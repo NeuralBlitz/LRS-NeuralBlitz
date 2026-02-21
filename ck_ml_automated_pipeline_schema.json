@@ -1,0 +1,114 @@
+{
+  "$id": "https://neuralblitz.org/schema/ck/ML/AutomatedPipeline/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ML/AutomatedPipeline CK v1.0",
+  "description": "Automated ML pipeline with model selection, hyperparameter optimization, and cross-validation.",
+  "type": "object",
+  "required": ["kernel", "version", "intent", "bounds", "governance", "telemetry", "payload", "provenance"],
+  "properties": {
+    "kernel": { "const": "ML/AutomatedPipeline" },
+    "version": { "const": "1.0.0" },
+    "intent": { "const": "Automated end-to-end ML pipeline with model selection and hyperparameter tuning" },
+    "bounds": {
+      "type": "object",
+      "required": ["entropy_max", "time_ms_max", "scope"],
+      "properties": {
+        "entropy_max": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.15 },
+        "time_ms_max": { "type": "integer", "minimum": 1, "default": 3600000 },
+        "scope": { "type": "string", "default": "SBX-ML-AUTO" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["rcf", "cect", "veritas_watch"],
+      "properties": {
+        "rcf": { "type": "boolean", "default": true },
+        "cect": { "type": "boolean", "default": true },
+        "veritas_watch": { "type": "boolean", "default": true },
+        "judex_quorum": { "type": "boolean", "default": false }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["explain_vector", "dag_attach"],
+      "properties": {
+        "explain_vector": { "type": "boolean", "default": true },
+        "dag_attach": { "type": "boolean", "default": true },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": ["dataset_cid", "target_column", "task_type"],
+      "properties": {
+        "dataset_cid": { "type": "string", "description": "CID of input dataset" },
+        "target_column": { "type": "string", "description": "Name of target variable" },
+        "task_type": { "type": "string", "enum": ["classification", "regression"], "description": "ML task type" },
+        "test_size": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.2 },
+        "cv_folds": { "type": "integer", "minimum": 2, "default": 5 },
+        "models": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["RandomForest", "GradientBoosting", "LogisticRegression", "SVM"],
+          "description": "List of models to evaluate"
+        },
+        "metric": { 
+          "type": "string", 
+          "default": "accuracy",
+          "description": "Primary evaluation metric"
+        },
+        "hyperparameter_search": {
+          "type": "string",
+          "enum": ["grid", "random", "bayesian"],
+          "default": "random"
+        },
+        "max_iter": { "type": "integer", "default": 100 }
+      }
+    },
+    "outputs_schema": {
+      "type": "object",
+      "properties": {
+        "best_model_cid": { "type": "string", "description": "CID of best trained model" },
+        "best_model_name": { "type": "string" },
+        "best_params": { "type": "object" },
+        "cv_score": { "type": "number" },
+        "test_score": { "type": "number" },
+        "all_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "model": { "type": "string" },
+              "cv_mean": { "type": "number" },
+              "cv_std": { "type": "number" },
+              "params": { "type": "object" }
+            }
+          }
+        },
+        "feature_importance": { "type": "object" },
+        "execution_time_ms": { "type": "integer" },
+        "explainability_report_cid": { "type": "string" }
+      }
+    },
+    "risk_factors": {
+      "type": "array",
+      "default": ["Overfitting", "Data Leakage", "Model Bias"]
+    },
+    "veritas_invariants": {
+      "type": "array",
+      "default": ["VPROOF#CrossValidationIntegrity", "VPROOF#NoDataLeakage"]
+    },
+    "kpi_metrics": {
+      "type": "array",
+      "default": ["cv_score", "test_score", "training_time", "model_complexity"]
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["caller_principal_id", "caller_dag_ref"],
+      "properties": {
+        "caller_principal_id": { "type": "string" },
+        "caller_dag_ref": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      }
+    }
+  }
+}

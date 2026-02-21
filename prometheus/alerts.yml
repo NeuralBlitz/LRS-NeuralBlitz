@@ -1,0 +1,165 @@
+# Prometheus Alert Rules for Time-Series Database Monitoring
+groups:
+  - name: influxdb_alerts
+    rules:
+      - alert: InfluxDBDown
+        expr: up{job="influxdb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: influxdb
+        annotations:
+          summary: "InfluxDB is down"
+          description: "InfluxDB instance {{ $labels.instance }} has been down for more than 1 minute"
+
+      - alert: InfluxDBHighMemoryUsage
+        expr: influxdb_memstats_heap_alloc_bytes / influxdb_memstats_sys_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: influxdb
+        annotations:
+          summary: "InfluxDB high memory usage"
+          description: "InfluxDB memory usage is above 85%"
+
+      - alert: InfluxDBSlowQueries
+        expr: rate(influxdb_query_duration_seconds_sum[5m]) / rate(influxdb_query_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: influxdb
+        annotations:
+          summary: "InfluxDB slow queries detected"
+          description: "Average query duration is above 1 second"
+
+      - alert: InfluxDBHighWriteLoad
+        expr: rate(influxdb_http_api_request_duration_seconds_count{handler="write"}[5m]) > 1000
+        for: 10m
+        labels:
+          severity: info
+          service: influxdb
+        annotations:
+          summary: "InfluxDB high write load"
+          description: "Write request rate is above 1000 req/sec"
+
+  - name: timescaledb_alerts
+    rules:
+      - alert: TimescaleDBDown
+        expr: up{job="timescaledb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: timescaledb
+        annotations:
+          summary: "TimescaleDB is down"
+          description: "TimescaleDB instance {{ $labels.instance }} has been down for more than 1 minute"
+
+      - alert: TimescaleDBHighConnections
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: timescaledb
+        annotations:
+          summary: "TimescaleDB high connection count"
+          description: "Active connections are above 80"
+
+      - alert: TimescaleDBSlowQueries
+        expr: pg_stat_statements_mean_time > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: timescaledb
+        annotations:
+          summary: "TimescaleDB slow queries"
+          description: "Mean query time is above 1 second"
+
+      - alert: TimescaleDBDiskSpaceLow
+        expr: pg_database_size_bytes / pg_database_size_bytes_max > 0.85
+        for: 5m
+        labels:
+          severity: critical
+          service: timescaledb
+        annotations:
+          summary: "TimescaleDB disk space low"
+          description: "Database disk usage is above 85%"
+
+      - alert: TimescaleDBReplicationLag
+        expr: pg_replication_lag_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: timescaledb
+        annotations:
+          summary: "TimescaleDB replication lag"
+          description: "Replication lag is above 30 seconds"
+
+  - name: system_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% on {{ $labels.instance }}"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_avail_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"} * 100 > 85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space low"
+          description: "Disk usage is above 85% on {{ $labels.instance }}"
+
+      - alert: NodeDown
+        expr: up{job="node-exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node exporter is down"
+          description: "Node exporter on {{ $labels.instance }} has been down for more than 2 minutes"
+
+  - name: agent_metrics_alerts
+    rules:
+      - alert: AgentHighErrorRate
+        expr: rate(agent_errors_total[5m]) / rate(agent_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: agent
+        annotations:
+          summary: "Agent high error rate"
+          description: "Agent {{ $labels.agent_id }} error rate is above 5%"
+
+      - alert: AgentHighLatency
+        expr: agent_request_duration_seconds{quantile="0.99"} > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: agent
+        annotations:
+          summary: "Agent high latency"
+          description: "Agent {{ $labels.agent_id }} p99 latency is above 1 second"
+
+      - alert: AgentDown
+        expr: up{job="agent-metrics-exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: agent
+        annotations:
+          summary: "Agent metrics exporter is down"
+          description: "Agent metrics exporter has been down for more than 2 minutes"

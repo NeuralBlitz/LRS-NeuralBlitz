@@ -1,0 +1,41 @@
+runtime: python311
+
+# Automatic scaling configuration
+automatic_scaling:
+  min_instances: 1
+  max_instances: 100
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.6
+  min_pending_latency: automatic
+  max_pending_latency: automatic
+
+# Health checks
+health_check:
+  enable_health_check: true
+  check_interval_sec: 5
+  timeout_sec: 4
+  unhealthy_threshold: 2
+  healthy_threshold: 2
+  restart_threshold: 60
+
+# Resources
+resources:
+  cpu: 2
+  memory_gb: 2.3
+  disk_size_gb: 10
+
+# Network
+network:
+  instance_ip_mode: external
+  name: default
+
+# Environment variables
+env_variables:
+  ENVIRONMENT: "production"
+  GOOGLE_CLOUD_PROJECT: "neuralblitz-project"
+  STORAGE_BUCKET: "neuralblitz-project-data"
+  PUBSUB_TOPIC: "neuralblitz-events"
+  LOG_LEVEL: "INFO"
+
+# Entrypoint
+entrypoint: gunicorn -b :$PORT -w 4 --threads 8 --timeout 0 main:app

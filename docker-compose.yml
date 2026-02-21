@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # InfluxDB for Telemetry Storage
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb-telemetry
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=telemetry
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin123
+      - INFLUXDB_HTTP_AUTH_ENABLED=true
+      - INFLUXDB_USER=telemetry_user
+      - INFLUXDB_USER_PASSWORD=telemetry_pass
+      - INFLUXDB_ORG=neuralblitz
+      - INFLUXDB_BUCKET=system_metrics
+      - INFLUXDB_ADMIN_TOKEN=telemetry-token-xyz
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - ./influxdb/config:/etc/influxdb2
+    networks:
+      - tsdb-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # TimescaleDB for Agent Metrics
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: timescaledb-agent
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=agent_metrics
+      - POSTGRES_USER=agent_user
+      - POSTGRES_PASSWORD=agent_pass_123
+      - POSTGRES_INITDB_ARGS="--encoding=UTF8"
+    volumes:
+      - timescaledb-data:/var/lib/postgresql/data
+      - ./timescaledb/init:/docker-entrypoint-initdb.d
+    networks:
+      - tsdb-network
+    command: postgres -c shared_preload_libraries=timescaledb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent_user -d agent_metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-monitor
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./prometheus/recording-rules.yml:/etc/prometheus/recording-rules.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - tsdb-network
+    depends_on:
+      - influxdb
+      - timescaledb
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - tsdb-network
+    depends_on:
+      - prometheus
+
+  # Node Exporter for system metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - tsdb-network
+
+  # cAdvisor for container metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    networks:
+      - tsdb-network
+
+volumes:
+  influxdb-data:
+  timescaledb-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  tsdb-network:
+    driver: bridge

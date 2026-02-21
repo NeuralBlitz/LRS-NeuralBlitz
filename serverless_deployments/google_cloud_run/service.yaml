@@ -1,0 +1,60 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: neuralblitz-cloud-run
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+    run.googleapis.com/cpu-throttling: "false"
+    run.googleapis.com/memory: "2Gi"
+    run.googleapis.com/cpu: "2"
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "100"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/cpu-throttling: "false"
+      labels:
+        app: neuralblitz
+        version: v1
+    spec:
+      containerConcurrency: 1000
+      timeoutSeconds: 300
+      serviceAccountName: neuralblitz-cloud-run-sa
+      containers:
+        - image: gcr.io/PROJECT_ID/neuralblitz-cloud-run:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "PROJECT_ID"
+            - name: STORAGE_BUCKET
+              value: "PROJECT_ID-data"
+            - name: PUBSUB_TOPIC
+              value: "neuralblitz-events"
+          resources:
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+            requests:
+              cpu: "1"
+              memory: "1Gi"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3

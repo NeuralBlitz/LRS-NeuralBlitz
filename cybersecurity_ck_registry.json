@@ -1,0 +1,489 @@
+{
+  "$id": "https://neuralblitz.org/schema/ck/cybersecurity/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NeuralBlitz Cybersecurity CK Registry v1.0",
+  "description": "Capability Kernels for Network Security, Malware Analysis, and Intrusion Detection",
+  "type": "object",
+  "properties": {
+    "ck_registry": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/NetworkAnomalyDetector"
+          },
+          {
+            "$ref": "#/$defs/MalwareSignatureAnalyzer"
+          },
+          {
+            "$ref": "#/$defs/IntrusionDetectionSystem"
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "NetworkAnomalyDetector": {
+      "type": "object",
+      "title": "CK: Security/NetworkAnomalyDetector",
+      "description": "Real-time network traffic anomaly detection using statistical and ML-based methods",
+      "required": ["kernel", "version", "intent", "inputs", "outputs_schema", "bounds", "governance", "telemetry", "risk_factors", "veritas_invariants"],
+      "properties": {
+        "kernel": {
+          "const": "Security/NetworkAnomalyDetector"
+        },
+        "version": {
+          "const": "1.0.0"
+        },
+        "intent": {
+          "const": "Detect anomalous patterns in network traffic that may indicate security threats, data exfiltration, or network reconnaissance activities"
+        },
+        "inputs": {
+          "type": "object",
+          "properties": {
+            "traffic_stream_cid": {
+              "type": "string",
+              "description": "CID of real-time or historical network traffic data (pcap, flow records)"
+            },
+            "baseline_profile_cid": {
+              "type": "string",
+              "description": "CID of normal traffic baseline profile for comparison"
+            },
+            "detection_threshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.85,
+              "description": "Anomaly detection confidence threshold"
+            },
+            "analysis_window_ms": {
+              "type": "integer",
+              "minimum": 1000,
+              "default": 60000,
+              "description": "Time window for analysis in milliseconds"
+            },
+            "feature_set": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["packet_size", "flow_duration", "byte_count", "protocol_distribution", "port_scanning", "timing_patterns", "geolocation"]
+              },
+              "default": ["packet_size", "flow_duration", "byte_count"]
+            }
+          },
+          "required": ["traffic_stream_cid"]
+        },
+        "outputs_schema": {
+          "type": "object",
+          "properties": {
+            "anomaly_report_cid": {
+              "type": "string",
+              "description": "CID of detailed anomaly detection report"
+            },
+            "anomaly_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Overall anomaly confidence score"
+            },
+            "detected_anomalies": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "timestamp": {"type": "string", "format": "date-time"},
+                  "anomaly_type": {"type": "string", "enum": ["ddos", "port_scan", "data_exfiltration", "lateral_movement", "botnet_activity", "unknown"]},
+                  "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                  "source_ips": {"type": "array", "items": {"type": "string"}},
+                  "destination_ips": {"type": "array", "items": {"type": "string"}},
+                  "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                  "evidence_cid": {"type": "string"}
+                }
+              }
+            },
+            "baseline_drift_detected": {
+              "type": "boolean",
+              "description": "Whether normal baseline has significantly drifted"
+            },
+            "recommendations": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Recommended security actions"
+            }
+          },
+          "required": ["anomaly_report_cid", "anomaly_score", "detected_anomalies"]
+        },
+        "bounds": {
+          "type": "object",
+          "properties": {
+            "entropy_max": {"const": 0.15},
+            "time_ms_max": {"const": 300000},
+            "scope": {"const": "SBX-NET-ANOMALY"}
+          }
+        },
+        "governance": {
+          "type": "object",
+          "properties": {
+            "rcf": {"const": true},
+            "cect": {"const": true},
+            "veritas_watch": {"const": true},
+            "judex_quorum": {"const": false}
+          }
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "explain_vector": {"const": true},
+            "dag_attach": {"const": true},
+            "trace_id": {"type": "string"}
+          }
+        },
+        "risk_factors": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["False Positive Alert Fatigue", "Evasion via Adversarial Examples", "Baseline Poisoning", "Latency-induced Blind Spots"]
+        },
+        "veritas_invariants": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["VPROOF#DetectionAccuracy", "VPROOF#FalsePositiveBounded", "VPROOF#ProvenanceIntegrity"]
+        },
+        "kpi_metrics": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["detection_rate", "false_positive_rate", "mean_time_to_detect", "baseline_drift_rate"]
+        }
+      }
+    },
+    "MalwareSignatureAnalyzer": {
+      "type": "object",
+      "title": "CK: Security/MalwareSignatureAnalyzer",
+      "description": "Static and dynamic malware signature analysis with behavioral classification",
+      "required": ["kernel", "version", "intent", "inputs", "outputs_schema", "bounds", "governance", "telemetry", "risk_factors", "veritas_invariants"],
+      "properties": {
+        "kernel": {
+          "const": "Security/MalwareSignatureAnalyzer"
+        },
+        "version": {
+          "const": "1.0.0"
+        },
+        "intent": {
+          "const": "Analyze executable files and binaries for malware signatures, behavioral indicators, and malicious patterns using hybrid static/dynamic analysis"
+        },
+        "inputs": {
+          "type": "object",
+          "properties": {
+            "sample_cid": {
+              "type": "string",
+              "description": "CID of binary sample to analyze"
+            },
+            "analysis_depth": {
+              "type": "string",
+              "enum": ["static", "dynamic", "hybrid"],
+              "default": "hybrid"
+            },
+            "signature_db_cid": {
+              "type": "string",
+              "description": "CID of malware signature database"
+            },
+            "sandbox_config_cid": {
+              "type": "string",
+              "description": "CID of sandbox environment configuration"
+            },
+            "heuristic_rules_cid": {
+              "type": "string",
+              "description": "CID of heuristic detection rules"
+            },
+            "analysis_timeout_ms": {
+              "type": "integer",
+              "default": 120000
+            }
+          },
+          "required": ["sample_cid"]
+        },
+        "outputs_schema": {
+          "type": "object",
+          "properties": {
+            "analysis_report_cid": {
+              "type": "string"
+            },
+            "verdict": {
+              "type": "string",
+              "enum": ["malicious", "benign", "suspicious", "unknown"]
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "malware_family": {
+              "type": "string",
+              "description": "Identified malware family if malicious"
+            },
+            "threat_level": {
+              "type": "string",
+              "enum": ["low", "medium", "high", "critical"]
+            },
+            "signatures_matched": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "signature_id": {"type": "string"},
+                  "signature_name": {"type": "string"},
+                  "match_offset": {"type": "integer"},
+                  "match_type": {"type": "string", "enum": ["hash", "byte_pattern", "yara", "behavioral"]},
+                  "confidence": {"type": "number"}
+                }
+              }
+            },
+            "behavioral_indicators": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "behavior": {"type": "string"},
+                  "severity": {"type": "string", "enum": ["low", "medium", "high"]},
+                  "api_calls": {"type": "array", "items": {"type": "string"}},
+                  "file_operations": {"type": "array", "items": {"type": "string"}},
+                  "network_activity": {"type": "array", "items": {"type": "string"}}
+                }
+              }
+            },
+            "indicators_of_compromise": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "List of IoCs extracted from sample"
+            },
+            "mitre_attack_mappings": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "MITRE ATT&CK technique IDs"
+            },
+            "similarity_hash": {
+              "type": "string",
+              "description": "TLSH or ssdeep hash for fuzzy matching"
+            }
+          },
+          "required": ["analysis_report_cid", "verdict", "confidence"]
+        },
+        "bounds": {
+          "type": "object",
+          "properties": {
+            "entropy_max": {"const": 0.12},
+            "time_ms_max": {"const": 300000},
+            "scope": {"const": "SBX-MALWARE-ANALYSIS"}
+          }
+        },
+        "governance": {
+          "type": "object",
+          "properties": {
+            "rcf": {"const": true},
+            "cect": {"const": true},
+            "veritas_watch": {"const": true},
+            "judex_quorum": {"const": false}
+          }
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "explain_vector": {"const": true},
+            "dag_attach": {"const": true},
+            "trace_id": {"type": "string"}
+          }
+        },
+        "risk_factors": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["Zero-Day Evasion", "Polymorphic Malware", "Sandbox Evasion Techniques", "False Positive Classification", "Analysis Environment Compromise"]
+        },
+        "veritas_invariants": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["VPROOF#SignatureAccuracy", "VPROOF#SandboxIsolation", "VPROOF#BehavioralFidelity"]
+        },
+        "kpi_metrics": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["detection_rate", "false_positive_rate", "analysis_time_ms", "signature_coverage"]
+        }
+      }
+    },
+    "IntrusionDetectionSystem": {
+      "type": "object",
+      "title": "CK: Security/IntrusionDetectionSystem",
+      "description": "Host and network-based intrusion detection with multi-layer correlation",
+      "required": ["kernel", "version", "intent", "inputs", "outputs_schema", "bounds", "governance", "telemetry", "risk_factors", "veritas_invariants"],
+      "properties": {
+        "kernel": {
+          "const": "Security/IntrusionDetectionSystem"
+        },
+        "version": {
+          "const": "1.0.0"
+        },
+        "intent": {
+          "const": "Detect and correlate intrusion attempts across network and host layers, identifying attack chains and APT activities"
+        },
+        "inputs": {
+          "type": "object",
+          "properties": {
+            "event_sources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "source_type": {"type": "string", "enum": ["network_ids", "host_ids", "endpoint_detection", "firewall", "dns_logs", "proxy_logs"]},
+                  "source_cid": {"type": "string"},
+                  "priority": {"type": "integer", "minimum": 1, "maximum": 10}
+                }
+              }
+            },
+            "rule_set_cid": {
+              "type": "string",
+              "description": "CID of detection rules (Snort, Suricata, YARA, Sigma)"
+            },
+            "threat_intel_cid": {
+              "type": "string",
+              "description": "CID of threat intelligence feeds"
+            },
+            "correlation_window_ms": {
+              "type": "integer",
+              "default": 300000
+            },
+            "detection_mode": {
+              "type": "string",
+              "enum": ["signature_based", "anomaly_based", "hybrid"],
+              "default": "hybrid"
+            }
+          },
+          "required": ["event_sources"]
+        },
+        "outputs_schema": {
+          "type": "object",
+          "properties": {
+            "incident_report_cid": {
+              "type": "string"
+            },
+            "detected_intrusions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "incident_id": {"type": "string"},
+                  "timestamp": {"type": "string", "format": "date-time"},
+                  "intrusion_type": {"type": "string", "enum": ["brute_force", "privilege_escalation", "lateral_movement", "data_exfiltration", "persistence", "initial_access", "command_control"]},
+                  "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                  "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                  "affected_assets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "asset_id": {"type": "string"},
+                        "asset_type": {"type": "string", "enum": ["host", "network_segment", "user_account", "application"]},
+                        "ip_address": {"type": "string"},
+                        "compromise_indicators": {"type": "array", "items": {"type": "string"}}
+                      }
+                    }
+                  },
+                  "attack_chain": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "stage": {"type": "string", "enum": ["reconnaissance", "weaponization", "delivery", "exploitation", "installation", "command_control", "actions_on_objective"]},
+                        "timestamp": {"type": "string", "format": "date-time"},
+                        "evidence_cid": {"type": "string"},
+                        "mitre_technique": {"type": "string"}
+                      }
+                    }
+                  },
+                  "correlated_events": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of correlated event CIDs"
+                  },
+                  "threat_actor_assessment": {
+                    "type": "object",
+                    "properties": {
+                      "suspected_actor": {"type": "string"},
+                      "motivation": {"type": "string"},
+                      "capability_assessment": {"type": "string", "enum": ["low", "medium", "high", "advanced_persistent"]},
+                      "confidence": {"type": "number"}
+                    }
+                  }
+                }
+              }
+            },
+            "alert_summary": {
+              "type": "object",
+              "properties": {
+                "total_alerts": {"type": "integer"},
+                "critical_count": {"type": "integer"},
+                "high_count": {"type": "integer"},
+                "medium_count": {"type": "integer"},
+                "low_count": {"type": "integer"},
+                "true_positive_rate": {"type": "number"},
+                "false_positive_rate": {"type": "number"}
+              }
+            },
+            "response_recommendations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "priority": {"type": "integer"},
+                  "action": {"type": "string"},
+                  "target_assets": {"type": "array", "items": {"type": "string"}},
+                  "estimated_impact": {"type": "string", "enum": ["low", "medium", "high"]},
+                  "automation_possible": {"type": "boolean"}
+                }
+              }
+            }
+          },
+          "required": ["incident_report_cid", "detected_intrusions"]
+        },
+        "bounds": {
+          "type": "object",
+          "properties": {
+            "entropy_max": {"const": 0.18},
+            "time_ms_max": {"const": 600000},
+            "scope": {"const": "SBX-IDS-CORRELATION"}
+          }
+        },
+        "governance": {
+          "type": "object",
+          "properties": {
+            "rcf": {"const": true},
+            "cect": {"const": true},
+            "veritas_watch": {"const": true},
+            "judex_quorum": {"const": true}
+          }
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "explain_vector": {"const": true},
+            "dag_attach": {"const": true},
+            "trace_id": {"type": "string"}
+          }
+        },
+        "risk_factors": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["Alert Fatigue", "Evasion via Encryption", "Zero-Day Exploits", "Insider Threats", "False Correlation", "Analysis Paralysis"]
+        },
+        "veritas_invariants": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["VPROOF#CorrelationAccuracy", "VPROOF#AlertFidelity", "VPROOF#ThreatIntelligenceIntegrity"]
+        },
+        "kpi_metrics": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["mean_time_to_detect", "mean_time_to_respond", "alert_quality_ratio", "attack_chain_completion_rate"]
+        }
+      }
+    }
+  }
+}

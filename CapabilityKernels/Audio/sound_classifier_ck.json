@@ -1,0 +1,198 @@
+{
+  "$id": "https://neuralblitz.org/schema/ck/audio/sound_classifier/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audio/SoundClassifier CK Contract v1.0",
+  "description": "Environmental sound classification and acoustic event detection with ethical awareness",
+  "type": "object",
+  "required": ["kernel", "version", "intent", "bounds", "governance", "telemetry", "payload", "provenance"],
+  "properties": {
+    "kernel": { "const": "Audio/SoundClassifier" },
+    "version": { "const": "1.0.0" },
+    "intent": { 
+      "type": "string", 
+      "const": "Classify acoustic events and environmental sounds with confidence scoring and ethical filtering"
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "audio_data": { "type": "string", "format": "base64", "description": "Base64 encoded audio" },
+        "audio_cid": { "type": "string", "description": "CID reference to stored audio artifact" },
+        "model_type": { 
+          "type": "string", 
+          "enum": ["yamnet", "vggish", "custom"], 
+          "default": "yamnet" 
+        },
+        "classification_mode": { 
+          "type": "string", 
+          "enum": ["single_label", "multi_label", "hierarchical"], 
+          "default": "multi_label" 
+        },
+        "target_classes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional subset of classes to detect"
+        },
+        "confidence_threshold": { 
+          "type": "number", 
+          "minimum": 0, 
+          "maximum": 1, 
+          "default": 0.5 
+        },
+        "top_k": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 },
+        "temporal_localization": { 
+          "type": "boolean", 
+          "default": false,
+          "description": "Enable event onset/offset detection"
+        },
+        "event_detection_params": {
+          "type": "object",
+          "properties": {
+            "min_event_duration_ms": { "type": "integer", "default": 250 },
+            "max_event_duration_ms": { "type": "integer", "default": 10000 },
+            "merge_gap_ms": { "type": "integer", "default": 100 },
+            "smoothing_window": { "type": "integer", "default": 3 }
+          }
+        },
+        "ethical_filters": {
+          "type": "object",
+          "properties": {
+            "block_suspicious_sounds": { "type": "boolean", "default": true },
+            "privacy_sensitive_classes": { 
+              "type": "array", 
+              "items": { "type": "string" },
+              "default": ["Speech", "Conversation", "Phone", "Doorbell"]
+            },
+            "alert_classes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["Gunshot", "Explosion", "Glass", "Screaming"]
+            }
+          }
+        }
+      }
+    },
+    "outputs_schema": {
+      "type": "object",
+      "properties": {
+        "predictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "class_name": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "class_id": { "type": "integer" },
+              "hierarchy_path": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "class_name": { "type": "string" },
+              "start_time": { "type": "number" },
+              "end_time": { "type": "number" },
+              "peak_confidence": { "type": "number" },
+              "avg_confidence": { "type": "number" },
+              "event_id": { "type": "string" }
+            }
+          }
+        },
+        "embedding": {
+          "type": "object",
+          "properties": {
+            "vector": { "type": "array", "items": { "type": "number" } },
+            "dimension": { "type": "integer" },
+            "model": { "type": "string" }
+          }
+        },
+        "audio_metadata": {
+          "type": "object",
+          "properties": {
+            "duration_sec": { "type": "number" },
+            "sample_rate": { "type": "integer" },
+            "channels": { "type": "integer" },
+            "format": { "type": "string" }
+          }
+        },
+        "ethical_review": {
+          "type": "object",
+          "properties": {
+            "privacy_alert": { "type": "boolean" },
+            "safety_alert": { "type": "boolean" },
+            "blocked_classes": { "type": "array", "items": { "type": "string" } },
+            "redacted_segments": { "type": "array", "items": { "type": "integer" } },
+            "confidence_calibration": { "type": "number" }
+          }
+        },
+        "explainability": {
+          "type": "object",
+          "properties": {
+            "feature_importance": { "type": "object" },
+            "decision_boundary": { "type": "string" },
+            "uncertainty_estimate": { "type": "number" }
+          }
+        },
+        "nbhs512_seal": { "type": "string", "pattern": "^[a-fA-F0-9]{128}$" }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "required": ["entropy_max", "time_ms_max", "scope"],
+      "properties": {
+        "entropy_max": { "type": "number", "const": 0.18 },
+        "time_ms_max": { "type": "integer", "const": 5000 },
+        "scope": { "type": "string", "const": "AudioProcessing.Classification" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["rcf", "cect", "veritas_watch"],
+      "properties": {
+        "rcf": { "type": "boolean", "const": true },
+        "cect": { "type": "boolean", "const": true },
+        "veritas_watch": { "type": "boolean", "const": true },
+        "judex_quorum": { "type": "boolean", "const": false }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["explain_vector", "dag_attach"],
+      "properties": {
+        "explain_vector": { "type": "boolean", "const": true },
+        "dag_attach": { "type": "boolean", "const": true },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "request_id": { "type": "string", "format": "uuid" },
+    "payload": { "$ref": "#/properties/inputs" },
+    "provenance": {
+      "type": "object",
+      "required": ["caller_principal_id", "caller_dag_ref"],
+      "properties": {
+        "caller_principal_id": { "type": "string" },
+        "caller_dag_ref": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      }
+    }
+  },
+  "risk_factors": [
+    "False Positive Alert",
+    "Privacy Violation",
+    "Class Bias",
+    "Misclassification"
+  ],
+  "veritas_invariants": [
+    "VPROOF#ClassificationAccuracy",
+    "VPROOF#PrivacyProtection",
+    "VPROOF#FairnessCalibration"
+  ],
+  "kpi_metrics": [
+    "top1_accuracy",
+    "top5_accuracy",
+    "mean_average_precision",
+    "inference_latency_ms",
+    "privacy_alert_rate"
+  ]
+}

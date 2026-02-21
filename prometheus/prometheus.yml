@@ -1,0 +1,131 @@
+# Prometheus Configuration for Monitoring Time-Series Databases
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'neuralblitz-monitor'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alerts.yml"
+  - "recording-rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Node Exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # cAdvisor for container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 15s
+
+  # InfluxDB metrics
+  - job_name: 'influxdb'
+    static_configs:
+      - targets: ['influxdb:8086']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scheme: http
+
+  # TimescaleDB metrics (via postgres_exporter)
+  - job_name: 'timescaledb'
+    static_configs:
+      - targets: ['timescaledb:5432']
+    scrape_interval: 30s
+
+  # Custom application metrics
+  - job_name: 'neuralblitz-app'
+    static_configs:
+      - targets: 
+        - 'app:8080'
+        - 'app:8081'
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  # InfluxDB Telegraf metrics
+  - job_name: 'telegraf'
+    static_configs:
+      - targets: ['telegraf:9273']
+    scrape_interval: 15s
+
+  # Agent metrics exporter
+  - job_name: 'agent-metrics-exporter'
+    static_configs:
+      - targets: ['agent-exporter:9111']
+    scrape_interval: 20s
+    metrics_path: '/agent-metrics'
+
+  # Blackbox exporter for endpoint monitoring
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://influxdb:8086/health
+        - http://timescaledb:5432
+        - http://prometheus:9090/-/healthy
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+# Remote write configuration to send metrics to other systems
+remote_write:
+  - url: "http://influxdb:8086/api/v1/prom/write?db=prometheus&rp=autogen"
+    remote_timeout: 30s
+    queue_config:
+      capacity: 10000
+      max_samples_per_send: 1000
+      batch_send_deadline: 5s
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'go_.*'
+        action: drop
+
+# Remote read configuration
+remote_read:
+  - url: "http://influxdb:8086/api/v1/prom/read?db=prometheus&rp=autogen"
+    remote_timeout: 1m
+    read_recent: true
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 15d
+    retention.size: 50GB
+    wal-compression: true
+
+# Query configuration
+query:
+  timeout: 2m
+  max-samples: 50000000
+  lookback-delta: 5m
+
+# Exemplar storage (for OpenTelemetry trace correlation)
+  exemplars:
+    max-size: 10000000

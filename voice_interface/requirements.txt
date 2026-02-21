@@ -1,0 +1,19 @@
+# Voice Interface System Requirements
+
+# Core dependencies
+openai>=1.0.0
+numpy>=1.21.0
+sounddevice>=0.4.0
+soundfile>=0.12.0
+pyttsx3>=2.90
+
+# Optional dependencies for enhanced features
+# scipy>=1.7.0  # For advanced audio processing
+# pydub>=0.25.0  # For audio format conversion
+# webrtcvad>=2.0.10  # For voice activity detection
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+mypy>=1.0.0

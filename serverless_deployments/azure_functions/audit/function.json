@@ -1,0 +1,22 @@
+{
+  "scriptFile": "audit.py",
+  "bindings": [
+    {
+      "type": "cosmosDBTrigger",
+      "name": "documents",
+      "direction": "in",
+      "leaseCollectionName": "leases",
+      "connectionStringSetting": "CosmosDBConnectionString",
+      "databaseName": "neuralblitz",
+      "collectionName": "results",
+      "createLeaseCollectionIfNotExists": true
+    },
+    {
+      "type": "blob",
+      "direction": "out",
+      "name": "auditBlob",
+      "path": "audit-logs/{DateTime}.json",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}

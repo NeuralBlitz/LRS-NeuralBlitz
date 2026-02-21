@@ -1,0 +1,283 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "NeuralBlitz Serverless API - AWS Lambda deployment",
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Default": "production",
+      "AllowedValues": ["development", "staging", "production"]
+    },
+    "LambdaMemorySize": {
+      "Type": "Number",
+      "Default": 1024,
+      "Description": "Lambda memory size in MB"
+    },
+    "LambdaTimeout": {
+      "Type": "Number",
+      "Default": 30,
+      "Description": "Lambda timeout in seconds"
+    }
+  },
+  "Globals": {
+    "Function": {
+      "Timeout": 30,
+      "MemorySize": 1024,
+      "Runtime": "python3.11",
+      "Architectures": ["x86_64"],
+      "Environment": {
+        "Variables": {
+          "ENVIRONMENT": { "Ref": "Environment" },
+          "LOG_LEVEL": "INFO",
+          "AWS_XRAY_CONTEXT_MISSING": "LOG_ERROR"
+        }
+      },
+      "TracingConfig": {
+        "Mode": "Active"
+      }
+    },
+    "Api": {
+      "CorsConfiguration": {
+        "AllowMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "AllowHeaders": ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key"],
+        "AllowOrigins": ["*"],
+        "MaxAge": "600"
+      }
+    }
+  },
+  "Resources": {
+    "NeuralBlitzApi": {
+      "Type": "AWS::Serverless::Api",
+      "Properties": {
+        "StageName": { "Ref": "Environment" },
+        "TracingEnabled": true,
+        "AccessLogSetting": {
+          "DestinationArn": { "Fn::GetAtt": ["ApiGatewayAccessLogGroup", "Arn"] },
+          "Format": "{\"requestId\":\"$context.requestId\",\"ip\":\"$context.identity.sourceIp\",\"requestTime\":\"$context.requestTime\",\"httpMethod\":\"$context.httpMethod\",\"routeKey\":\"$context.routeKey\",\"status\":\"$context.status\",\"responseLength\":\"$context.responseLength\",\"integrationLatency\":\"$context.integrationLatency\"}"
+        },
+        "MethodSettings": [{
+          "ResourcePath": "/*",
+          "HttpMethod": "*",
+          "LoggingLevel": "INFO",
+          "DataTraceEnabled": true,
+          "MetricsEnabled": true
+        }]
+      }
+    },
+    
+    "ProcessInferenceFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "CodeUri": "src/",
+        "Handler": "handlers.inference.handler",
+        "Description": "NeuralBlitz inference processing",
+        "Environment": {
+          "Variables": {
+            "MODEL_BUCKET": { "Ref": "ModelArtifactsBucket" },
+            "RESULTS_TABLE": { "Ref": "ResultsTable" }
+          }
+        },
+        "Policies": [
+          "AWSLambdaBasicExecutionRole",
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": { "Fn::GetAtt": ["ModelArtifactsBucket", "Arn"] }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:GetItem",
+                "dynamodb:UpdateItem"
+              ],
+              "Resource": { "Fn::GetAtt": ["ResultsTable", "Arn"] }
+            }]
+          }
+        ],
+        "Events": {
+          "InferenceApi": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/inference",
+              "Method": "POST",
+              "RestApiId": { "Ref": "NeuralBlitzApi" }
+            }
+          },
+          "S3UploadTrigger": {
+            "Type": "S3",
+            "Properties": {
+              "Bucket": { "Ref": "InputDataBucket" },
+              "Events": "s3:ObjectCreated:*",
+              "Filter": {
+                "Prefix": "uploads/",
+                "Suffix": ".json"
+              }
+            }
+          }
+        },
+        "ReservedConcurrentExecutions": 100
+      }
+    },
+
+    "GovernanceCheckFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "CodeUri": "src/",
+        "Handler": "handlers.governance.handler",
+        "Description": "NeuralBlitz governance and ethics validation",
+        "MemorySize": 512,
+        "Timeout": 10,
+        "Environment": {
+          "Variables": {
+            "CHARTER_TABLE": { "Ref": "CharterTable" }
+          }
+        },
+        "Events": {
+          "GovernanceApi": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/governance/check",
+              "Method": "POST",
+              "RestApiId": { "Ref": "NeuralBlitzApi" }
+            }
+          }
+        }
+      }
+    },
+
+    "AuditLoggerFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "CodeUri": "src/",
+        "Handler": "handlers.audit.handler",
+        "Description": "Audit logging for compliance",
+        "Events": {
+          "DynamoDBStream": {
+            "Type": "DynamoDB",
+            "Properties": {
+              "Stream": { "Fn::GetAtt": ["ResultsTable", "StreamArn"] },
+              "StartingPosition": "TRIM_HORIZON",
+              "BatchSize": 100
+            }
+          }
+        }
+      }
+    },
+
+    "InputDataBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": { "Fn::Sub": "neuralblitz-input-${Environment}-${AWS::AccountId}" },
+        "VersioningConfiguration": { "Status": "Enabled" },
+        "EncryptionConfiguration": {
+          "ServerSideEncryptionConfiguration": [{
+            "ServerSideEncryptionByDefault": { "SSEAlgorithm": "AES256" }
+          }]
+        },
+        "LifecycleConfiguration": {
+          "Rules": [{
+            "Id": "ArchiveOldData",
+            "Status": "Enabled",
+            "Transitions": [{
+              "StorageClass": "GLACIER",
+              "TransitionInDays": 90
+            }]
+          }]
+        }
+      }
+    },
+
+    "ModelArtifactsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": { "Fn::Sub": "neuralblitz-models-${Environment}-${AWS::AccountId}" },
+        "VersioningConfiguration": { "Status": "Enabled" },
+        "EncryptionConfiguration": {
+          "ServerSideEncryptionConfiguration": [{
+            "ServerSideEncryptionByDefault": { "SSEAlgorithm": "aws:kms", "KMSMasterKeyID": "alias/aws/s3" }
+          }]
+        }
+      }
+    },
+
+    "ResultsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": { "Fn::Sub": "neuralblitz-results-${Environment}" },
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          { "AttributeName": "request_id", "AttributeType": "S" },
+          { "AttributeName": "timestamp", "AttributeType": "S" },
+          { "AttributeName": "user_id", "AttributeType": "S" }
+        ],
+        "KeySchema": [
+          { "AttributeName": "request_id", "KeyType": "HASH" },
+          { "AttributeName": "timestamp", "KeyType": "RANGE" }
+        ],
+        "GlobalSecondaryIndexes": [{
+          "IndexName": "UserIdIndex",
+          "KeySchema": [
+            { "AttributeName": "user_id", "KeyType": "HASH" },
+            { "AttributeName": "timestamp", "KeyType": "RANGE" }
+          ],
+          "Projection": { "ProjectionType": "ALL" }
+        }],
+        "StreamSpecification": { "StreamViewType": "NEW_AND_OLD_IMAGES" },
+        "PointInTimeRecoverySpecification": { "PointInTimeRecoveryEnabled": true },
+        "SSESpecification": { "SSEEnabled": true }
+      }
+    },
+
+    "CharterTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": { "Fn::Sub": "neuralblitz-charter-${Environment}" },
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          { "AttributeName": "clause_id", "AttributeType": "S" }
+        ],
+        "KeySchema": [
+          { "AttributeName": "clause_id", "KeyType": "HASH" }
+        ],
+        "SSESpecification": { "SSEEnabled": true }
+      }
+    },
+
+    "ApiGatewayAccessLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": { "Fn::Sub": "/aws/apigateway/neuralblitz-${Environment}" },
+        "RetentionInDays": 30
+      }
+    },
+
+    "DeadLetterQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": { "Fn::Sub": "neuralblitz-dlq-${Environment}" },
+        "MessageRetentionPeriod": 1209600,
+        "KmsMasterKeyId": "alias/aws/sqs"
+      }
+    }
+  },
+  
+  "Outputs": {
+    "ApiEndpoint": {
+      "Description": "API Gateway endpoint URL",
+      "Value": { "Fn::Sub": "https://${NeuralBlitzApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/" }
+    },
+    "InferenceFunctionArn": {
+      "Description": "Inference Lambda function ARN",
+      "Value": { "Fn::GetAtt": ["ProcessInferenceFunction", "Arn"] }
+    },
+    "InputBucketName": {
+      "Description": "S3 input bucket name",
+      "Value": { "Ref": "InputDataBucket" }
+    }
+  }
+}

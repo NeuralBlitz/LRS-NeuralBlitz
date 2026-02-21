@@ -1,0 +1,226 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "NBCL",
+  "scopeName": "source.nbcl",
+  "fileTypes": [".nbcl"],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#commands"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#parameters"
+    },
+    {
+      "include": "#flags"
+    },
+    {
+      "include": "#json-payloads"
+    },
+    {
+      "include": "#ck-references"
+    },
+    {
+      "include": "#constants"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.nbcl",
+          "match": "#.*$"
+        },
+        {
+          "name": "comment.block.nbcl",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "commands": {
+      "patterns": [
+        {
+          "name": "keyword.control.command.nbcl",
+          "match": "\\b/(boot|nbos|omega|status|verify|export|manifest_drs_field|set_state|drift_field|entangle|project|collapse_trace|merge|fork|query_drs|charter\\.shade|charter\\.enforce|judex\\.review|sentia\\.scan|veritas\\.sign|conscientia\\.stabilize|custodian\\.override|policy\\.set|psi|ignite|glyphnet\\.compile|qec\\.set|aqm\\.recursion\\.fold|build_dsl|introspect|import|mount|publish|index|apply|analyze_policy|correct_drift|lock_ethics|entropy_budget|scan_alignment|ignite_ΩZ_superbloom)\\b"
+        },
+        {
+          "name": "keyword.control.command.system.nbcl",
+          "match": "\\b/(boot|nbos|status|verify|export)\\b"
+        },
+        {
+          "name": "keyword.control.command.ethics.nbcl",
+          "match": "\\b/(charter\\.shade|charter\\.enforce|judex\\.review|sentia\\.scan|conscientia\\.stabilize|correct_drift|lock_ethics)\\b"
+        },
+        {
+          "name": "keyword.control.command.drs.nbcl",
+          "match": "\\b/(manifest_drs_field|set_state|drift_field|entangle|project|collapse_trace|merge|fork|query_drs)\\b"
+        },
+        {
+          "name": "keyword.control.command.frontier.nbcl",
+          "match": "\\b/(ignite|glyphnet\\.compile|qec\\.set|aqm\\.recursion\\.fold|psi)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.nbcl",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.nbcl",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.nbcl",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.nbcl",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.template.nbcl",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.nbcl",
+              "match": "\\\\."
+            },
+            {
+              "name": "variable.other.embedded.nbcl",
+              "match": "\\$\\{[^}]*\\}"
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.nbcl",
+          "match": "\\b\\d+\\.\\d+([eE][+-]?\\d+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.nbcl",
+          "match": "\\b\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.hex.nbcl",
+          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.other.nbcl",
+          "match": "\\b(true|false|null|undefined)\\b"
+        },
+        {
+          "name": "keyword.operator.nbcl",
+          "match": "\\b(AND|OR|NOT|IN|HAS|IS)\\b"
+        }
+      ]
+    },
+    "parameters": {
+      "patterns": [
+        {
+          "name": "variable.parameter.nbcl",
+          "match": "--[a-zA-Z][a-zA-Z0-9_-]*"
+        },
+        {
+          "name": "variable.parameter.short.nbcl",
+          "match": "-[a-zA-Z]"
+        }
+      ]
+    },
+    "flags": {
+      "patterns": [
+        {
+          "name": "constant.language.flag.nbcl",
+          "match": "\\b(charter_lock|goldendag_enable|trace|strict)\\b"
+        },
+        {
+          "name": "constant.language.mode.nbcl",
+          "match": "\\b(Sentio|Dynamo|Hybrid)\\b"
+        }
+      ]
+    },
+    "json-payloads": {
+      "patterns": [
+        {
+          "name": "meta.embedded.json.nbcl",
+          "begin": "\\{",
+          "end": "\\}",
+          "patterns": [
+            {
+              "include": "source.json"
+            }
+          ]
+        },
+        {
+          "name": "meta.embedded.json.array.nbcl",
+          "begin": "\\[",
+          "end": "\\]",
+          "patterns": [
+            {
+              "include": "source.json"
+            }
+          ]
+        }
+      ]
+    },
+    "ck-references": {
+      "patterns": [
+        {
+          "name": "entity.name.type.class.ck.nbcl",
+          "match": "\\b(Causa|Ethics|Wisdom|Temporal|Language|Perception|Simulation|OQT|DQPK|DRS|Plan|Gov)/[A-Za-z0-9_]+CK\\b"
+        },
+        {
+          "name": "entity.name.type.class.ck.family.nbcl",
+          "match": "\\b(Causa|Ethics|Wisdom|Temporal|Language|Perception|Simulation|OQT|DQPK|DRS|Plan|Gov)\\b(?=/[A-Za-z0-9_])"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.charter.nbcl",
+          "match": "\\bϕ[0-9]{1,2}\\b"
+        },
+        {
+          "name": "constant.language.vpce.nbcl",
+          "match": "\\bVPCE\\b"
+        },
+        {
+          "name": "constant.language.cect.nbcl",
+          "match": "\\bCECT\\b"
+        },
+        {
+          "name": "constant.language.governance.nbcl",
+          "match": "\\b(DRS-F|TRM|CTPV|CECT|VPCE|MRDE|SEAM|ASF|RRFD|EEM)\\b"
+        }
+      ]
+    }
+  }
+}

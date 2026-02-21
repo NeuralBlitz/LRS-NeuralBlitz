@@ -1,0 +1,20 @@
+# Requirements for Vector Database Integrations
+
+# Pinecone - Cloud vector database for semantic memory
+pinecone-client>=5.0.0
+
+# Weaviate - Knowledge graph vector database
+weaviate-client>=4.15.0
+
+# ChromaDB - Local embeddings database
+chromadb>=0.5.0
+
+# Common dependencies
+numpy>=1.24.0
+python-dotenv>=1.0.0
+
+# Optional: For automatic embeddings with ChromaDB
+sentence-transformers>=2.2.0
+
+# Optional: For Weaviate embedded mode (no external server)
+# weaviate-client[embedded]>=4.15.0

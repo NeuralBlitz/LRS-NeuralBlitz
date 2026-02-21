@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "verb": "export",
+  "timestamp": "2025-08-28T20:00:00Z",
+  "actor_id": "Principal/Architect",
+  "goldendag_ref": "DAG#V20-VOTING-MECH-DESIGN-7A2F9C1E",
+  "trace_id": "TRC-V20.0-VOTING_SYSTEMS-9B3D8E2A",
+  "status_code": "OK-200",
+  "result": {
+    "report_title": "Multi-Stakeholder Voting Mechanisms for NeuralBlitz Governance",
+    "report_version": "v1.0.0",
+    "artifacts_emitted": [
+      {
+        "uaid": "NBX:v20:V3:CK:QuadraticVotingCK:0001",
+        "path": "Governance/VotingSystems/QuadraticVotingCK.yaml"
+      },
+      {
+        "uaid": "NBX:v20:V3:CK:LiquidDemocracyCK:0001", 
+        "path": "Governance/VotingSystems/LiquidDemocracyCK.yaml"
+      },
+      {
+        "uaid": "NBX:v20:V3:CK:FutarchyDecisionCK:0001",
+        "path": "Governance/VotingSystems/FutarchyDecisionCK.yaml"
+      },
+      {
+        "uaid": "NBX:v20:COMMON:PLAY:VotingProtocols.nbcl",
+        "path": "Scriptorium/Playbooks/VotingProtocols.nbcl"
+      }
+    ],
+    "explainability": {
+      "coverage": 1.0,
+      "details_cid": "cid:QmVotingSystemsDesignExplanation"
+    },
+    "veritas_proofs": [
+      {"id": "VPROOF#VotingIntegrity", "verdict": "PASS"},
+      {"id": "VPROOF#NoVoteBuying", "verdict": "PASS"},
+      {"id": "VPROOF#SybilResistance", "verdict": "PASS"}
+    ]
+  }
+}

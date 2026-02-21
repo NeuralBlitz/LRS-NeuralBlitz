@@ -1,0 +1,43 @@
+{
+  "name": "neuralblitz-dashboard",
+  "version": "1.0.0",
+  "description": "NeuralBlitz Σ-class SOI Monitoring Dashboard",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "recharts": "^2.10.0",
+    "three": "^0.158.0",
+    "@react-three/fiber": "^8.15.0",
+    "@react-three/drei": "^9.92.0",
+    "framer-motion": "^10.16.0",
+    "lucide-react": "^0.294.0",
+    "socket.io-client": "^4.7.0",
+    "styled-components": "^6.1.0",
+    "date-fns": "^3.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

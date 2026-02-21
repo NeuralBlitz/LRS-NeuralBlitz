@@ -10,14 +10,20 @@ import sys
 import os
 
 # Add ComputationalAxioms to path if needed
-workspace_root = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Path: neuralblitz-v50/python/neuralblitz/golden_dag.py -> neuralblitz-v50/
+current_file = os.path.abspath(__file__)
+neuralblitz_dir = os.path.dirname(current_file)  # python/neuralblitz
+python_dir = os.path.dirname(neuralblitz_dir)  # python
+workspace_root = os.path.dirname(python_dir)  # neuralblitz-v50
+computational_axioms_path = os.path.join(
+    workspace_root, "ComputationalAxioms", "python"
 )
-if workspace_root not in sys.path:
-    sys.path.insert(0, workspace_root)
+
+if computational_axioms_path not in sys.path:
+    sys.path.insert(0, computational_axioms_path)
 
 # Import from new Three-Pillar location
-from ComputationalAxioms.python.goldendag_core import (
+from goldendag_core import (
     GoldenDAG,
     NBHSCryptographicHash,
     TraceID,

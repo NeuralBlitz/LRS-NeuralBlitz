@@ -1,0 +1,154 @@
+# Prometheus Recording Rules for Time-Series Database Monitoring
+groups:
+  - name: influxdb_recording_rules
+    interval: 30s
+    rules:
+      - record: influxdb:query_rate_5m
+        expr: rate(influxdb_http_api_request_duration_seconds_count{handler="query"}[5m])
+
+      - record: influxdb:write_rate_5m
+        expr: rate(influxdb_http_api_request_duration_seconds_count{handler="write"}[5m])
+
+      - record: influxdb:query_latency_p99
+        expr: histogram_quantile(0.99, sum(rate(influxdb_http_api_request_duration_seconds_bucket{handler="query"}[5m])) by (le))
+
+      - record: influxdb:write_latency_p99
+        expr: histogram_quantile(0.99, sum(rate(influxdb_http_api_request_duration_seconds_bucket{handler="write"}[5m])) by (le))
+
+      - record: influxdb:memory_usage_percent
+        expr: influxdb_memstats_heap_alloc_bytes / influxdb_memstats_sys_bytes * 100
+
+      - record: influxdb:gc_pause_duration
+        expr: rate(influxdb_memstats_pause_ns[5m]) / 1e9
+
+      - record: influxdb:series_count
+        expr: influxdb_database_numSeries
+
+      - record: influxdb:measurement_count
+        expr: influxdb_database_numMeasurements
+
+  - name: timescaledb_recording_rules
+    interval: 30s
+    rules:
+      - record: timescaledb:query_rate_5m
+        expr: rate(pg_stat_database_xact_commit[5m]) + rate(pg_stat_database_xact_rollback[5m])
+
+      - record: timescaledb:error_rate_5m
+        expr: rate(pg_stat_database_xact_rollback[5m])
+
+      - record: timescaledb:connection_utilization
+        expr: pg_stat_activity_count / pg_settings_max_connections * 100
+
+      - record: timescaledb:disk_usage_percent
+        expr: pg_database_size_bytes / pg_database_size_bytes_max * 100
+
+      - record: timescaledb:cache_hit_ratio
+        expr: pg_stat_database_blks_hit / (pg_stat_database_blks_hit + pg_stat_database_blks_read) * 100
+
+      - record: timescaledb:transaction_rate
+        expr: rate(pg_stat_database_xact_commit[5m])
+
+      - record: timescaledb:tup_read_rate
+        expr: rate(pg_stat_database_tup_returned[5m])
+
+      - record: timescaledb:tup_write_rate
+        expr: rate(pg_stat_database_tup_inserted[5m]) + rate(pg_stat_database_tup_updated[5m]) + rate(pg_stat_database_tup_deleted[5m])
+
+  - name: system_recording_rules
+    interval: 30s
+    rules:
+      - record: system:cpu_usage_percent
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      - record: system:memory_usage_percent
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100
+
+      - record: system:disk_usage_percent
+        expr: (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_avail_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"} * 100
+
+      - record: system:network_receive_rate
+        expr: rate(node_network_receive_bytes_total[5m])
+
+      - record: system:network_transmit_rate
+        expr: rate(node_network_transmit_bytes_total[5m])
+
+      - record: system:load_average_5m
+        expr: node_load5
+
+  - name: agent_metrics_recording_rules
+    interval: 30s
+    rules:
+      - record: agent:request_rate_5m
+        expr: rate(agent_requests_total[5m])
+
+      - record: agent:error_rate_5m
+        expr: rate(agent_errors_total[5m])
+
+      - record: agent:error_ratio
+        expr: rate(agent_errors_total[5m]) / rate(agent_requests_total[5m])
+
+      - record: agent:latency_p50
+        expr: histogram_quantile(0.50, sum(rate(agent_request_duration_seconds_bucket[5m])) by (le, agent_id))
+
+      - record: agent:latency_p95
+        expr: histogram_quantile(0.95, sum(rate(agent_request_duration_seconds_bucket[5m])) by (le, agent_id))
+
+      - record: agent:latency_p99
+        expr: histogram_quantile(0.99, sum(rate(agent_request_duration_seconds_bucket[5m])) by (le, agent_id))
+
+      - record: agent:task_completion_rate
+        expr: rate(agent_tasks_completed_total[5m])
+
+      - record: agent:active_tasks
+        expr: agent_active_tasks
+
+      - record: agent:cpu_usage_percent
+        expr: agent_cpu_usage_percent
+
+      - record: agent:memory_usage_mb
+        expr: agent_memory_usage_bytes / 1024 / 1024
+
+  - name: container_recording_rules
+    interval: 30s
+    rules:
+      - record: container:cpu_usage_percent
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100
+
+      - record: container:memory_usage_mb
+        expr: container_memory_usage_bytes / 1024 / 1024
+
+      - record: container:memory_working_set_mb
+        expr: container_memory_working_set_bytes / 1024 / 1024
+
+      - record: container:network_receive_rate
+        expr: rate(container_network_receive_bytes_total[5m])
+
+      - record: container:network_transmit_rate
+        expr: rate(container_network_transmit_bytes_total[5m])
+
+      - record: container:restart_count
+        expr: container_restart_count
+
+  - name: composite_recording_rules
+    interval: 60s
+    rules:
+      - record: composite:tsdb_health_score
+        expr: |
+          (
+            (up{job="influxdb"} * 100) +
+            (up{job="timescaledb"} * 100) +
+            (100 - influxdb:memory_usage_percent) +
+            (100 - timescaledb:connection_utilization)
+          ) / 4
+
+      - record: composite:system_health_score
+        expr: |
+          (
+            (100 - system:cpu_usage_percent) +
+            (100 - system:memory_usage_percent) +
+            (100 - system:disk_usage_percent)
+          ) / 3
+
+      - record: composite:sla_availability_percent
+        expr: |
+          avg_over_time(up{job=~"influxdb|timescaledb|prometheus"}[30d]) * 100

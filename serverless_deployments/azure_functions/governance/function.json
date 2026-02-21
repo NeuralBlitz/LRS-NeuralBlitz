@@ -1,0 +1,29 @@
+{
+  "scriptFile": "governance.py",
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "post"
+      ],
+      "route": "governance/check"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "in",
+      "name": "charterDocuments",
+      "databaseName": "neuralblitz",
+      "collectionName": "charter",
+      "sqlQuery": "SELECT * FROM c WHERE c.type = 'clause'",
+      "connectionStringSetting": "CosmosDBConnectionString"
+    }
+  ]
+}

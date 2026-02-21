@@ -1,0 +1,135 @@
+{
+  "$id": "https://neuralblitz.org/schema/ck/Feature/EngineeringAutomation/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Feature/EngineeringAutomation CK v1.0",
+  "description": "Automated feature engineering including transformations, interactions, selection, and generation using ML-based approaches.",
+  "type": "object",
+  "required": ["kernel", "version", "intent", "bounds", "governance", "telemetry", "payload", "provenance"],
+  "properties": {
+    "kernel": { "const": "Feature/EngineeringAutomation" },
+    "version": { "const": "1.0.0" },
+    "intent": { "const": "Automate feature engineering pipeline with transformations, interactions, selection, and generation" },
+    "bounds": {
+      "type": "object",
+      "required": ["entropy_max", "time_ms_max", "scope"],
+      "properties": {
+        "entropy_max": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.12 },
+        "time_ms_max": { "type": "integer", "minimum": 1, "default": 600000 },
+        "scope": { "type": "string", "default": "SBX-FEATURE-ENG" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["rcf", "cect", "veritas_watch"],
+      "properties": {
+        "rcf": { "type": "boolean", "default": true },
+        "cect": { "type": "boolean", "default": true },
+        "veritas_watch": { "type": "boolean", "default": true },
+        "judex_quorum": { "type": "boolean", "default": false }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["explain_vector", "dag_attach"],
+      "properties": {
+        "explain_vector": { "type": "boolean", "default": true },
+        "dag_attach": { "type": "boolean", "default": true },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": ["dataset_cid", "target_column"],
+      "properties": {
+        "dataset_cid": { "type": "string", "description": "CID of input dataset" },
+        "target_column": { "type": "string", "description": "Name of target variable" },
+        "task_type": { 
+          "type": "string", 
+          "enum": ["classification", "regression"],
+          "default": "classification"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["scaling", "encoding", "interactions", "polynomials", "binning", "datetime", "selection"]
+          },
+          "default": ["scaling", "encoding", "interactions", "selection"]
+        },
+        "max_features": { "type": "integer", "default": 100 },
+        "interaction_degree": { "type": "integer", "minimum": 2, "maximum": 3, "default": 2 },
+        "polynomial_degree": { "type": "integer", "minimum": 2, "maximum": 3, "default": 2 },
+        "binning_strategy": { 
+          "type": "string", 
+          "enum": ["uniform", "quantile", "kmeans"],
+          "default": "quantile"
+        },
+        "n_bins": { "type": "integer", "default": 10 },
+        "selection_method": { 
+          "type": "string", 
+          "enum": ["correlation", "mutual_info", "importance", "rfe"],
+          "default": "mutual_info"
+        },
+        "selection_threshold": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.01 }
+      }
+    },
+    "outputs_schema": {
+      "type": "object",
+      "properties": {
+        "transformed_dataset_cid": { "type": "string" },
+        "feature_pipeline_cid": { "type": "string" },
+        "original_feature_count": { "type": "integer" },
+        "new_feature_count": { "type": "integer" },
+        "selected_features": { 
+          "type": "array", 
+          "items": { "type": "string" } 
+        },
+        "dropped_features": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "feature_importance": {
+          "type": "object",
+          "description": "Importance scores for selected features"
+        },
+        "transformations_applied": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "operation": { "type": "string" },
+              "input_features": { "type": "array", "items": { "type": "string" } },
+              "output_features": { "type": "array", "items": { "type": "string" } },
+              "parameters": { "type": "object" }
+            }
+          }
+        },
+        "feature_statistics": {
+          "type": "object",
+          "description": "Statistics for engineered features"
+        },
+        "execution_time_ms": { "type": "integer" }
+      }
+    },
+    "risk_factors": {
+      "type": "array",
+      "default": ["Feature Leakage", "Overfitting", "Dimensionality Explosion"]
+    },
+    "veritas_invariants": {
+      "type": "array",
+      "default": ["VPROOF#NoDataLeakage", "VPROOF#FeatureReproducibility"]
+    },
+    "kpi_metrics": {
+      "type": "array",
+      "default": ["feature_count", "selection_ratio", "execution_time", "pipeline_complexity"]
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["caller_principal_id", "caller_dag_ref"],
+      "properties": {
+        "caller_principal_id": { "type": "string" },
+        "caller_dag_ref": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      }
+    }
+  }
+}

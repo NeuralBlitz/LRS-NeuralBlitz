@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # MQTT Broker
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: iot-mqtt-broker
+    restart: unless-stopped
+    ports:
+      - "1883:1883"    # MQTT port
+      - "9001:9001"    # WebSocket port
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    networks:
+      - iot-mesh-network
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "health", "-m", "test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # IoT Mesh Core Service
+  iot-mesh-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iot-mesh-core
+    restart: unless-stopped
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - LOG_LEVEL=INFO
+      - DISCOVERY_ENABLED=true
+      - AUTOMATION_ENABLED=true
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - iot-mesh-network
+    command: python -m iot_mesh_core
+
+  # Web Dashboard (Optional)
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: iot-dashboard
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - API_HOST=iot-mesh-core
+      - API_PORT=8000
+    depends_on:
+      - mosquitto
+      - iot-mesh-core
+    networks:
+      - iot-mesh-network
+
+  # Device Simulator (for testing)
+  device-simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: iot-device-simulator
+    restart: unless-stopped
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - NUM_DEVICES=10
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - iot-mesh-network
+
+volumes:
+  mosquitto_data:
+    driver: local
+  mosquitto_logs:
+    driver: local
+
+networks:
+  iot-mesh-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

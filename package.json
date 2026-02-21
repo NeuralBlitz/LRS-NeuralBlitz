@@ -1,0 +1,243 @@
+{
+  "name": "neuralblitz-vscode",
+  "displayName": "NeuralBlitz IDE",
+  "description": "VS Code extension for NeuralBlitz - Syntax highlighting, debugging, and code completion",
+  "version": "1.0.0",
+  "publisher": "neuralblitz",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers",
+    "Snippets"
+  ],
+  "keywords": [
+    "neuralblitz",
+    "nbcl",
+    "ai",
+    "ontology"
+  ],
+  "activationEvents": [
+    "onLanguage:nbcl",
+    "onLanguage:reflexaellang",
+    "onLanguage:lon",
+    "onDebug"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "nbcl",
+        "aliases": [
+          "NeuralBlitz Command Language",
+          "NBCL"
+        ],
+        "extensions": [
+          ".nbcl"
+        ],
+        "configuration": "./language-configurations/nbcl.language-configuration.json"
+      },
+      {
+        "id": "reflexaellang",
+        "aliases": [
+          "ReflexælLang",
+          "RFXL"
+        ],
+        "extensions": [
+          ".rfxl",
+          ".rl"
+        ],
+        "configuration": "./language-configurations/reflexaellang.language-configuration.json"
+      },
+      {
+        "id": "lon",
+        "aliases": [
+          "Language of the Nexus",
+          "LoN"
+        ],
+        "extensions": [
+          ".lonx"
+        ],
+        "configuration": "./language-configurations/lon.language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "nbcl",
+        "scopeName": "source.nbcl",
+        "path": "./syntaxes/nbcl.tmLanguage.json"
+      },
+      {
+        "language": "reflexaellang",
+        "scopeName": "source.reflexaellang",
+        "path": "./syntaxes/reflexaellang.tmLanguage.json"
+      },
+      {
+        "language": "lon",
+        "scopeName": "source.lon",
+        "path": "./syntaxes/lon.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "neuralblitz.boot",
+        "title": "Boot NeuralBlitz",
+        "category": "NeuralBlitz"
+      },
+      {
+        "command": "neuralblitz.execute",
+        "title": "Execute NBCL Command",
+        "category": "NeuralBlitz"
+      },
+      {
+        "command": "neuralblitz.debug.start",
+        "title": "Start Agent Debugging",
+        "category": "NeuralBlitz Debug"
+      },
+      {
+        "command": "neuralblitz.debug.step",
+        "title": "Step Into",
+        "category": "NeuralBlitz Debug"
+      },
+      {
+        "command": "neuralblitz.debug.continue",
+        "title": "Continue",
+        "category": "NeuralBlitz Debug"
+      },
+      {
+        "command": "neuralblitz.introspect",
+        "title": "Introspect Bundle",
+        "category": "NeuralBlitz"
+      },
+      {
+        "command": "neuralblitz.ck.search",
+        "title": "Search Capability Kernels",
+        "category": "NeuralBlitz"
+      },
+      {
+        "command": "neuralblitz.ck.documentation",
+        "title": "Show CK Documentation",
+        "category": "NeuralBlitz"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorLangId == nbcl",
+          "command": "neuralblitz.execute",
+          "group": "neuralblitz@1"
+        },
+        {
+          "when": "editorLangId == nbcl",
+          "command": "neuralblitz.introspect",
+          "group": "neuralblitz@2"
+        }
+      ]
+    },
+    "debuggers": [
+      {
+        "type": "neuralblitz",
+        "label": "NeuralBlitz Agent Debugger",
+        "program": "./out/debugAdapter.js",
+        "runtime": "node",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to the NBCL file to debug",
+                "default": "${workspaceFolder}/main.nbcl"
+              },
+              "args": {
+                "type": "array",
+                "description": "Command line arguments",
+                "default": []
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "Sentio",
+                  "Dynamo",
+                  "Hybrid"
+                ],
+                "description": "Cognitive mode for debugging",
+                "default": "Sentio"
+              },
+              "trace": {
+                "type": "boolean",
+                "description": "Enable full tracing",
+                "default": false
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "neuralblitz",
+            "request": "launch",
+            "name": "Debug NeuralBlitz Agent",
+            "program": "${workspaceFolder}/main.nbcl",
+            "mode": "Sentio",
+            "trace": true
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "NeuralBlitz",
+      "properties": {
+        "neuralblitz.nbosEndpoint": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "NeuralBlitz Operating System endpoint"
+        },
+        "neuralblitz.goldenDagViewer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable GoldenDAG visualization"
+        },
+        "neuralblitz.ckRegistryUrl": {
+          "type": "string",
+          "default": "https://neuralblitz.org/api/ck-registry",
+          "description": "Capability Kernel registry endpoint"
+        },
+        "neuralblitz.strictMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable strict Charter enforcement"
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "nbcl",
+        "path": "./snippets/nbcl.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.1.0"
+  },
+  "dependencies": {
+    "vscode-debugadapter": "^1.51.0",
+    "vscode-debugprotocol": "^1.51.0",
+    "axios": "^1.4.0"
+  }
+}

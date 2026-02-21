@@ -1,0 +1,152 @@
+{
+  "$id": "https://neuralblitz.org/schema/ck/Data/QualityAssessment/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Data/QualityAssessment CK v1.0",
+  "description": "Comprehensive data quality assessment including missing values, outliers, distributions, and data integrity checks.",
+  "type": "object",
+  "required": ["kernel", "version", "intent", "bounds", "governance", "telemetry", "payload", "provenance"],
+  "properties": {
+    "kernel": { "const": "Data/QualityAssessment" },
+    "version": { "const": "1.0.0" },
+    "intent": { "const": "Assess and report comprehensive data quality metrics with actionable remediation suggestions" },
+    "bounds": {
+      "type": "object",
+      "required": ["entropy_max", "time_ms_max", "scope"],
+      "properties": {
+        "entropy_max": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.08 },
+        "time_ms_max": { "type": "integer", "minimum": 1, "default": 300000 },
+        "scope": { "type": "string", "default": "SBX-DATA-QUALITY" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["rcf", "cect", "veritas_watch"],
+      "properties": {
+        "rcf": { "type": "boolean", "default": true },
+        "cect": { "type": "boolean", "default": true },
+        "veritas_watch": { "type": "boolean", "default": true },
+        "judex_quorum": { "type": "boolean", "default": false }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["explain_vector", "dag_attach"],
+      "properties": {
+        "explain_vector": { "type": "boolean", "default": true },
+        "dag_attach": { "type": "boolean", "default": true },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": ["dataset_cid"],
+      "properties": {
+        "dataset_cid": { "type": "string", "description": "CID of dataset to assess" },
+        "checks": {
+          "type": "array",
+          "items": { 
+            "type": "string",
+            "enum": ["completeness", "consistency", "validity", "uniqueness", "timeliness", "integrity"]
+          },
+          "default": ["completeness", "consistency", "validity", "uniqueness"]
+        },
+        "outlier_method": { 
+          "type": "string", 
+          "enum": ["iqr", "zscore", "isolation_forest"],
+          "default": "iqr"
+        },
+        "outlier_threshold": { "type": "number", "default": 1.5 },
+        "missing_threshold": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.05 },
+        "cardinality_threshold": { "type": "integer", "default": 50 },
+        "correlation_threshold": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.95 }
+      }
+    },
+    "outputs_schema": {
+      "type": "object",
+      "properties": {
+        "quality_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "overall_grade": { "type": "string", "enum": ["A", "B", "C", "D", "F"] },
+        "completeness": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "number" },
+            "missing_counts": { "type": "object" },
+            "missing_percentages": { "type": "object" },
+            "columns_with_high_missing": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "consistency": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "number" },
+            "outliers_detected": { "type": "object" },
+            "duplicate_rows": { "type": "integer" },
+            "inconsistent_types": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "validity": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "number" },
+            "invalid_entries": { "type": "object" },
+            "range_violations": { "type": "object" }
+          }
+        },
+        "uniqueness": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "number" },
+            "duplicate_counts": { "type": "object" },
+            "high_cardinality_columns": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "distributions": {
+          "type": "object",
+          "description": "Distribution analysis per column"
+        },
+        "correlations": {
+          "type": "object",
+          "properties": {
+            "high_correlation_pairs": { "type": "array" },
+            "correlation_matrix_cid": { "type": "string" }
+          }
+        },
+        "recommendations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+              "issue": { "type": "string" },
+              "column": { "type": "string" },
+              "suggestion": { "type": "string" },
+              "estimated_impact": { "type": "string" }
+            }
+          }
+        },
+        "remediation_plan_cid": { "type": "string" },
+        "execution_time_ms": { "type": "integer" }
+      }
+    },
+    "risk_factors": {
+      "type": "array",
+      "default": ["Data Leakage", "PII Exposure", "Bias Introduction"]
+    },
+    "veritas_invariants": {
+      "type": "array",
+      "default": ["VPROOF#DataIntegrity", "VPROOF#NoPIILeakage"]
+    },
+    "kpi_metrics": {
+      "type": "array",
+      "default": ["quality_score", "missing_rate", "outlier_rate", "duplicate_rate"]
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["caller_principal_id", "caller_dag_ref"],
+      "properties": {
+        "caller_principal_id": { "type": "string" },
+        "caller_dag_ref": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      }
+    }
+  }
+}

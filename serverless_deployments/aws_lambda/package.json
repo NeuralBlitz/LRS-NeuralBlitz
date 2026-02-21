@@ -1,0 +1,19 @@
+{
+  "name": "neuralblitz-lambda",
+  "version": "1.0.0",
+  "description": "NeuralBlitz AWS Lambda deployment",
+  "main": "src/handlers/inference.py",
+  "scripts": {
+    "test": "pytest tests/ -v",
+    "lint": "flake8 src/ && black --check src/",
+    "deploy": "bash deploy.sh",
+    "local": "sam local start-api",
+    "package": "sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket $DEPLOYMENT_BUCKET"
+  },
+  "dependencies": {
+    "aws-xray-sdk": "^2.14.0"
+  },
+  "devDependencies": {
+    "aws-sam-cli": "^1.115.0"
+  }
+}

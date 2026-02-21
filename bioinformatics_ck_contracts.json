@@ -1,0 +1,169 @@
+{
+  "Bio/DNASequenceAnalyzer": {
+    "kernel": "Bio/DNASequenceAnalyzer",
+    "version": "1.0.0",
+    "intent": "Analyzes DNA sequences for GC content, molecular weight, ORF detection, and restriction sites using Biopython",
+    "inputs": {
+      "sequence": "string (DNA sequence or FASTA file path)",
+      "format": "string (fasta, raw, genbank)",
+      "analyses": "array[string] (gc_content, molecular_weight, orf_finder, restriction_sites, complement, translate)",
+      "restriction_enzymes": "array[string] (optional, e.g., ['EcoRI', 'BamHI'])"
+    },
+    "outputs_schema": {
+      "gc_content": "float",
+      "molecular_weight": "float",
+      "orf_positions": "array[object]",
+      "restriction_sites": "object",
+      "complement": "string",
+      "translation": "string",
+      "sequence_length": "integer",
+      "nucleotide_counts": "object",
+      "analysis_timestamp": "string (ISO8601)",
+      "provenance_hash": "string (NBHS-512)"
+    },
+    "bounds": {
+      "entropy_max": 0.15,
+      "time_ms_max": 5000,
+      "scope": "SBX-BIO-DNA"
+    },
+    "governance": {
+      "rcf": true,
+      "cect": true,
+      "veritas_watch": true,
+      "judex_quorum": false
+    },
+    "telemetry": {
+      "explain_vector": true,
+      "dag_attach": true,
+      "trace_id": "DNA-ANALYSIS-TRACE"
+    },
+    "risk_factors": [
+      "Sequence contamination",
+      "Misinterpretation of ORF positions",
+      "Restriction site false positives",
+      "Large sequence memory exhaustion"
+    ],
+    "veritas_invariants": [
+      "VPROOF#SequenceIntegrity",
+      "VPROOF#BiopythonValidation",
+      "VPROOF#ExplainabilityCoverage"
+    ],
+    "kpi_metrics": [
+      "analysis_latency_ms",
+      "sequence_length",
+      "gc_content_variance",
+      "orf_detection_confidence"
+    ]
+  },
+  "Bio/ProteinStructurePredictor": {
+    "kernel": "Bio/ProteinStructurePredictor",
+    "version": "1.0.0",
+    "intent": "Predicts protein secondary structure, physicochemical properties, and stability using Biopython and empirical methods",
+    "inputs": {
+      "sequence": "string (amino acid sequence or FASTA)",
+      "format": "string (fasta, raw)",
+      "predictions": "array[string] (secondary_structure, stability, physicochemical, domains, disorder)",
+      "pdb_template": "string (optional PDB ID for comparative modeling)"
+    },
+    "outputs_schema": {
+      "secondary_structure": "object (helix%, sheet%, turn%, coil%)",
+      "molecular_weight": "float",
+      "isoelectric_point": "float",
+      "gravy": "float (Grand Average of Hydropathy)",
+      "aromaticity": "float",
+      "instability_index": "float",
+      "stability_prediction": "string (stable/unstable)",
+      "flexibility": "array[float]",
+      "domain_predictions": "array[object]",
+      "analysis_timestamp": "string (ISO8601)",
+      "provenance_hash": "string (NBHS-512)"
+    },
+    "bounds": {
+      "entropy_max": 0.25,
+      "time_ms_max": 10000,
+      "scope": "SBX-BIO-PROTEIN"
+    },
+    "governance": {
+      "rcf": true,
+      "cect": true,
+      "veritas_watch": true,
+      "judex_quorum": false
+    },
+    "telemetry": {
+      "explain_vector": true,
+      "dag_attach": true,
+      "trace_id": "PROTEIN-PREDICT-TRACE"
+    },
+    "risk_factors": [
+      "Secondary structure prediction inaccuracy",
+      "Unfolded protein state mischaracterization",
+      "Large protein computational limits",
+      "Template-based modeling errors"
+    ],
+    "veritas_invariants": [
+      "VPROOF#SequenceIntegrity",
+      "VPROOF#PhysicochemicalValidity",
+      "VPROOF#ExplainabilityCoverage"
+    ],
+    "kpi_metrics": [
+      "prediction_latency_ms",
+      "sequence_length_aa",
+      "prediction_confidence",
+      "memory_usage_mb"
+    ]
+  },
+  "Bio/GenomicVisualizer": {
+    "kernel": "Bio/GenomicVisualizer",
+    "version": "1.0.0",
+    "intent": "Generates publication-quality visualizations of genomic data including sequence features, GC profiles, and phylogenetic trees",
+    "inputs": {
+      "data": "object (sequence data, alignment, or features)",
+      "viz_type": "string (gc_plot, feature_map, sequence_logo, phylogenetic_tree, coverage_plot)",
+      "format": "string (png, svg, json)",
+      "style_config": "object (colors, labels, dimensions)",
+      "annotations": "array[object] (optional feature annotations)"
+    },
+    "outputs_schema": {
+      "visualization": "string (base64 encoded image or JSON specification)",
+      "viz_type": "string",
+      "dimensions": "object (width, height)",
+      "format": "string",
+      "data_summary": "object",
+      "analysis_timestamp": "string (ISO8601)",
+      "provenance_hash": "string (NBHS-512)"
+    },
+    "bounds": {
+      "entropy_max": 0.2,
+      "time_ms_max": 8000,
+      "scope": "SBX-BIO-VIZ"
+    },
+    "governance": {
+      "rcf": true,
+      "cect": true,
+      "veritas_watch": true,
+      "judex_quorum": false
+    },
+    "telemetry": {
+      "explain_vector": true,
+      "dag_attach": true,
+      "trace_id": "GENOMIC-VIZ-TRACE"
+    },
+    "risk_factors": [
+      "Visualization misrepresentation",
+      "Large dataset rendering failure",
+      "Colorblind accessibility issues",
+      "Data scaling artifacts"
+    ],
+    "veritas_invariants": [
+      "VPROOF#DataIntegrity",
+      "VPROOF#VisualAccuracy",
+      "VPROOF#ExplainabilityCoverage"
+    ],
+    "kpi_metrics": [
+      "render_latency_ms",
+      "data_points_count",
+      "image_size_kb",
+      "accessibility_score"
+    ]
+  }
+}

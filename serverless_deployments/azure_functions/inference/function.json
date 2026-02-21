@@ -1,0 +1,31 @@
+{
+  "scriptFile": "inference.py",
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "get",
+        "post",
+        "put"
+      ],
+      "route": "inference"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "out",
+      "name": "outputDocument",
+      "databaseName": "neuralblitz",
+      "collectionName": "results",
+      "connectionStringSetting": "CosmosDBConnectionString",
+      "partitionKey": "/user_id"
+    }
+  ]
+}

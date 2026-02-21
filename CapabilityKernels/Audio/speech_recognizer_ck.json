@@ -1,0 +1,128 @@
+{
+  "$id": "https://neuralblitz.org/schema/ck/audio/speech_recognizer/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audio/SpeechRecognizer CK Contract v1.0",
+  "description": "Speech-to-text transcription using OpenAI Whisper with ethical content filtering",
+  "type": "object",
+  "required": ["kernel", "version", "intent", "bounds", "governance", "telemetry", "payload", "provenance"],
+  "properties": {
+    "kernel": { "const": "Audio/SpeechRecognizer" },
+    "version": { "const": "1.0.0" },
+    "intent": { 
+      "type": "string", 
+      "const": "Convert audio speech to text with ethical content awareness and privacy protection"
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "audio_data": { "type": "string", "format": "base64", "description": "Base64 encoded audio (WAV/MP3/FLAC)" },
+        "audio_cid": { "type": "string", "description": "CID reference to stored audio artifact" },
+        "language": { "type": "string", "default": "auto", "description": "ISO 639-1 language code" },
+        "model_size": { "type": "string", "enum": ["tiny", "base", "small", "medium", "large"], "default": "base" },
+        "task": { "type": "string", "enum": ["transcribe", "translate"], "default": "transcribe" },
+        "timestamp_granularities": { "type": "array", "items": { "enum": ["word", "segment"] } },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 1, "default": 0 },
+        "content_filter_level": { "type": "string", "enum": ["strict", "moderate", "minimal"], "default": "moderate" },
+        "pii_redaction": { "type": "boolean", "default": true }
+      }
+    },
+    "outputs_schema": {
+      "type": "object",
+      "properties": {
+        "transcription": { "type": "string", "description": "Full transcribed text" },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "start": { "type": "number", "description": "Start time in seconds" },
+              "end": { "type": "number", "description": "End time in seconds" },
+              "text": { "type": "string" },
+              "words": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "word": { "type": "string" },
+                    "start": { "type": "number" },
+                    "end": { "type": "number" },
+                    "probability": { "type": "number", "minimum": 0, "maximum": 1 }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "language": { "type": "string", "description": "Detected language code" },
+        "duration": { "type": "number", "description": "Audio duration in seconds" },
+        "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "content_flags": {
+          "type": "object",
+          "properties": {
+            "pii_detected": { "type": "boolean" },
+            "pii_types": { "type": "array", "items": { "type": "string" } },
+            "sensitive_content": { "type": "boolean" },
+            "redacted_segments": { "type": "array", "items": { "type": "integer" } }
+          }
+        },
+        "nbhs512_seal": { "type": "string", "pattern": "^[a-fA-F0-9]{128}$" }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "required": ["entropy_max", "time_ms_max", "scope"],
+      "properties": {
+        "entropy_max": { "type": "number", "const": 0.15 },
+        "time_ms_max": { "type": "integer", "const": 300000 },
+        "scope": { "type": "string", "const": "AudioProcessing.Speech" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["rcf", "cect", "veritas_watch"],
+      "properties": {
+        "rcf": { "type": "boolean", "const": true },
+        "cect": { "type": "boolean", "const": true },
+        "veritas_watch": { "type": "boolean", "const": true },
+        "judex_quorum": { "type": "boolean", "const": false }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["explain_vector", "dag_attach"],
+      "properties": {
+        "explain_vector": { "type": "boolean", "const": true },
+        "dag_attach": { "type": "boolean", "const": true },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "request_id": { "type": "string", "format": "uuid" },
+    "payload": { "$ref": "#/properties/inputs" },
+    "provenance": {
+      "type": "object",
+      "required": ["caller_principal_id", "caller_dag_ref"],
+      "properties": {
+        "caller_principal_id": { "type": "string" },
+        "caller_dag_ref": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      }
+    }
+  },
+  "risk_factors": [
+    "PII Exposure",
+    "Audio Quality Degradation",
+    "Language Misidentification",
+    "Content Sensitivity"
+  ],
+  "veritas_invariants": [
+    "VPROOF#PrivacyProtection",
+    "VPROOF#ContentFiltering",
+    "VPROOF#ExplainabilityCoverage"
+  ],
+  "kpi_metrics": [
+    "wer_score",
+    "transcription_latency_ms",
+    "pii_detection_rate",
+    "content_flag_accuracy"
+  ]
+}

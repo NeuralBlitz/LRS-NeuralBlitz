@@ -1,0 +1,168 @@
+{
+  "$id": "https://neuralblitz.org/schema/ck/audio/realtime_analyzer/1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audio/RealTimeAnalyzer CK Contract v1.0",
+  "description": "Real-time audio stream analysis with ethical monitoring and safety controls",
+  "type": "object",
+  "required": ["kernel", "version", "intent", "bounds", "governance", "telemetry", "payload", "provenance"],
+  "properties": {
+    "kernel": { "const": "Audio/RealTimeAnalyzer" },
+    "version": { "const": "1.0.0" },
+    "intent": { 
+      "type": "string", 
+      "const": "Analyze real-time audio streams for patterns, anomalies, and ethical compliance"
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "stream_config": {
+          "type": "object",
+          "properties": {
+            "sample_rate": { "type": "integer", "default": 16000 },
+            "channels": { "type": "integer", "enum": [1, 2], "default": 1 },
+            "chunk_duration_ms": { "type": "integer", "default": 100 },
+            "buffer_size": { "type": "integer", "default": 1024 }
+          }
+        },
+        "analysis_modes": {
+          "type": "array",
+          "items": { 
+            "enum": ["spectral", "temporal", "rhythmic", "pitch", "volume", "noise"] 
+          },
+          "default": ["spectral", "temporal", "volume"]
+        },
+        "anomaly_detection": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "sensitivity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.7 },
+            "baseline_window_sec": { "type": "integer", "default": 10 }
+          }
+        },
+        "safety_thresholds": {
+          "type": "object",
+          "properties": {
+            "max_db": { "type": "number", "default": 100 },
+            "min_db": { "type": "number", "default": 30 },
+            "distortion_threshold": { "type": "number", "default": 0.1 },
+            "clip_detection": { "type": "boolean", "default": true }
+          }
+        },
+        "duration_limit_sec": { "type": "integer", "default": 300 },
+        "privacy_mode": { "type": "boolean", "default": false }
+      }
+    },
+    "outputs_schema": {
+      "type": "object",
+      "properties": {
+        "stream_metrics": {
+          "type": "object",
+          "properties": {
+            "rms_level": { "type": "number" },
+            "peak_level": { "type": "number" },
+            "dynamic_range": { "type": "number" },
+            "zero_crossing_rate": { "type": "number" },
+            "spectral_centroid": { "type": "number" },
+            "spectral_rolloff": { "type": "number" },
+            "spectral_bandwidth": { "type": "number" },
+            "mfcc_coefficients": { "type": "array", "items": { "type": "number" } }
+          }
+        },
+        "temporal_analysis": {
+          "type": "object",
+          "properties": {
+            "attack_time": { "type": "number" },
+            "decay_time": { "type": "number" },
+            "sustain_level": { "type": "number" },
+            "envelope": { "type": "array", "items": { "type": "number" } }
+          }
+        },
+        "anomalies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "timestamp": { "type": "number" },
+              "type": { "type": "string", "enum": ["clipping", "silence", "noise_spike", "distortion", "dropout"] },
+              "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "safety_status": {
+          "type": "object",
+          "properties": {
+            "compliant": { "type": "boolean" },
+            "violations": { "type": "array", "items": { "type": "string" } },
+            "recommendations": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "session_stats": {
+          "type": "object",
+          "properties": {
+            "duration_sec": { "type": "number" },
+            "chunks_processed": { "type": "integer" },
+            "avg_processing_latency_ms": { "type": "number" },
+            "data_throughput_kbps": { "type": "number" }
+          }
+        },
+        "nbhs512_seal": { "type": "string", "pattern": "^[a-fA-F0-9]{128}$" }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "required": ["entropy_max", "time_ms_max", "scope"],
+      "properties": {
+        "entropy_max": { "type": "number", "const": 0.12 },
+        "time_ms_max": { "type": "integer", "const": 60000 },
+        "scope": { "type": "string", "const": "AudioProcessing.RealTime" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["rcf", "cect", "veritas_watch"],
+      "properties": {
+        "rcf": { "type": "boolean", "const": true },
+        "cect": { "type": "boolean", "const": true },
+        "veritas_watch": { "type": "boolean", "const": true },
+        "judex_quorum": { "type": "boolean", "const": false }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["explain_vector", "dag_attach"],
+      "properties": {
+        "explain_vector": { "type": "boolean", "const": true },
+        "dag_attach": { "type": "boolean", "const": true },
+        "trace_id": { "type": "string" }
+      }
+    },
+    "request_id": { "type": "string", "format": "uuid" },
+    "payload": { "$ref": "#/properties/inputs" },
+    "provenance": {
+      "type": "object",
+      "required": ["caller_principal_id", "caller_dag_ref"],
+      "properties": {
+        "caller_principal_id": { "type": "string" },
+        "caller_dag_ref": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+      }
+    }
+  },
+  "risk_factors": [
+    "Privacy Violation",
+    "Real-time Latency Failure",
+    "Anomaly Miss",
+    "Safety Threshold Breach"
+  ],
+  "veritas_invariants": [
+    "VPROOF#RealTimeIntegrity",
+    "VPROOF#PrivacyProtection",
+    "VPROOF#AnomalyDetectionAccuracy"
+  ],
+  "kpi_metrics": [
+    "processing_latency_ms",
+    "anomaly_detection_precision",
+    "anomaly_detection_recall",
+    "safety_compliance_rate"
+  ]
+}
