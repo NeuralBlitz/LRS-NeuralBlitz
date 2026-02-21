@@ -236,8 +236,9 @@
     "typescript": "^5.1.0"
   },
   "dependencies": {
+    "axios": "^1.4.0",
+    "pyright": "^1.1.408",
     "vscode-debugadapter": "^1.51.0",
-    "vscode-debugprotocol": "^1.51.0",
-    "axios": "^1.4.0"
+    "vscode-debugprotocol": "^1.51.0"
   }
 }
