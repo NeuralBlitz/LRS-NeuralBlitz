@@ -32,7 +32,7 @@
 ### **Method 1: Quick Install (Recommended)**
 ```bash
 # Clone the repository
-git clone https://github.com/anomalyco/opencode-lrs
+git clone https://github.com/NeuralBlitz/opencode-lrs
 cd opencode-lrs
 
 # Install with automatic dependency resolution
@@ -49,7 +49,7 @@ python main.py
 ### **Method 2: Manual Install**
 ```bash
 # Clone repository
-git clone https://github.com/anomalyco/opencode-lrs
+git clone https://github.com/NeuralBlitz/opencode-lrs
 cd opencode-lrs
 
 # Create virtual environment
@@ -83,7 +83,7 @@ docker pull opencode-lrs/latest
 docker run -p 8000:8000 opencode-lrs/latest
 
 # Or build from source
-git clone https://github.com/anomalyco/opencode-lrs
+git clone https://github.com/NeuralBlitz/opencode-lrs
 cd opencode-lrs
 docker build -t opencode-lrs .
 docker run -p 8000:8000 opencode-lrs
@@ -449,7 +449,7 @@ dependencies {
 ### **Get Help**
 - **Documentation**: [docs.opencode-lrs.com](https://docs.opencode-lrs.com)
 - **Community**: [Discord Server](https://discord.gg/opencode-lrs)
-- **Issues**: [GitHub Issues](https://github.com/anomalyco/opencode-lrs/issues)
+- **Issues**: [GitHub Issues](https://github.com/NeuralBlitz/opencode-lrs/issues)
 - **Email**: support@opencode-lrs.com
 
 ---
