@@ -14,19 +14,19 @@ export class CKCompletionProvider implements vscode.CompletionItemProvider {
         const items: vscode.CompletionItem[] = [];
 
         // Check if we're completing a CK reference (e.g., /apply Causa/...)
-        const applyMatch = lineText.match(/\\/apply\\s+([A-Za-z]*)\\/?$/);
+        const applyMatch = lineText.match(/\/apply\s+([A-Za-z]*)\/?$/);
         if (applyMatch) {
             const partialFamily = applyMatch[1];
             return this.provideCKCompletions(partialFamily);
         }
 
         // Check for CK family completion after "/apply "
-        if (lineText.match(/\\/apply\\s*$/)) {
+        if (lineText.match(/\/apply\s*$/)) {
             return this.provideCKFamilies();
         }
 
         // Check for specific CK completion after family/
-        const familyMatch = lineText.match(/\\/apply\\s+([A-Za-z]+)\\/([A-Za-z0-9_]*)$/);
+        const familyMatch = lineText.match(/\/apply\s+([A-Za-z]+)\/([A-Za-z0-9_]*)$/);
         if (familyMatch) {
             const family = familyMatch[1];
             const partialName = familyMatch[2];
