@@ -6,9 +6,6 @@ import { NBCLDocumentSymbolProvider } from './providers/nbclDocumentSymbolProvid
 import { NBCLDiagnosticProvider } from './providers/nbclDiagnosticProvider';
 import { NBCLCommands } from './commands/nbclCommands';
 import { NeuralBlitzDebugAdapterFactory } from './debugger/debugAdapterFactory';
-import { GoldenDAGTreeProvider } from './views/goldenDAGTreeProvider';
-import { CKRegistryTreeProvider } from './views/ckRegistryTreeProvider';
-import { IntrospectPanel } from './panels/introspectPanel';
 import { CKRegistry } from './util/ckRegistry';
 import { NBOSClient } from './util/nbosClient';
 
@@ -58,25 +55,6 @@ export function activate(context: vscode.ExtensionContext) {
         new NeuralBlitzDebugAdapterFactory()
     );
 
-    // Register tree views
-    const goldenDAGProvider = new GoldenDAGTreeProvider();
-    const goldenDAGTree = vscode.window.registerTreeDataProvider(
-        'neuralblitzGoldenDAG',
-        goldenDAGProvider
-    );
-
-    const ckRegistryProvider = new CKRegistryTreeProvider(ckRegistry);
-    const ckRegistryTree = vscode.window.registerTreeDataProvider(
-        'neuralblitzCKRegistry',
-        ckRegistryProvider
-    );
-
-    // Register webview panels
-    const introspectCommand = vscode.commands.registerCommand(
-        'neuralblitz.introspect',
-        () => IntrospectPanel.createOrShow(context.extensionUri)
-    );
-
     // Add all disposables to context
     context.subscriptions.push(
         nbclCompletionProvider,
@@ -84,9 +62,6 @@ export function activate(context: vscode.ExtensionContext) {
         hoverProvider,
         symbolProvider,
         debugAdapterFactory,
-        goldenDAGTree,
-        ckRegistryTree,
-        introspectCommand,
         ...commandDisposables
     );
 
