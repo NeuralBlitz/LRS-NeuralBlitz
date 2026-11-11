@@ -66,9 +66,14 @@ print(result)
 
 ## Testing
 
+Install the optional development dependencies before running the test suite:
+
 ```bash
-pytest tests/ -v
+python -m pip install -r requirements-dev.txt
+python -m pytest tests/ -v
 ```
+
+Runtime installations (`pip install -e .` or `pip install -r requirements.txt`) do not install test tooling. This section documents commands only; passing tests must be established separately.
 
 ## Coherence
 
