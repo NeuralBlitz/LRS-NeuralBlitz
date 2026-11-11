@@ -33,12 +33,12 @@ COPY python/ .
 RUN useradd -m -u 1000 neuralblitz && chown -R neuralblitz:neuralblitz /app
 USER neuralblitz
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import neuralblitz; print('Coherence:', 1.0)" || exit 1
+# This image defaults to a one-shot CLI, not a long-running service.
+# Do not declare an import-only HEALTHCHECK: it cannot measure API readiness.
+# An API-specific image should define a health probe for its running endpoint.
 
-# Default to Option E (NBCL Interpreter CLI)
-CMD ["python", "-m", "neuralblitz.cli", "version"]
+# Show supported CLI commands by default (there is no `version` subcommand).
+CMD ["python", "-m", "neuralblitz.cli", "--help"]
 
 # For Option F (API Server), override CMD:
 # docker run -p 8080:8080 neuralblitz:v50.0 python -m neuralblitz.cli serve --port 8080
