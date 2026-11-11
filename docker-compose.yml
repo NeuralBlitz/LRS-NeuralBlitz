@@ -46,7 +46,7 @@ services:
       - tsdb-network
     command: postgres -c shared_preload_libraries=timescaledb
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$POSTGRES_USER\" -d agent_metrics"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -d agent_metrics"]
       interval: 30s
       timeout: 10s
       retries: 3
