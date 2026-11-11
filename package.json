@@ -225,7 +225,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node --test tests/*.test.cjs"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
