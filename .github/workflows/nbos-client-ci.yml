@@ -7,6 +7,8 @@ on:
       - "tests/nbosClient.failClosed.test.cjs"
       - "package.json"
       - "bun.lock"
+      - "docker-compose.yml"
+      - ".env.example"
       - ".github/workflows/nbos-client-ci.yml"
   pull_request:
     paths:
@@ -14,6 +16,8 @@ on:
       - "tests/nbosClient.failClosed.test.cjs"
       - "package.json"
       - "bun.lock"
+      - "docker-compose.yml"
+      - ".env.example"
       - ".github/workflows/nbos-client-ci.yml"
 
 permissions:
@@ -38,3 +42,15 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Run offline NBOS client regression tests
         run: bun run test
+      - name: Validate Compose interpolation with disposable credentials
+        env:
+          INFLUXDB_ADMIN_USER: ci_admin
+          INFLUXDB_ADMIN_PASSWORD: ci_only_not_a_real_secret_01
+          INFLUXDB_USER: ci_user
+          INFLUXDB_USER_PASSWORD: ci_only_not_a_real_secret_02
+          INFLUXDB_ADMIN_TOKEN: ci_only_not_a_real_token_03
+          POSTGRES_USER: ci_postgres
+          POSTGRES_PASSWORD: ci_only_not_a_real_secret_04
+          GRAFANA_ADMIN_USER: ci_grafana
+          GRAFANA_ADMIN_PASSWORD: ci_only_not_a_real_secret_05
+        run: docker compose config --quiet
