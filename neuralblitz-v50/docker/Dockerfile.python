@@ -41,4 +41,4 @@ USER neuralblitz
 CMD ["python", "-m", "neuralblitz.cli", "--help"]
 
 # For Option F (API Server), override CMD:
-# docker run -p 8080:8080 neuralblitz:v50.0 python -m neuralblitz.cli serve --port 8080
+# docker run -p 8080:8080 neuralblitz:v50.0 python -m neuralblitz.cli option-f --port 8080
