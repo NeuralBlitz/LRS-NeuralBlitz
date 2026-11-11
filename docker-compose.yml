@@ -6,7 +6,7 @@ services:
     image: influxdb:2.7
     container_name: influxdb-telemetry
     ports:
-      - "8086:8086"
+      - "${INFLUXDB_BIND_ADDRESS:-127.0.0.1}:8086:8086"
     environment:
       - INFLUXDB_DB=telemetry
       - INFLUXDB_ADMIN_USER=${INFLUXDB_ADMIN_USER:?Set INFLUXDB_ADMIN_USER in .env}
@@ -33,7 +33,7 @@ services:
     image: timescale/timescaledb:latest-pg15
     container_name: timescaledb-agent
     ports:
-      - "5432:5432"
+      - "${TIMESCALEDB_BIND_ADDRESS:-127.0.0.1}:5432:5432"
     environment:
       - POSTGRES_DB=agent_metrics
       - POSTGRES_USER=${POSTGRES_USER:?Set POSTGRES_USER in .env}
@@ -56,7 +56,7 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus-monitor
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_BIND_ADDRESS:-127.0.0.1}:9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
@@ -80,7 +80,7 @@ services:
     image: grafana/grafana:latest
     container_name: grafana-dashboard
     ports:
-      - "3000:3000"
+      - "${GRAFANA_BIND_ADDRESS:-127.0.0.1}:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:?Set GRAFANA_ADMIN_USER in .env}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
@@ -99,7 +99,7 @@ services:
     image: prom/node-exporter:latest
     container_name: node-exporter
     ports:
-      - "9100:9100"
+      - "${NODE_EXPORTER_BIND_ADDRESS:-127.0.0.1}:9100:9100"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -117,7 +117,7 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     ports:
-      - "8080:8080"
+      - "${CADVISOR_BIND_ADDRESS:-127.0.0.1}:8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
