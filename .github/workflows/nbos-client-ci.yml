@@ -1,0 +1,40 @@
+name: NBOS client regression tests
+
+on:
+  push:
+    paths:
+      - "src/util/nbosClient.ts"
+      - "tests/nbosClient.failClosed.test.cjs"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/nbos-client-ci.yml"
+  pull_request:
+    paths:
+      - "src/util/nbosClient.ts"
+      - "tests/nbosClient.failClosed.test.cjs"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/nbos-client-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nbos-client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Run offline NBOS client regression tests
+        run: bun run test
