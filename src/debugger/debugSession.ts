@@ -45,7 +45,7 @@ export class NeuralBlitzDebugSession extends DebugSession {
     private _currentFile = '';
     private _currentLine = 0;
     private _isRunning = false;
-    private _mode: string = 'Sentio';
+    private _mode: LaunchRequestArguments['mode'] = 'Sentio';
 
     public constructor() {
         super();
@@ -215,7 +215,7 @@ export class NeuralBlitzDebugSession extends DebugSession {
         args: DebugProtocol.VariablesArguments,
         request?: DebugProtocol.Request
     ): Promise<void> {
-        const variables: Variable[] = [];
+        const variables: DebugProtocol.Variable[] = [];
         const scope = this._variableHandles.get(args.variablesReference);
 
         try {
@@ -339,9 +339,9 @@ export class NeuralBlitzDebugSession extends DebugSession {
         args: DebugProtocol.CompletionsArguments
     ): void {
         const completions: DebugProtocol.CompletionItem[] = [
-            { label: '/boot', type: 'command' },
-            { label: '/apply', type: 'command' },
-            { label: '/status', type: 'command' },
+            { label: '/boot', type: 'function' },
+            { label: '/apply', type: 'function' },
+            { label: '/status', type: 'function' },
             { label: 'Causa', type: 'class' },
             { label: 'Ethics', type: 'class' },
             { label: 'Wisdom', type: 'class' }

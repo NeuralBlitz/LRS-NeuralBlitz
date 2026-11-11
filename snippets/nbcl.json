@@ -1,0 +1,16 @@
+{
+  "Inspect NeuralBlitz status": {
+    "prefix": "/status",
+    "body": [
+      "/status"
+    ],
+    "description": "NBCL status command; requires a connected backend to return live state."
+  },
+  "Request NeuralBlitz verification": {
+    "prefix": "/verify",
+    "body": [
+      "/verify"
+    ],
+    "description": "NBCL verification command; results require a live backend and independent evidence."
+  }
+}

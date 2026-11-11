@@ -118,12 +118,12 @@ export class NBCLCompletionProvider implements vscode.CompletionItemProvider {
         const items: vscode.CompletionItem[] = [];
 
         // Command completion at start of line
-        if (lineText.match(/^\\s*\\/?$/)) {
+        if (lineText.match(/^\s*\/?$/)) {
             return Array.from(this.commands.values());
         }
 
         // Partial command completion
-        if (lineText.match(/^\\s*\\/\\w*$/)) {
+        if (lineText.match(/^\s*\/\w*$/)) {
             const partial = lineText.trim();
             return Array.from(this.commands.values()).filter(cmd => 
                 cmd.label.toString().startsWith(partial)
@@ -131,7 +131,7 @@ export class NBCLCompletionProvider implements vscode.CompletionItemProvider {
         }
 
         // Parameter completion after command
-        const commandMatch = lineText.match(/^\\s*(\\/\\w+)/);
+        const commandMatch = lineText.match(/^\s*(\/\w+)/);
         if (commandMatch) {
             const command = commandMatch[1];
             const params = this.parameters.get(command);
@@ -141,7 +141,7 @@ export class NBCLCompletionProvider implements vscode.CompletionItemProvider {
         }
 
         // Flag completion anywhere
-        if (lineText.match(/\\s--?$/)) {
+        if (lineText.match(/\s--?$/)) {
             items.push(...this.flags);
         }
 

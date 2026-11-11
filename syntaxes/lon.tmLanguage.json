@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Language of the Nexus (provisional lexical highlighting)",
+  "scopeName": "source.lon",
+  "fileTypes": [
+    "lonx"
+  ],
+  "patterns": [
+    {
+      "name": "string.quoted.double.lon",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.lon",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "string.quoted.single.lon",
+      "begin": "'",
+      "end": "'",
+      "patterns": [
+        {
+          "name": "constant.character.escape.lon",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "constant.numeric.lon",
+      "match": "\\b[0-9]+(?:\\.[0-9]+)?\\b"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+name: VS Code Extension CI
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "syntaxes/**"
+      - "snippets/**"
+      - "language-configurations/**"
+      - "package.json"
+      - "tsconfig.json"
+      - "bun.lock"
+      - ".github/workflows/vscode-extension-ci.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - "syntaxes/**"
+      - "snippets/**"
+      - "language-configurations/**"
+      - "package.json"
+      - "tsconfig.json"
+      - "bun.lock"
+      - ".github/workflows/vscode-extension-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vscode-extension-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile-and-validate:
+    name: Compile and validate extension manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Compile TypeScript
+        run: bun run compile
+
+      - name: Validate extension manifest and contributed assets
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const manifest = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+          if (!manifest.name || !manifest.publisher || !manifest.version || !manifest.engines?.vscode) {
+            throw new Error('Required VS Code extension metadata is missing.');
+          }
+
+          const required = [manifest.main, ...((manifest.contributes?.grammars || []).map(item => item.path)),
+            ...((manifest.contributes?.languages || []).map(item => item.configuration).filter(Boolean)),
+            ...((manifest.contributes?.snippets || []).map(item => item.path))];
+
+          for (const file of required) {
+            if (typeof file !== 'string' || !fs.existsSync(path.resolve(file))) {
+              throw new Error(`Manifest references a missing file: ${file}`);
+            }
+          }
+
+          console.log(`Validated ${required.length} manifest entry points/assets for ${manifest.name}.`);
+          NODE
