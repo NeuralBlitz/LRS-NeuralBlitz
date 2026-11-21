@@ -59,6 +59,8 @@ test('Replit configuration launches preview without advertising deploy capabilit
   const cfg = fs.readFileSync(path.resolve(__dirname, '../.replit'), 'utf8');
   assert.match(cfg, /run = "HOST=0\.0\.0\.0 node index\.js"/);
   assert.match(cfg, /"index\.js"/);
-  assert.doesNotMatch(cfg, /\[deployment\]|deploymentTarget|package-lock\.json"\]/);
-  assert.doesNotMatch(cfg, /replit\.nix/);
+  assert.doesNotMatch(cfg, /\[deployment\]|deploymentTarget/);
+  const imports = cfg.match(/^requiredFiles\s*=\s*\[([^\]]*)\]/m);
+  assert.ok(imports, 'Missing GitHub import requiredFiles');
+  assert.doesNotMatch(imports[1], /package-lock\.json|replit\.nix/);
 });
