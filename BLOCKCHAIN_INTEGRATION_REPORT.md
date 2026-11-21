@@ -1,3 +1,7 @@
+> **Historical research / evidence warning (November 2026):** The words Production-Ready in this historical specification are **not an audited release status**; no Ethereum/Fabric mainnet deployment or formal security verification is established here. The [current README](README.md) and [root-file evidence register](docs/audits/root-file-review-register.md) contain the supported pre-production status.
+
+---
+
 > **Verification notice (2026-11-21): historical / experimental research.** Claims of production-ready blockchain integration are not backed by a verified live-chain, Fabric-network, or audited-contract test in this repository. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
 
 ---
