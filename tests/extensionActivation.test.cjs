@@ -78,14 +78,16 @@ function createHarness() {
       registerDocumentSymbolProvider: () => disposable('symbol provider'),
     },
     window: {
-      createOutputChannel: () => ({
-        ...disposable('output channel'),
-        appendLine: () => {},
-      }),
-      createStatusBarItem: () => ({
-        ...disposable('status bar item'),
-        show: () => {},
-      }),
+      createOutputChannel: () => {
+        const channel = disposable('output channel');
+        channel.appendLine = () => {};
+        return channel;
+      },
+      createStatusBarItem: () => {
+        const item = disposable('status bar item');
+        item.show = () => {};
+        return item;
+      },
       registerTreeDataProvider: (id) => {
         if (!manifestViewIds.has(id)) throw new Error('Uncontributed tree view: ' + id);
         registeredViews.push(id);
