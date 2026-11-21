@@ -26,7 +26,7 @@
     "storageAccountName": "[toLower(concat('nbfunc', uniqueString(resourceGroup().id)))]",
     "cosmosDbAccountName": "[toLower(concat('nb-cosmos-', parameters('environment')))]",
     "appInsightsName": "[concat(parameters('functionAppName'), '-insights')]",
-    "hostingPlanName": "[concat(parameters('functionAppName'), '-plan")]
+    "hostingPlanName": "[concat(parameters('functionAppName'), '-plan')]"
   },
   "resources": [
     {
@@ -181,7 +181,7 @@
           "minTlsVersion": "1.2",
           "ftpsState": "Disabled",
           "cors": {
-            "allowedOrigins": ["*"],
+            "allowedOrigins": [],
             "supportCredentials": false
           }
         },
