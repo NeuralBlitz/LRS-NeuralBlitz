@@ -11,6 +11,12 @@ Return to the [main README](../README.md) for the verified product scope. The or
 - [Production readiness](production-readiness.md) — required checks and unresolved release gates
 - [Deployment security checklist](security-deployment.md) — operational risks, prior credential exposure, and manual remediation responsibilities
 
+## Complete root-file inspection
+
+- [Root-level review and outstanding issues](audits/root-review-findings.md) — 110 tracked entries, evidence boundaries, source-level defects, and release blockers
+- [Root-by-root evidence register](audits/root-file-review.csv) — exact filenames, Git blob revisions, observed roles and inspection scope
+- [Root review freshness checker](../scripts/check_root_review.py) — CI rejects undocumented changes to root-level tracked files
+
 ## Verified-source extension engineering
 
 - [Extension activation contract](extension-activation-contract.md) — manifest commands, tree views, and offline activation checks
