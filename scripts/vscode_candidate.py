@@ -92,9 +92,10 @@ def verify_candidate(vsix: Path) -> None:
             head = rel.split("/")[0]
             if head not in ALLOWED_EXTENSION_TOPLEVEL:
                 raise ValueError(f"Unapproved VSIX content: {rel}")
-            if head == "dist" and rel != "dist/extension.js":
-                raise ValueError(f"Unexpected compiled asset: {rel}")
-            if head in {"syntaxes", "snippets", "language-configurations"}:
+            if head == "dist":
+                if rel != "dist/extension.js":
+                    raise ValueError(f"Unexpected compiled asset: {rel}")
+            elif head in {"syntaxes", "snippets", "language-configurations"}:
                 if len(rel.split("/")) < 2:
                     raise ValueError(f"Unexpected asset folder entry: {rel}")
             elif rel not in ALLOWED_EXTENSION_TOPLEVEL:
