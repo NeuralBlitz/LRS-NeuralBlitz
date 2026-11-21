@@ -446,7 +446,8 @@ class ConsciousnessPredictor:
             "best_model_type": self.best_model_type,
             "best_score": self.best_score,
             "model_path": self.model_path,
-            "models": {k: v["model_type"]: k["score"] for k, v in self.models.items()},
+            "models": {k: {"model_type": v["model_type"], "score": v["score"]}
+                       for k, v in self.models.items()},
             "feature_count": len(self.feature_names),
             "feature_names": self.feature_names,
             "historical_samples": len(self.historical_data),
