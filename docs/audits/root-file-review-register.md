@@ -2,6 +2,8 @@
 
 **Repository:** NeuralBlitz/LRS-NeuralBlitz. **Baseline:** `e54ac39bfd053740f5af152bfe2fa6fc2aa72a23` (November 21, 2026). **Scope: 110 Git-tracked root entries.** This document intentionally treats every file separately rather than equating a whole-tree scanner with a complete semantic or functional review.
 
+This is not a line-by-line correctness audit. It does not certify security, integration, performance or scientific validity.
+
 **Method:** Source and documentation were retrieved for targeted inspection of Python imports/classes/functions/entry points, Markdown headings/introductory claims, JSON structures, and root configurations; key gateway and deployment functions were inspected more deeply. Binary objects, symlinks, and external Gitlinks have explicit inspection boundaries. This register is **not** a line-by-line correctness audit, a successful execution of every implementation, or certification of scientific claims. The CI consistency gate requires a row for each tracked root path and flags additions/removals.
 
 ## Individually indexed root files
