@@ -93,10 +93,10 @@ class LogicalExpression:
         # Handle basic logical connectives
         if 'and' in expr:
             parts = expr.split('and')
-            return all(self._evaluate_subpart(part.strip(), assignment)[0] for part in parts), self.confidence)
+            return all(self._evaluate_subpart(part.strip(), assignment)[0] for part in parts), self.confidence
         elif 'or' in expr:
             parts = expr.split('or')
-            return any(self._evaluate_subpart(part.strip(), assignment)[0] for part in parts), self.confidence)
+            return any(self._evaluate_subpart(part.strip(), assignment)[0] for part in parts), self.confidence
         elif 'not' in expr:
             part = expr.replace('not', '').strip()
             result = self._evaluate_subpart(part, assignment)[0]
