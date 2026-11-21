@@ -95,130 +95,61 @@ lrs_agent = SimplifiedLRSAgent(tools=[opencode_tool])
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    """Serve the comprehensive integration web interface."""
-    html_content = """<!DOCTYPE html>
+    """Present a truthful status page without simulated availability claims."""
+    return """<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenCode ↔ LRS-Agents Integration Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+    <title>LRS-NeuralBlitz — Experimental Gateway</title>
     <style>
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .pulse-ring { animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite; }
-        @keyframes pulse-ring { 0% { transform: scale(0.33); } 40%, 50% { opacity: 1; } 100% { opacity: 0; transform: scale(0.9); } }
+      body { max-width: 56rem; margin: 3rem auto; padding: 0 1rem;
+             font: 1rem/1.6 system-ui, sans-serif; color: #1c2430; }
+      h1 { line-height: 1.2; } code { background: #edf1f4; padding: .1rem .3rem; }
+      a { color: #1758a8; } .notice { border-left: .25rem solid #c68920; padding-left: 1rem; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">OC</span>
-                        </div>
-                        <span class="text-xl font-bold text-gray-800">OpenCode</span>
-                    </div>
-                    <div class="text-2xl text-gray-400">↔</div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">LRS</span>
-                        </div>
-                        <span class="text-xl font-bold text-gray-800">LRS-Agents</span>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Cognitive AI Hub v3.0</span>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-green-500 rounded-full pulse-ring"></div>
-                        <span class="text-sm text-green-600">🧠 Cognitive AI Active</span>
-                    </div>
-                    <a href="cognitive_demo.html" target="_blank" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition duration-200">🚀 Cognitive Demo</a>
-                </div>
-            </div>
-        </div>
-    </nav>"""
-
-    # Add the rest of the HTML content
-    html_content += """
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <div class="text-center mb-12">
-                <h1 class="text-5xl font-bold text-gray-900 mb-4">OpenCode ↔ LRS-Agents Cognitive AI Hub</h1>
-                <p class="text-xl text-gray-600 mb-6 max-w-3xl mx-auto">Revolutionary AI-assisted development platform with 264,447x performance improvement and cognitive intelligence</p>
-                <div class="flex justify-center space-x-4">
-                    <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">Active Inference</div>
-                    <div class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium">Cognitive AI</div>
-                    <div class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">264,447x Faster</div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-6">🎯 Revolutionary Capabilities</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="p-4 border border-gray-200 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-2">🧠 Cognitive Code Analysis</h3>
-                        <p class="text-gray-600 text-sm">Multi-modal AI understanding of code patterns, attention focus, and cognitive insights</p>
-                    </div>
-                    <div class="p-4 border border-gray-200 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-2">⚡ 264,447x Performance</h3>
-                        <p class="text-gray-600 text-sm">Revolutionary speed improvements with perfect accuracy and enterprise scalability</p>
-                    </div>
-                    <div class="p-4 border border-gray-200 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-2">🤖 Multi-Agent Intelligence</h3>
-                        <p class="text-gray-600 text-sm">Self-optimizing cognitive agents with temporal learning and coordination</p>
-                    </div>
-                    <div class="p-4 border border-gray-200 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-2">🏢 Enterprise Security</h3>
-                        <p class="text-gray-600 text-sm">JWT authentication, RBAC, audit logging, and production monitoring</p>
-                    </div>
-                    <div class="p-4 border border-gray-200 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-2">🌐 Universal Ecosystem</h3>
-                        <p class="text-gray-600 text-sm">7 deployment platforms, 4 IDE integrations, plugin marketplace</p>
-                    </div>
-                    <div class="p-4 border border-gray-200 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-2">🚀 Cognitive Demo</h3>
-                        <p class="text-gray-600 text-sm">Interactive AI code analysis with real-time insights and pattern recognition</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center">
-                <a href="cognitive_demo.html" target="_blank" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition duration-200 inline-flex items-center">
-                    <span class="mr-2">🚀</span> Launch Cognitive AI Demo
-                </a>
-                <p class="text-gray-600 mt-4">Experience revolutionary AI-assisted development firsthand</p>
-            </div>
-        </div>
-
-        <script>
-            // Simple enterprise status check
-            function updateStatus() {
-                console.log('Cognitive AI Hub v3.0 - Enterprise Status: Operational');
-            }
-            updateStatus();
-        </script>
-    </body>
-    </html>"""
-
-    return html_content
+<body>
+    <h1>LRS-NeuralBlitz — Experimental API Gateway</h1>
+    <p class="notice"><strong>Pre-production research prototype.</strong> This page
+    does not establish backend availability, secure deployment, performance
+    improvement, or completed multi-agent execution.</p>
+    <p>Check <code>GET /api/integration/status</code> for source-level
+    component detection; detection alone does not verify integration health.</p>
+    <p>The multi-agent workflow endpoint currently does <strong>not execute
+    tasks</strong> and returns an explicit error for unsupported execution.</p>
+    <p>For verified scope, installation limitations and release gates, see
+    <a href="https://github.com/NeuralBlitz/LRS-NeuralBlitz/blob/main/README.md">
+    the source-backed project README</a>.</p>
+</body>
+</html>"""
 
 
 @app.get("/api/integration/status")
 async def get_integration_status():
-    """Get current integration status."""
+    """Report component detection, not unmeasured end-to-end availability."""
     return {
         "lrs_available": LRS_AVAILABLE,
-        "opencode_available": opencode_tool.opencode_path is not None,
-        "lrs_agent_precision": lrs_agent.belief_state["precision"],
-        "lrs_agent_adaptations": lrs_agent.belief_state["adaptation_count"],
+        "opencode_available": bool(
+            opencode_tool is not None
+            and getattr(opencode_tool, "opencode_path", None) is not None
+        ),
+        "lrs_agent_precision": (
+            lrs_agent.belief_state.get("precision")
+            if lrs_agent is not None and hasattr(lrs_agent, "belief_state")
+            else None
+        ),
+        "lrs_agent_adaptations": (
+            lrs_agent.belief_state.get("adaptation_count")
+            if lrs_agent is not None and hasattr(lrs_agent, "belief_state")
+            else None
+        ),
         "cognitive_available": COGNITIVE_AVAILABLE,
         "multi_agent_available": MULTI_AGENT_AVAILABLE,
-        "integration_active": True,
+        "integration_active": False,
+        "integration_verified": False,
+        "message": "A successful authenticated backend health check has not been implemented",
     }
 
 
@@ -330,4 +261,4 @@ async def execute_multi_agent_workflow(request: dict):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
