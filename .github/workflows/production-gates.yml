@@ -1,0 +1,79 @@
+name: Production quality gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  extension:
+    name: Extension compile lint and regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Compile TypeScript
+        run: bun run compile
+      - name: Enforce extension lint rules
+        run: bun run lint
+      - name: Run offline extension regression suite
+        run: bun run test
+      - name: Validate VS Code extension manifest assets
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const manifest = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (!manifest.name || !manifest.publisher || !manifest.version || !manifest.engines?.vscode) {
+            throw new Error('Required extension metadata is missing');
+          }
+          const files = [
+            manifest.main,
+            ...((manifest.contributes?.grammars || []).map(item => item.path)),
+            ...((manifest.contributes?.languages || []).map(item => item.configuration).filter(Boolean)),
+            ...((manifest.contributes?.snippets || []).map(item => item.path)),
+          ];
+          for (const file of files) {
+            if (typeof file !== 'string' || !fs.existsSync(path.resolve(file))) {
+              throw new Error(`Extension manifest references missing file: ${file}`);
+            }
+          }
+          console.log(`Validated ${files.length} extension manifest assets`);
+          NODE
+
+  python-contracts:
+    name: Python API contract regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run dependency-free Python contract tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+  compose-security:
+    name: Compose security regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Compose security regression and configuration checks
+        run: |
+          python3 -m unittest discover -s tests -p 'test_compose_security.py' -v
+          python3 scripts/check_compose_security.py
