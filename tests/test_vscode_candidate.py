@@ -38,6 +38,10 @@ class CandidatePackagingTests(unittest.TestCase):
                 if not path.is_file():
                     continue
                 name = "extension/" + path.relative_to(self.stage).as_posix()
+                if name == "extension/LICENSE":
+                    name = "extension/LICENSE.txt"
+                elif name == "extension/README.md":
+                    name = "extension/readme.md"
                 if name not in excluded:
                     archive.write(path, name)
             for name, data in additional:
@@ -45,10 +49,12 @@ class CandidatePackagingTests(unittest.TestCase):
         return vsix
 
     def test_staging_excludes_the_large_monorepo_and_dev_dependencies(self):
-        allowed = candidate.ALLOWED_EXTENSION_TOPLEVEL
+        expected = set(candidate.ASSET_DIRS) | {
+            "dist", "generated-icon.png", "LICENSE", "README.md", "package.json"
+        }
         self.assertEqual(
             {p.name for p in self.stage.iterdir()},
-            allowed,
+            expected,
         )
         manifest = json.loads((self.stage / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["main"], "./dist/extension.js")
