@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** The requirements, install commands, hardware guidance and runtime promises on this page have not been proven with a locked end-to-end installation matrix. See the [source-backed product README](../README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # 📖 Installation Guide
 
 **Complete Setup Instructions for OpenCode LRS**
