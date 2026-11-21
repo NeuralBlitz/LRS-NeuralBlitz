@@ -1,3 +1,7 @@
+> **Historical research / evidence warning (November 2026):** Historical collaboration claims below require source-linked verification; repository presence does **not** prove every named system was delivered or deployed. The [current README](README.md) and [root-file evidence register](docs/audits/root-file-review-register.md) contain the supported pre-production status.
+
+---
+
 > **Verification notice (2026-11-21): historical / experimental research.** Historical achievement, chronology and performance assertions remain author claims pending source-linked independent verification. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
 
 ---
