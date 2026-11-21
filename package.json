@@ -22,7 +22,9 @@
     "onLanguage:nbcl",
     "onLanguage:reflexaellang",
     "onLanguage:lon",
-    "onDebug"
+    "onDebug",
+    "onView:neuralblitzGoldenDAG",
+    "onView:neuralblitzCKRegistry"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -91,6 +93,11 @@
         "category": "NeuralBlitz"
       },
       {
+        "command": "neuralblitz.status",
+        "title": "Show NBOS Status",
+        "category": "NeuralBlitz"
+      },
+      {
         "command": "neuralblitz.debug.start",
         "title": "Start Agent Debugging",
         "category": "NeuralBlitz Debug"
@@ -139,8 +146,6 @@
       {
         "type": "neuralblitz",
         "label": "NeuralBlitz Agent Debugger",
-        "program": "./out/debugAdapter.js",
-        "runtime": "node",
         "configurationAttributes": {
           "launch": {
             "required": [
@@ -218,7 +223,28 @@
         "language": "nbcl",
         "path": "./snippets/nbcl.json"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "neuralblitz",
+          "title": "NeuralBlitz",
+          "icon": "./generated-icon.png"
+        }
+      ]
+    },
+    "views": {
+      "neuralblitz": [
+        {
+          "id": "neuralblitzGoldenDAG",
+          "name": "GoldenDAG Status"
+        },
+        {
+          "id": "neuralblitzCKRegistry",
+          "name": "Capability Kernels"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

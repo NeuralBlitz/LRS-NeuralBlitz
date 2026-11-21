@@ -95,13 +95,12 @@ export function activate(context: vscode.ExtensionContext) {
     // Show welcome message
     vscode.window.showInformationMessage(
         'NeuralBlitz IDE is ready',
-        'Open Documentation',
-        'Start Tutorial'
+        'Open Documentation'
     ).then(selection => {
         if (selection === 'Open Documentation') {
-            vscode.env.openExternal(vscode.Uri.parse('https://neuralblitz.org/docs'));
-        } else if (selection === 'Start Tutorial') {
-            vscode.commands.executeCommand('neuralblitz.startTutorial');
+            vscode.env.openExternal(vscode.Uri.parse(
+                'https://github.com/NeuralBlitz/LRS-NeuralBlitz/blob/main/docs/production-readiness.md'
+            ));
         }
     });
 }

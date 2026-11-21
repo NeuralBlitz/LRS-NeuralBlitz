@@ -32,7 +32,11 @@ export class NBCLCommands {
     }
 
     register(context: vscode.ExtensionContext): vscode.Disposable[] {
-        const disposables: vscode.Disposable[] = [];
+        // Release extension-owned UI resources on deactivation.
+        const disposables: vscode.Disposable[] = [
+            this.outputChannel,
+            this.statusBarItem
+        ];
 
         // Boot command
         disposables.push(
@@ -64,9 +68,16 @@ export class NBCLCommands {
             vscode.commands.registerCommand('neuralblitz.ck.documentation', () => this.showCKDocumentation())
         );
 
-        // Debug start command
+        // Debug commands forward to VS Code's native debug controls. These
+        // controls must not accidentally act on another extension's session.
         disposables.push(
             vscode.commands.registerCommand('neuralblitz.debug.start', () => this.startDebug())
+        );
+        disposables.push(
+            vscode.commands.registerCommand('neuralblitz.debug.step', () => this.debugControl('workbench.action.debug.stepInto'))
+        );
+        disposables.push(
+            vscode.commands.registerCommand('neuralblitz.debug.continue', () => this.debugControl('workbench.action.debug.continue'))
         );
 
         return disposables;
@@ -238,6 +249,14 @@ export class NBCLCommands {
         );
 
         panel.webview.html = this.getCKHtml(ck);
+    }
+
+    private async debugControl(action: string): Promise<void> {
+        if (vscode.debug.activeDebugSession?.type !== 'neuralblitz') {
+            vscode.window.showWarningMessage('Start a NeuralBlitz debug session before using this command');
+            return;
+        }
+        await vscode.commands.executeCommand(action);
     }
 
     private startDebug(): void {
