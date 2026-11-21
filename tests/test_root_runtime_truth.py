@@ -72,7 +72,7 @@ class GatewayTruthTests(unittest.TestCase):
     def test_stage_cluster_numbers_are_clearly_labeled_simulations(self):
         a = (ROOT / "deployment_summary.py").read_text(encoding="utf-8")
         b = (ROOT / "stage_clusters_5000_9999_deployment.py").read_text(encoding="utf-8")
-        self.assertIn("SIMULATION SUMMARY (NO REAL DEPLOYMENT)", a)
+        self.assertIn("SIMULATED CAPACITY PLAN", a)
         self.assertIn("no infrastructure was provisioned or verified", a)
         self.assertIn("NO LIVE DEPLOYMENT", b)
         self.assertIn("NO REAL AGENTS PROVISIONED", b)
