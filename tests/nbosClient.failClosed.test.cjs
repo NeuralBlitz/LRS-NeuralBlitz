@@ -112,3 +112,46 @@ test('debug scope is URL-encoded and disconnect resets local state', async () =>
   client.disconnect();
   assert.equal(client.isConnected(), false);
 });
+
+
+test('executeFile requires explicit backend completion evidence', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: true, completed: true } }),
+  });
+  const result = await client.executeFile('main.nbcl');
+  assert.equal(result.completed, true);
+  assert.equal(result.stopped, false);
+});
+
+test('backend acknowledgement alone cannot masquerade as execution completion', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: true } }),
+  });
+  await assert.rejects(client.executeFile('main.nbcl'), /did not confirm execution completion/);
+});
+
+test('a stopped response never simultaneously reports completion', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: true, stopped: true, completed: true, line: 8 } }),
+  });
+  const result = await client.executeFile('main.nbcl');
+  assert.equal(result.completed, false);
+  assert.equal(result.stopped, true);
+  assert.equal(result.line, 8);
+});
+
+test('malformed backend execution responses fail closed', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: 'true', completed: true } }),
+  });
+  await assert.rejects(client.executeFile('main.nbcl'), /missing boolean ok/);
+});
+
+test('backend rejection cannot claim completion even with a conflicting completed flag', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: false, completed: true, error: { message: 'denied' } } }),
+  });
+  const result = await client.executeFile('main.nbcl');
+  assert.equal(result.completed, false);
+  assert.equal(result.error, 'denied');
+});
