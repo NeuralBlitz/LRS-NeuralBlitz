@@ -272,7 +272,7 @@ def main():
         # Test 5: All systems working together
         integration_results.append({
             "component": "full_integration",
-            "status": "PASS" if all(r['status'] == "PASS" else "FAIL",
+            "status": "PASS" if all(r['status'] == "PASS" for r in integration_results) else "FAIL",
             "details": {
                 "chaos_engine": integration_results[0]["status"],
                 "audit_system": integration_results[1]["status"],
