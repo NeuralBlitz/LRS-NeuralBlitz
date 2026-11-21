@@ -146,6 +146,16 @@ def audit_repo(root=ROOT):
             })
             continue
         try:
+            if item["mode"] == "120000":
+                # Read the link text itself; never follow a tracked symlink
+                # into an unavailable gitlink or outside the checkout.
+                import os
+                target = os.readlink(root / path)
+                row = inspect_blob(path, target.encode("utf-8", "surrogateescape"), all_paths)
+                row["kind"] = "symlink-target-not-traversed"
+                row["flags"].append("symlink-target-not-traversed")
+                rows.append(row)
+                continue
             data = (root / path).read_bytes()
             rows.append(inspect_blob(path, data, all_paths))
         except OSError:
