@@ -77,6 +77,9 @@ export class NBOSClient {
                 error: data.error?.message || 'NBOS rejected execution'
             };
         }
+        if (data.completed === true && data.stopped === true) {
+            throw new Error('Contradictory NBOS execution response: completed and stopped');
+        }
         if (data.stopped === true) {
             return { completed: false, stopped: true, line: data.line };
         }
