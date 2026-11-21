@@ -1,18 +1,16 @@
+# Source-preview workspace only; this does NOT deploy a production AI platform.
+# The Node entrypoint serves only a truthful static status/health page.
+run = "HOST=0.0.0.0 node index.js"
 entrypoint = "index.js"
 modules = ["nodejs-22", "python-3.11"]
 hidden = [".config", "package-lock.json"]
 
 [gitHubImport]
-requiredFiles = [".replit", "replit.nix", "package.json", "package-lock.json"]
+requiredFiles = [".replit", "index.js", "package.json", "bun.lock"]
 
 [nix]
 channel = "stable-24_11"
 packages = ["libxcrypt"]
-
-[deployment]
-run = ["node", "index.js"]
-deploymentTarget = "autoscale"
-ignorePorts = false
 
 [agent]
 expertMode = true
