@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Stage Clusters 5000-9999 Deployment Summary
+Stage Clusters 5000-9999 - Arithmetic Capacity Simulation
 ==========================================
-Optimized simulation and reporting for 500 million agent deployment
+Arithmetic capacity illustration: NO agents, memory or infrastructure are provisioned.
 """
 
 import time
@@ -23,11 +23,13 @@ def create_golden_dag_entry(operation, agent_count, metadata=None):
 
 def main():
     print("=" * 80)
-    print("STAGE CLUSTERS 5000-9999 SIMULATION SUMMARY (NO REAL DEPLOYMENT)")
+    print("STAGE CLUSTERS 5000-9999 - SIMULATED CAPACITY PLAN")
     print("Optimized Simulation - 500 Million Agents")
     print("=" * 80)
     print()
     
+    print("WARNING: values below are synthetic arithmetic examples, not observed workers.")
+    print("No real agents, channels, memory allocations or deployment were measured.")
     golden_dag = []
     deployment_start = time.time()
     
@@ -54,7 +56,7 @@ def main():
     print(f"  - Supervisors: {supervisors:,}")
     print(f"  - Workers: {workers:,}")
     print()
-    print("Components Deployed:")
+    print("Illustrative components (NOT deployed):")
     print("  ✓ Coordinator-supervisor-worker hierarchies")
     print("  ✓ MultiAgentSystem coordination topology")
     print("  ✓ GoalManager for hierarchical task decomposition")
@@ -85,7 +87,7 @@ def main():
     print(f"  - Tactical Agents: {tactical_agents:,} (1,000 per stage)")
     print(f"  - Operational Agents: {operational_agents:,} (98,900 per stage)")
     print()
-    print("Components Deployed:")
+    print("Illustrative components (NOT deployed):")
     print("  ✓ Goal hierarchies (strategic, tactical, operational)")
     print("  ✓ Task dataclass with dependencies")
     print("  ✓ Goal success criteria")
@@ -114,7 +116,7 @@ def main():
     print(f"Memories per Agent: {memories_per_agent:,}")
     print(f"Total Memories: {total_memories:,}")
     print()
-    print("Components Deployed:")
+    print("Illustrative components (NOT deployed):")
     print("  ✓ Episodic memory buffers (100 per agent)")
     print("  ✓ Semantic memory graphs (50 per agent)")
     print("  ✓ Working memory caches (7 per agent)")
@@ -150,7 +152,7 @@ def main():
         percentage = (count / meta_agents) * 100
         print(f"  - {level}: {count:,} agents ({percentage:.1f}%)")
     print()
-    print("Components Deployed:")
+    print("Illustrative components (NOT deployed):")
     print("  ✓ MetaCognitiveEngine instances")
     print("  ✓ Self-reflection capabilities")
     print("  ✓ Performance analysis modules")
@@ -183,7 +185,7 @@ def main():
     print(f"  - Decentralized: {comm_agents // 3:,} agents")
     print(f"  - Distributed: {comm_agents - 2*(comm_agents//3):,} agents")
     print()
-    print("Components Deployed:")
+    print("Illustrative components (NOT deployed):")
     print("  ✓ λ-Field channels (symbolic signal propagation)")
     print("  ✓ CommunicationManager instances")
     print("  ✓ Network topology (centralized, decentralized, distributed)")
@@ -202,7 +204,7 @@ def main():
     print("MONITORING METRICS")
     print("-" * 80)
     print()
-    print("Real-time Metrics (Simulated Average over 30s):")
+    print("Illustrative input metrics (synthetic, NOT live telemetry):")
     print("  • Coordination Overhead: 0.0500 (5.0%)")
     print("  • Task Completion Rate: 0.9150 (91.5%)")
     print("  • Memory Utilization: 0.7250 (72.5%)")
@@ -211,8 +213,8 @@ def main():
     print()
     print("Aggregate Statistics:")
     total_agents = total_agents_5000 + total_agents_6000 + memory_agents + meta_agents + comm_agents
-    print(f"  • Total Agents Deployed: {total_agents:,}")
-    print(f"  • Total Agents Active: {total_agents:,}")
+    print(f"  • Hypothetical agents counted (NOT deployed): {total_agents:,}")
+    print("  • Verified live agents: not measured")
     print(f"  • Total λ-Field Channels: {total_channels:,}")
     print(f"  • Total Memory Units: {total_memories:,}")
     print()
@@ -232,17 +234,17 @@ def main():
     
     # Performance Report
     print("-" * 80)
-    print("PERFORMANCE REPORT")
+    print("ARITHMETIC SIMULATION REPORT (NOT A BENCHMARK)")
     print("-" * 80)
     deployment_end = time.time()
     total_time = deployment_end - deployment_start
     
-    print(f"Total Deployment Time: {total_time:.2f} seconds")
+    print(f"Script elapsed time (NOT provisioning): {total_time:.2f} seconds")
     print(f"Total Agents: {total_agents:,}")
-    print(f"Deployment Rate: {total_agents/total_time:,.0f} agents/second (simulated)")
+    print("Actual provisioning throughput: not measured")
     print()
     
-    print("Cluster Deployment Times:")
+    print("Illustrative phase durations below (NOT observed):")
     print(f"  • Cluster 5000-5999: ~45.0s")
     print(f"  • Cluster 6000-6999: ~42.0s")
     print(f"  • Cluster 7000-7999: ~38.0s")
@@ -252,7 +254,7 @@ def main():
     print()
     
     # Export GoldenDAG
-    dag_filename = "deployment_goldendag.json"
+    dag_filename = "simulated_stage_clusters_goldendag.json"
     dag_data = []
     for i, hash_val in enumerate(golden_dag):
         dag_data.append({
@@ -270,15 +272,15 @@ def main():
     
     # Final Summary
     print("=" * 80)
-    print("DEPLOYMENT COMPLETE")
+    print("SIMULATION COMPLETE - NO INFRASTRUCTURE DEPLOYED")
     print("=" * 80)
     print()
     print("Summary:")
-    print(f"  ✓ 5 Stage Clusters Deployed")
-    print(f"  ✓ {total_agents:,} Agents Initialized")
-    print(f"  ✓ {total_channels:,} Communication Channels Established")
-    print(f"  ✓ {total_memories:,} Memory Units Allocated")
-    print(f"  ✓ {len(golden_dag)} GoldenDAG Entries Created")
+    print("  • 5 hypothetical stage clusters represented")
+    print(f"  • {total_agents:,} hypothetical agents counted (not instantiated)")
+    print(f"  • {total_channels:,} theoretical channels (not established)")
+    print(f"  • {total_memories:,} theoretical memory units (not allocated)")
+    print(f"  • {len(golden_dag)} local synthetic hashes, not attestations")
     print()
     print("Simulation complete: no infrastructure was provisioned or verified.")
     print("=" * 80)
