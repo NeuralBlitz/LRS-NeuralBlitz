@@ -1,3 +1,7 @@
+> **Historical research / evidence warning (November 2026):** Agent totals and operations described below are **historical/synthetic planning assertions**, not evidence that 500 million independent agents were provisioned or actively monitored. The [current README](README.md) and [root-file evidence register](docs/audits/root-file-review-register.md) contain the supported pre-production status.
+
+---
+
 > **Verification notice (2026-11-21): historical / experimental research.** The 500-million-agent deployment figures describe simulation/accounting outputs, not independently confirmed provisioned processes or cloud deployment. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
 
 ---
