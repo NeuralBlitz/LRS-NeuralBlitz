@@ -1,3 +1,7 @@
+> **Verification notice (2026-11-21): historical / experimental research.** Descriptions of production-ready code-generation kernels require dependency-pinned functional, security and integration tests before being treated as supported product features. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
+
+---
+
 # NeuralBlitz Code Generation Capability Kernels
 ## Structured Implementation Report
 
