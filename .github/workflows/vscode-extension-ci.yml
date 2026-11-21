@@ -10,6 +10,7 @@ on:
       - "package.json"
       - "tsconfig.json"
       - "bun.lock"
+      - "tests/*.test.cjs"
       - ".github/workflows/vscode-extension-ci.yml"
   pull_request:
     paths:
@@ -20,6 +21,7 @@ on:
       - "package.json"
       - "tsconfig.json"
       - "bun.lock"
+      - "tests/*.test.cjs"
       - ".github/workflows/vscode-extension-ci.yml"
 
 permissions:
@@ -47,6 +49,9 @@ jobs:
 
       - name: Compile TypeScript
         run: bun run compile
+
+      - name: Run offline extension regression tests
+        run: bun run test
 
       - name: Validate extension manifest and contributed assets
         run: |
