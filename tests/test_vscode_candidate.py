@@ -61,7 +61,7 @@ class CandidatePackagingTests(unittest.TestCase):
         self.assertNotIn("dependencies", manifest)
         self.assertNotIn("devDependencies", manifest)
         self.assertNotIn("scripts", manifest)
-        self.assertNotIn("neuralblitz-v50", allowed)
+        self.assertNotIn("neuralblitz-v50", expected)
 
     def test_valid_minimal_archive_passes(self):
         candidate.verify_candidate(self.create_fixture_vsix())
