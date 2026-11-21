@@ -1,17 +1,24 @@
 /**
- * NeuralBlitz v50.0 - Main Entry Point
- * Omega Singularity Architecture
- * 
- * This is the main entry point for the NeuralBlitz application.
- * For the full LRS bridge implementation, see js/src/lrs_bridge.js
+ * NeuralBlitz root metadata module, not a web server or VS Code entry point.
+ * The actual extension is built from src/extension.ts.
+ * This file must not silently pass a Replit run/deploy smoke test.
  */
-
-console.log('NeuralBlitz v50.0 - Omega Singularity Architecture');
-console.log('Formula: Ω_singularity = lim(n→∞) (A_Architect^(n) ⊕ S_Ω\'^(n)) = I_source');
-
-// Export core modules
-module.exports = {
+const metadata = Object.freeze({
     version: '50.0.0',
     name: 'NeuralBlitz',
-    architecture: 'Omega Singularity'
-};
+    architecture: 'Omega Singularity',
+    status: 'research-prototype',
+});
+
+module.exports = metadata;
+
+if (require.main === module) {
+    console.error(
+        'LRS-NeuralBlitz is not a deployable root Node/HTTP application. ' +
+        'This entry point exports metadata only. ' +
+        'For the tested VS Code extension, see README.md and ' +
+        'docs/vscode-candidate-packaging.md. ' +
+        'For the experimental Python gateway, see docs/production-readiness.md.'
+    );
+    process.exitCode = 1;
+}

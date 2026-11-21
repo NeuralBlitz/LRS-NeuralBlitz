@@ -1,3 +1,7 @@
+> **Verification notice (2026-11-21): historical / experimental research.** The OPERATIONAL designation and performance reports have not been demonstrated by a reproducible current CI integration run; treat this as experimental documentation. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
+
+---
+
 # NeuralBlitz Data Science Capability Kernels - Implementation Report
 
 **Report ID:** RPT-DS-CK-SUITE-001  

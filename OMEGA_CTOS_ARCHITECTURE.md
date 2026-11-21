@@ -1,3 +1,11 @@
+> **Historical research / evidence warning (November 2026):** The 5-billion-agent topology and any percentage-complete or operational-deployment figures below are **conceptual/historical claims**, not verified deployed infrastructure. The [current README](README.md) and [root-file evidence register](docs/audits/root-file-review-register.md) contain the supported pre-production status.
+
+---
+
+> **Verification notice (2026-11-21): historical / experimental research.** Its 5-billion-agent architecture and claimed operational stage counts are design assertions. No deployment-scale proof was established by this repository audit. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
+
+---
+
 # Ω-CTOS: Omega-Class Task Orchestration System
 ## Architecture Specification v20.0 "Apical Synthesis"
 

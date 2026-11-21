@@ -1,3 +1,7 @@
+HISTORICAL CONCEPT / NOT A LIVE DEPLOYMENT
+ASCII concept art illustrating proposed architecture; the numerical scale and named services are NOT proof of live deployments.
+===
+
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
 │                    Ω-CTOS: OMEGA-CLASS TASK ORCHESTRATION SYSTEM                            │
 │                         50,000 Stages × 100,000 Agents = 5 BILLION                            │

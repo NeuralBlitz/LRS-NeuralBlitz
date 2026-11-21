@@ -6,10 +6,17 @@ Return to the [main README](../README.md) for the verified product scope. The or
 
 ## Start here
 
+- [Root-file review register](audits/root-file-review-register.md) — all 110 baseline root Git entries, filename-specific risks and evidence tiers
 - [README evidence audit](readme-claim-audit.md) — corrected assertions, historical claim categories, and promotion standards
 - [Legacy prose claim inventory](audits/readme-legacy-claim-inventory.tsv) — source line references for substantive narrative assertions; no implication of independent verification
 - [Production readiness](production-readiness.md) — required checks and unresolved release gates
 - [Deployment security checklist](security-deployment.md) — operational risks, prior credential exposure, and manual remediation responsibilities
+
+## Complete root-file inspection
+
+- [Root-level review and outstanding issues](audits/root-review-findings.md) — 110 tracked entries, evidence boundaries, source-level defects, and release blockers
+- [Root-by-root evidence register](audits/root-file-review.csv) — exact filenames, Git blob revisions, observed roles and inspection scope
+- [Root review freshness checker](../scripts/check_root_review.py) — CI rejects undocumented changes to root-level tracked files
 
 ## Verified-source extension engineering
 

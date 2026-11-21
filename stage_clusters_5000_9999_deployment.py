@@ -1039,7 +1039,7 @@ class StageClusterDeployment:
     async def execute_full_deployment(self):
         """Execute full deployment of all stage clusters"""
         print("=" * 80)
-        print("STAGE CLUSTERS 5000-9999 DEPLOYMENT INITIATED")
+        print("STAGE CLUSTERS 5000-9999 SIMULATION INITIATED (NO LIVE DEPLOYMENT)")
         print("Target: 500 Million Agents (5 Clusters × 100M Agents)")
         print("=" * 80)
 
@@ -1066,7 +1066,7 @@ class StageClusterDeployment:
             # Final summary
             total_time = time.time() - self.deployment_start_time
             print(f"\n{'=' * 80}")
-            print(f"DEPLOYMENT COMPLETE")
+            print(f"SIMULATED ACCOUNTING COMPLETE — NO REAL AGENTS PROVISIONED")
             print(f"{'=' * 80}")
             print(f"Total Agents: {self.deployment_metrics['total_agents_deployed']:,}")
             print(f"Total Time: {total_time:.2f} seconds")

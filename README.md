@@ -89,7 +89,28 @@ To promote a claim into the supported README, require: a precise definition, rel
 
 The [legacy claim inventory](docs/audits/readme-legacy-claim-inventory.tsv) preserves extracted original prose assertions with line numbers; **unverified does not mean disproved**. The source archive remains available for systematic follow-up.
 
+## Root-level source and research inspection
+
+The root includes 110 tracked entries spanning code, research specifications,
+metadata, binary artifacts, a symlink and a Gitlink. The
+[filename-indexed root review](docs/audits/root-review-findings.md) and
+[110-entry evidence register](docs/audits/root-file-review.csv) record what
+was inspected, defects found, and the limits of verification. A passing source
+scan is **not** equivalent to running or independently validating every
+subsystem. The [reproducible root review check](scripts/check_root_review.py)
+requires source-hash updates after any root-level change.
+
+The root `index.js` is **not an HTTP application**. Running `node index.js`
+intentionally exits with a diagnostic message rather than implying a server
+started. Replit does not advertise an autoscaled deployment or HTTP port.
+The tested VS Code extension and optional experimental Python gateway are
+separate components; neither is made production-ready by this root entry point.
+
 ## Documentation and contributing
+
+The [root-file review register](docs/audits/root-file-review-register.md) identifies each of the 110 baseline tracked root entries and its verification limits. The [repository-wide audit](docs/audits/repository-wide-inspection.md) covers nested files at an inventory/structural level, **not** automatic proof that they work.
+
+**Replit status:** The old autoscale configuration invoked a metadata-only Node entry point. The root Replit development command now reports that no deployable root HTTP app exists; it is not a production launch path. Stage-cluster figures in the repository are hypothetical arithmetic simulations, not measured deployment counts.
 
 Start with the [documentation index](docs/README.md), [product release gates](docs/production-readiness.md), [README evidence audit](docs/readme-claim-audit.md), [extension activation contract](docs/extension-activation-contract.md), [debugger execution contract](docs/debugger-execution-contract.md), and [VSIX candidate packaging guide](docs/vscode-candidate-packaging.md).
 
