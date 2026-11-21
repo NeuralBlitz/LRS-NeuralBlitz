@@ -160,9 +160,7 @@ def main():
                 result = classifier.predict(test_intent)
                 print(f"Test {i+1}: {result.category} (confidence: {result.confidence:.2%})")
         
-            accuracy = sum(1 for r in test_intents 
-                          if r.category == r['category']) / len(test_intents))
-            print(f"   📈 Prediction Accuracy: {accuracy:.2%}")
+            print("   Note: prediction accuracy requires labeled holdout samples; not measured here.")
         
         # 6. Consciousness Prediction
         print("\n🧮 Testing Consciousness Prediction...")
