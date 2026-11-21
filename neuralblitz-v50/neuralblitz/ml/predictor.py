@@ -460,42 +460,18 @@ class ConsciousnessPredictor:
         }
     
     def get_prediction_accuracy(self, window_size: int = 20) -> Dict[str, Any]:
-        """Calculate prediction accuracy over recent window."""
-        if len(self.prediction_history) < window_size:
-            return {"status": "insufficient_data"}
-        
-        # Get recent predictions and actual values
-        predictions = [p.predicted_level for p in self.prediction_history[-window_size:]]
-        actual_values = [p.predicted_value for p in self.prediction_history[-window_size:]]
-        
-        # Map back to actual levels for comparison
-        predicted_levels = [self._encode_consciousness_level(
-            {"consciousness_level": self.LEVELS[int(p.predicted_level), "DORMANT"}] for p in self.prediction_history
-        ) for p in self.prediction_history[-window_size:]]
-        
-        # Calculate accuracy
-        correct = sum(1 for p, a in zip(predicted_levels, actual_values) if p == a)
-        accuracy = correct / len(predictions)
-        
-        # Calculate MAE
-        mae = np.mean([abs(p - a) for p, a in zip(predicted_levels, actual_values)])
-        
-        # RMSE
-        rmse = np.mean((p - a) ** 2 for p, a in zip(predicted_levels, actual_values))
-        
+        """Fail closed until independent observed targets are recorded.
+
+        Prediction history does not currently store matched future outcomes.
+        Comparing two predictions, or the prediction to the same feature
+        sample, is not a legitimate measured forecast accuracy metric.
+        """
         return {
+            "status": "unavailable",
             "window_size": window_size,
-            "accuracy": accuracy,
-            "mae": mae,
-            "rmse": rmse,
-            "predicted_levels": predictions,
-            "actual_values": actual_values,
-            "accuracy_per_level": {
-                level: sum(1 for p, a in zip(predicted_levels, actual_values) if p == a) / 
-                sum(1 for p, a in zip(predicted_levels, actual_values))
-            }
+            "reason": "No independently observed target labels are recorded for these forecasts",
         }
-    
+
     def update_with_engine_result(self, engine_result: Dict[str, Any]) -> None:
         """Update predictor with new engine result."""
         # Extract features from engine result
