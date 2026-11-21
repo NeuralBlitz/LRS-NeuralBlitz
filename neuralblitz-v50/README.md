@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** Consciousness terminology, production-readiness, API compatibility and inference-time benchmarks on this page are historical claims, not independently reproduced product evidence. See the [source-backed product README](../README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # NeuralBlitz v50.0 + OpenCode + LRS Agents Integration
 
 🌟 **The irreducible source of all possible being, enhanced with artificial intelligence and distributed coordination**

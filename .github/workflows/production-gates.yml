@@ -64,6 +64,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Check factual README contracts against tracked source
+        run: python scripts/check_readme_contract.py
       - name: Run dependency-free Python contract tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 

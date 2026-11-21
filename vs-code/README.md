@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** This describes a historical/different extension identity and version; do not infer that any linked Marketplace listing is the present neuralblitz-vscode package. See the [source-backed product README](../README.md). Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # OpenCode LRS Integration - VS Code Extension
 
 **AI-Assisted Development Revolutionized**  

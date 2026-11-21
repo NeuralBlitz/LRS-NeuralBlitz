@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** Microphone, AI service and voice-command examples require dependencies, credentials and hardware; this is an unverified experimental guide. See the [source-backed product README](../README.md). Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # Voice Interface System - Quick Start Guide
 
 ## Installation

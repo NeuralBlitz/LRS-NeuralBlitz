@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** Cloud scale, completeness and deployment behavior described below have not been validated in a supported production account. See the [source-backed product README](../README.md). Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # OpenCode LRS Serverless Deployment
 
 **Cloud-Native AI-Assisted Development**  

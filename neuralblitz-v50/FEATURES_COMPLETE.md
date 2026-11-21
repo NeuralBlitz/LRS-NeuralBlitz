@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** Feature totals, test coverage, and production functionality are not currently supported by verified end-to-end test reports. See the [source-backed product README](../README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # NeuralBlitz V50 - Production-Grade Features: IMPLEMENTATION COMPLETE
 
 ## 🎉 BUILD STATUS: 5 MAJOR FEATURES COMPLETED

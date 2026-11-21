@@ -1,208 +1,39 @@
-# 📚 OpenCode LRS Documentation Hub
+# LRS-NeuralBlitz — Documentation Index
 
-**Comprehensive Documentation for the Advanced AI Development Platform**
+**Status: pre-production.** The pages below describe tracked source, explicit test boundaries, and outstanding release work. This documentation does **not** certify experimental research claims, independent security review, actual cloud deployment, medical/BCI performance, or hardware interoperability.
 
----
+Return to the [main README](../README.md) for the verified product scope. The original long-form README remains [archived as unverified historical material](history/README-legacy-2026-11-21.md).
 
+## Start here
 
+- [README evidence audit](readme-claim-audit.md) — corrected assertions, historical claim categories, and promotion standards
+- [Legacy prose claim inventory](audits/readme-legacy-claim-inventory.tsv) — source line references for substantive narrative assertions; no implication of independent verification
+- [Production readiness](production-readiness.md) — required checks and unresolved release gates
+- [Deployment security checklist](security-deployment.md) — operational risks, prior credential exposure, and manual remediation responsibilities
 
-## 🎯 **Documentation by Role**
+## Verified-source extension engineering
 
-### **👨‍💻 Developers**
-```markdown
-📖 Must Read:
-├── README.md              # Platform overview
-├── API_REFERENCE.md        # Complete API docs
-├── DEVELOPMENT_SETUP.md    # Local environment
-└── TESTING.md             # Test procedures
+- [Extension activation contract](extension-activation-contract.md) — manifest commands, tree views, and offline activation checks
+- [Debugger execution contract](debugger-execution-contract.md) — failure behavior, real execution evidence, and unsupported debugger capabilities
+- [NBOS client response validation](nbos-client-protocol-validation.md) — transport acknowledgements versus completed work
+- [Language asset boundaries](vscode-extension-language-assets.md) — provisional ReflexælLang / LoN grammar support
+- [VS Code webview security](vscode-webview-security.md) — tested text escaping and webview script restrictions
+- [VSIX candidate packaging](vscode-candidate-packaging.md) — allowlisted bundle, artifact checksums, and no-publish boundary
 
-🔬 Advanced:
-├── ARCHITECTURE.md        # System design
-├── LRS_AGENTS.md         # AI framework
-└── PERFORMANCE_ANALYSIS.md # Optimization
-```
+## API and telemetry
 
-### **🏢 Enterprise Users**
-```markdown
-📖 Must Read:
-├── README.md              # Platform overview
-├── ENTERPRISE_DEPLOYMENT.md # Production setup
-├── SECURITY_GUIDELINES.md  # Security best practices
-└── MONITORING.md          # System monitoring
+- [Multi-agent workflow status](multi-agent-workflow-status.md) — route does **not** execute tasks
+- [Compose security baseline](compose-security-baseline.md) — local development configuration checks, remaining privileged-container and image-pinning issues
+- [Source API gateway](../main.py) — FastAPI route declarations; not an independently verified authenticated service
 
-🔬 Advanced:
-├── PERFORMANCE_ANALYSIS.md # Benchmarking
-├── TROUBLESHOOTING.md     # Issue resolution
-└── CONTRIBUTING.md        # Custom integrations
-```
+## Automated checks
 
-### **🔬 Researchers**
-```markdown
-📖 Must Read:
-├── README.md              # Platform overview
-├── LRS_AGENTS.md         # Active Inference framework
-├── NEURALBLITZ.md        # Advanced AI systems
-└── DEVELOPMENT_SETUP.md    # Research environment
+- [Production gates](../.github/workflows/production-gates.yml) — TypeScript compilation/lint/offline regression, Python contract checks, Compose policy checks
+- [VSIX candidate workflow](../.github/workflows/vscode-vsix-candidate.yml) — creates a checked development artifact, not a Marketplace release
+- [README claim verifier](../scripts/check_readme_contract.py) — keeps links, route count, and supported claims consistent with tracked source
 
-🔬 Advanced:
-├── QUANTUM_GUIDE.md      # Quantum computing
-├── NEURO_SYMBIOTIC.md    # Brain-computer interfaces
-├── DIMENSIONAL_COMPUTING.md # Multi-dimensional processing
-└── SELF_EVOLUTION.md     # Autonomous improvement
-```
+### Limitations
 
----
+Historical descriptions of coverage percentages, test counts, working SDKs, AI capabilities, peer-reviewed results, certification, third-party service availability, and product performance have **not** been accepted as current facts without corresponding evidence. Nested experimental projects can have their own instructions; their existence does not demonstrate that they pass end-to-end tests.
 
-## 📊 **Documentation Metrics**
-
-### **Coverage Statistics**
-- **API Endpoints**: 18/18 documented (100%)
-- **Core Classes**: 47/52 documented (90%)
-- **Example Code**: 120+ working examples
-- **Test Cases**: 257 with documentation
-- **Tutorials**: 15 comprehensive guides
-
-### **Quality Assurance**
-- **Peer Review**: All documentation reviewed by technical team
-- **Example Testing**: All code examples validated
-- **User Testing**: Documentation tested by real users
-- **Regular Updates**: Monthly documentation reviews
-
----
-
-## 🔍 **Search & Discovery**
-
-### **Common Search Topics**
-```bash
-# Quick access to popular topics:
-/search "quick start"          # Getting started guides
-/search "api examples"         # Code examples
-/search "deployment"           # Production deployment
-/search "quantum computing"    # Quantum features
-/search "performance"          # Optimization guides
-/search "security"             # Security documentation
-/search "enterprise"           # Enterprise features
-/search "troubleshooting"      # Problem solving
-```
-
-### **Documentation Tags**
-- `#beginner` - New user friendly
-- `#intermediate` - Some experience required
-- `#advanced` - Complex concepts
-- `#enterprise` - Business-focused
-- `#research` - Academic/research content
-- `#tutorial` - Step-by-step guides
-- `#reference` - Technical reference
-
----
-
-## 🌐 **Documentation Formats**
-
-### **Available Formats**
-- **Web**: [docs.opencode-lrs.com](https://docs.opencode-lrs.com)
-- **PDF**: Downloadable guides for offline reading
-- **Markdown**: Source files in the repository
-- **API**: Interactive API documentation
-- **Video**: Tutorial videos for visual learners
-
-### **Accessibility**
-- **Screen Reader**: Optimized for accessibility tools
-- **Dark Mode**: Available for reduced eye strain
-- **Mobile**: Responsive design for mobile devices
-- **Print**: Print-optimized versions available
-
----
-
-## 🤝 **Contributing to Documentation**
-
-### **How to Contribute**
-```bash
-# Clone documentation repository
-git clone https://github.com/anomalyco/opencode-lrs-docs
-cd opencode-lrs-docs
-
-# Create new documentation
-cp TEMPLATE.md my-new-guide.md
-# Edit following the style guide
-
-# Test your documentation
-python validate_docs.py my-new-guide.md
-
-# Submit pull request
-git add my-new-guide.md
-git commit -m "Add: New guide for X feature"
-git push origin feature/my-new-guide
-```
-
-### **Documentation Standards**
-- **Style**: Follow Markdown style guide
-- **Examples**: All code must be tested
-- **Screenshots**: Use consistent format
-- **Links**: Validate all external links
-- **Review**: Technical accuracy required
-
----
-
-## 📞 **Documentation Support**
-
-### **Getting Help**
-- **GitHub Issues**: Report documentation problems
-- **Discord**: #documentation channel for help
-- **Email**: docs@opencode-lrs.com
-- **Office Hours**: Weekly documentation Q&A sessions
-
-### **Community Resources**
-- **Wiki**: Community-contributed content
-- **Forums**: Discussion and Q&A
-- **Blog**: Latest updates and tutorials
-- **Newsletter**: Monthly documentation updates
-
----
-
-## 📈 **Documentation Roadmap**
-
-### **Q1 2026**
-- [ ] Video tutorial series (20+ videos)
-- [ ] Interactive code playground
-- [ ] Multi-language documentation (Spanish, Chinese, Japanese)
-- [ ] Advanced troubleshooting wizard
-
-### **Q2 2026**
-- [ ] GraphQL API documentation
-- [ ] Mobile app documentation
-- [ ] Enterprise integration patterns
-- [ ] Best practices handbook
-
-### **Q3 2026**
-- [ ] AI-powered documentation assistant
-- [ ] Custom documentation generator
-- [ ] Real-time documentation updates
-- [ ] Certification program materials
-
----
-
-## 🎊 **Start Your Journey**
-
-**Ready to dive into the world's most advanced AI development platform?**
-
-### **🚀 New to OpenCode LRS?**
-1. Read the [Main README](../README.md) for overview
-2. Follow the [Installation Guide](INSTALLATION.md) for setup
-3. Try the [First Steps](FIRST_STEPS.md) tutorial
-4. Explore the [API Reference](API_REFERENCE.md) for capabilities
-
-### **🔬 Ready for Advanced Features?**
-1. Study the [Architecture Guide](ARCHITECTURE.md)
-2. Learn the [LRS-Agents Framework](LRS_AGENTS.md)
-3. Explore [NeuralBlitz v50.0](NEURALBLITZ.md) systems
-4. Try advanced [Quantum Computing](QUANTUM_GUIDE.md) features
-
-### **🏢 Enterprise Deployment?**
-1. Review [Enterprise Deployment](ENTERPRISE_DEPLOYMENT.md)
-2. Follow [Security Guidelines](SECURITY_GUIDELINES.md)
-3. Set up [Monitoring & Analytics](MONITORING.md)
-4. Learn [Performance Optimization](PERFORMANCE_ANALYSIS.md)
-
----
-
-**🌟 Welcome to the future of AI-assisted development. Your journey starts here!**
+For a missing or inaccurate source claim, file a reproducible [GitHub issue](https://github.com/NeuralBlitz/LRS-NeuralBlitz/issues) and include the exact source, expected behavior, test, dependency version, and observed result.

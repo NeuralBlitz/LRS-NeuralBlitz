@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** This nested API guide is not an authenticated root gateway contract; imports, examples and compatibility statements require their own integration tests. See the [source-backed product README](../../README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # NeuralBlitz V50 API Reference
 
 Complete API documentation for the NeuralBlitz V50 Minimal consciousness engine.
