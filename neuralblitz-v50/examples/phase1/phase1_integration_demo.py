@@ -252,7 +252,7 @@ def main():
             "status": "PASS" if admin_auth['authorized'] else "FAIL",
             "metrics": {
                 "auth_success": admin_auth['authorized'],
-                "demo_auth_success": demo_auth['authorized']
+                "demo_auth_success": demo_auth['authorized'],
                 "rate_limiting": rate_limited
             }
         })
