@@ -13,30 +13,30 @@ import os
 import subprocess
 
 # Add current directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(
-    0, os.path.dirname(os.path.abspath(__file__))
-)  # Add twice to ensure root is in path
 sys.path.insert(
     0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lrs-agents")
 )
 
-# Import our integration components
-from lrs_agents.lrs.opencode.simplified_integration import (
-    OpenCodeTool,
-    SimplifiedLRSAgent,
-)
-
-# Import benchmark integration
-from lrs_agents.lrs.benchmarking.benchmark_integration import (
-    integrate_benchmarks_into_main,
-    add_benchmark_ui_to_main_html,
-)
-
-# Import enterprise security and monitoring
-from lrs_agents.lrs.enterprise.enterprise_security_monitoring import (
-    integrate_enterprise_features,
-)
+# Optional LRS integration: Gitlink content is not present in a normal
+# checkout. Missing modules must not prevent the source-only status API from
+# starting, and must never be represented as an operational integration.
+try:
+    from lrs_agents.lrs.opencode.simplified_integration import (
+        OpenCodeTool, SimplifiedLRSAgent,
+    )
+    from lrs_agents.lrs.benchmarking.benchmark_integration import (
+        integrate_benchmarks_into_main,
+    )
+    from lrs_agents.lrs.enterprise.enterprise_security_monitoring import (
+        integrate_enterprise_features,
+    )
+    BACKEND_IMPORT_AVAILABLE = True
+except ImportError:
+    OpenCodeTool = None
+    SimplifiedLRSAgent = None
+    integrate_benchmarks_into_main = None
+    integrate_enterprise_features = None
+    BACKEND_IMPORT_AVAILABLE = False
 
 # Import cognitive components
 try:
@@ -68,11 +68,14 @@ except ImportError:
 
 app = FastAPI(title="OpenCode ↔ LRS-Agents Integration Hub", version="2.0.0")
 
-# Integrate benchmark endpoints
-integrate_benchmarks_into_main(app)
-
-# Integrate enterprise security and monitoring
-integrate_enterprise_features(app)
+# The legacy LRS modules may register additional routes with unknown
+# authentication and authorization properties. Never expose those routes by
+# default; require explicit local opt-in while integration tests are pending.
+if os.environ.get("LRS_ENABLE_EXPERIMENTAL_ROUTES") == "1":
+    if integrate_benchmarks_into_main is not None:
+        integrate_benchmarks_into_main(app)
+    if integrate_enterprise_features is not None:
+        integrate_enterprise_features(app)
 
 
 # Data models
@@ -88,9 +91,13 @@ class IntegrationResponse(BaseModel):
     integration_notes: str
 
 
-# Global instances for demo
-opencode_tool = OpenCodeTool()
-lrs_agent = SimplifiedLRSAgent(tools=[opencode_tool])
+# Optional backend classes are absent in a checkout without the Gitlink.
+# Preserve detection for status reporting, never fabricate a working agent.
+opencode_tool = OpenCodeTool() if BACKEND_IMPORT_AVAILABLE else None
+lrs_agent = (
+    SimplifiedLRSAgent(tools=[opencode_tool])
+    if opencode_tool is not None else None
+)
 
 
 @app.get("/", response_class=HTMLResponse)
