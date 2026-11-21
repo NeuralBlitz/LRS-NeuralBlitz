@@ -100,10 +100,11 @@ scan is **not** equivalent to running or independently validating every
 subsystem. The [reproducible root review check](scripts/check_root_review.py)
 requires source-hash updates after any root-level change.
 
-For a small working preview that makes **no AI or production claims**, run
-`node index.js` and open `http://127.0.0.1:8000`; its `/healthz` response
-explicitly reports `backend_connected: false` and `production_ready: false`.
-It is separate from the optional Python API gateway and extension.
+The root `index.js` is **not an HTTP application**. Running `node index.js`
+intentionally exits with a diagnostic message rather than implying a server
+started. Replit does not advertise an autoscaled deployment or HTTP port.
+The tested VS Code extension and optional experimental Python gateway are
+separate components; neither is made production-ready by this root entry point.
 
 ## Documentation and contributing
 
