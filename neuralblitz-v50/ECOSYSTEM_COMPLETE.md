@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** Claims of complete multi-system integration and production readiness are not certified by the root project's current release gates. See the [source-backed product README](../README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # NeuralBlitz V50 - BIDIRECTIONAL ECOSYSTEM COMMUNICATION
 
 ## ✅ BUILD COMPLETE - 1,800+ Lines of Production-Grade Code
