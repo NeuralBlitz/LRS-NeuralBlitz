@@ -27,6 +27,44 @@ This is full **static file inventory** coverage when CI passes, *not* deep human
 
 Gitlinks are not ordinary blobs and are reported separately rather than incorrectly counted as inspected source. Unresolvable links require a documented upstream location and valid dependency manifest before any recursive inspection. Audit results themselves are *not* proof that all claims are true.
 
+## First complete CI scan — audit run 44956585979
+
+The [first successful file-by-file CI scan](https://github.com/NeuralBlitz/LRS-NeuralBlitz/actions/runs/44956585979) produced a complete per-file CSV and JSON report for 732 tracked entries in PR #28's then-current checkout. It reported **no unreadable ordinary tracked blobs**, but four Gitlinks and one symlink target were not recursively traversed.
+
+| Inspection finding | Count | Status |
+| --- | ---: | --- |
+| Python/JSON static syntax errors | 13 | Open remediation; not proof of runtime correctness in other files |
+| Local Markdown link findings | 35 | Mostly historical root and nested v50 READMEs; some links refer to absent content |
+| Heuristic unsupported-claim term occurrences | 116 | Review queue, not a count of false claims |
+| Heuristic potential credential-text matches | 22 files | Requires careful **private** validation; no secret values printed in reports |
+| Tracked generated/cached artifacts | 225 files | Provenance/cleanup review required; not production test coverage |
+| Brief or placeholder Markdown files | 39 | Documentation completeness review required |
+
+### Static parse errors requiring repair
+
+- `language-configurations/nbcl.language-configuration.json` (invalid JSON; **VS Code extension release-blocking**)
+- `server.py`, `simple_app.py` (root Python parse failures)
+- `serverless_deployments/azure_functions/azuredeploy.json` (invalid JSON)
+- `neuralblitz-v50/examples/07_real_ecosystem_demo.py`
+- `neuralblitz-v50/examples/phase1/phase1_integration_demo.py`
+- `neuralblitz-v50/neuralblitz/enterprise/autocognition_engine.py`
+- `neuralblitz-v50/neuralblitz/enterprise/lrs_knowledge_acquisition.py`
+- `neuralblitz-v50/neuralblitz/enterprise/lrs_reasoning_engine.py`
+- `neuralblitz-v50/neuralblitz/ml/classifier.py`
+- `neuralblitz-v50/neuralblitz/ml/predictor.py`
+- `neuralblitz-v50/python/neuralblitz/cognitive_engine.py`
+- `neuralblitz-v50/quantum_foundation.py`
+
+**Important:** The existing extension compilation and VSIX packaging checks did **not** parse the NBCL language configuration JSON, so previously green workflows missed an actual editor asset defect. A separate release-hardening change must validate JSON contents, not merely file existence. Likewise, the Python errors are static parse failures; they do not establish the correct intended implementation and should not be "fixed" by inventing behavior.
+
+### Files with local-link findings
+
+- Historical root README archive (14 link references detected under its new archival relative path)
+- Nested `neuralblitz-v50/README.md` (18 findings)
+- `vs-code/README.md`, `neuralblitz-v50/BLOG_POST.md`, and `DISTRIBUTED_MLMAS_UPGRADES_REPORT.md` (one each)
+
+The archive intentionally preserves historical links even where the original targets no longer exist. The active root README and documentation index have passed their stricter local-link contract check.
+
 ## Findings by boundary
 
 ### Root and project-level documentation
