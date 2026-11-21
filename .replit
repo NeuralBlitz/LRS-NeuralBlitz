@@ -1,12 +1,12 @@
-# Source-preview workspace only; this does NOT deploy a production AI platform.
-# The Node entrypoint serves only a truthful static status/health page.
-run = "HOST=0.0.0.0 node index.js"
+# Development helper only. No deployable Replit web application exists yet.
+# The run command intentionally exits with an actionable explanation.
 entrypoint = "index.js"
+run = ["node", "index.js"]
 modules = ["nodejs-22", "python-3.11"]
 hidden = [".config", "package-lock.json"]
 
 [gitHubImport]
-requiredFiles = [".replit", "index.js", "package.json", "bun.lock"]
+requiredFiles = [".replit", "package.json", "bun.lock", "index.js"]
 
 [nix]
 channel = "stable-24_11"
@@ -15,6 +15,4 @@ packages = ["libxcrypt"]
 [agent]
 expertMode = true
 
-[[ports]]
-localPort = 8000
-externalPort = 80
+# No [deployment] or [[ports]] advertised: this is not a running service.
