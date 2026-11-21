@@ -1,0 +1,43 @@
+name: Repository-wide source and documentation audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repository-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository-audit:
+    name: Tracked file inventory and README evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify current README against source and existing evidence
+        run: python3 scripts/check_readme_contract.py
+      - name: Run isolated audit tool regression checks
+        run: python3 -m unittest discover -s tests -p 'test_repository_tree_audit.py' -v
+      - name: Read and inventory every tracked checkout file
+        run: python3 scripts/audit_repository_tree.py --out "$RUNNER_TEMP/repository-audit"
+      - name: Preserve complete per-file audit and findings
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-audit-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/repository-audit/tracked-files.csv
+            ${{ runner.temp }}/repository-audit/summary.json
+          retention-days: 30
+          if-no-files-found: error
