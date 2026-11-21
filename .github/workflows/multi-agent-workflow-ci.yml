@@ -1,0 +1,28 @@
+name: Multi-agent workflow fail-closed tests
+
+on:
+  push:
+    paths:
+      - "main.py"
+      - "tests/test_multi_agent_workflow.py"
+      - ".github/workflows/multi-agent-workflow-ci.yml"
+  pull_request:
+    paths:
+      - "main.py"
+      - "tests/test_multi_agent_workflow.py"
+      - ".github/workflows/multi-agent-workflow-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  fail-closed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify fail-closed endpoint behavior without optional services
+        run: python -m unittest discover -s tests -p 'test_multi_agent_workflow.py' -v
