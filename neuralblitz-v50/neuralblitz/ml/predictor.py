@@ -646,14 +646,13 @@ def demo_consciousness_predictor():
                 coherence += random_event * 0.2
                 
                 synthetic_data.append({
-                    "timestamp": f"2023-01-{day:02d:02:02:05}", 5, hour:minute, second:05"),
+                    "timestamp": f"2023-01-{day + 1:02d}T{hour:02d}:{minute:02d}:00",
                     "coherence": coherence,
                     "processing_time_ms": processing_time,
-                    "consciousness_level": {
-                        "DORMANT" if day < 5 else "AWARE",
-                        "AWARE" if 5 <= day < 17 else "FOCUSED",
-                        "TRANSCENDENT" if day >= 17 else "SINGULARITY"
-                    },
+                    # Synthetic category label: not a measured consciousness state.
+                    "consciousness_level": (
+                        "DORMANT" if day < 2 else "AWARE" if day < 5 else "FOCUSED"
+                    ),
                     "metadata": {
                         "synthetic": True,
                         "day": day,
