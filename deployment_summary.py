@@ -23,7 +23,7 @@ def create_golden_dag_entry(operation, agent_count, metadata=None):
 
 def main():
     print("=" * 80)
-    print("STAGE CLUSTERS 5000-9999 DEPLOYMENT SUMMARY")
+    print("STAGE CLUSTERS 5000-9999 SIMULATION SUMMARY (NO REAL DEPLOYMENT)")
     print("Optimized Simulation - 500 Million Agents")
     print("=" * 80)
     print()
@@ -280,7 +280,7 @@ def main():
     print(f"  ✓ {total_memories:,} Memory Units Allocated")
     print(f"  ✓ {len(golden_dag)} GoldenDAG Entries Created")
     print()
-    print("All systems operational and monitoring active.")
+    print("Simulation complete: no infrastructure was provisioned or verified.")
     print("=" * 80)
 
 if __name__ == "__main__":
