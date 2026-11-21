@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** The listed JWT authentication endpoints, rate limits and enterprise API contracts are not established by the six-route root FastAPI source. Treat these as proposed interfaces. See the [source-backed product README](../README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # 📚 API Reference
 
 **Complete API Documentation for OpenCode LRS**
