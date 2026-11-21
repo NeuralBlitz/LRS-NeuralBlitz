@@ -1,0 +1,75 @@
+name: VSIX release candidate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vsix-candidate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package-candidate:
+    name: Build and validate minimal VSIX
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install locked development dependencies
+        run: bun install --frozen-lockfile
+      - name: Compile, lint, and run offline regression tests
+        run: |
+          bun run compile
+          bun run lint
+          bun run test
+
+      - name: Verify release-stage policy tests
+        run: python -m unittest discover -s tests -p 'test_vscode_candidate.py' -v
+
+      - name: Prepare minimal extension stage
+        run: |
+          python scripts/vscode_candidate.py stage "$RUNNER_TEMP/neuralblitz-vsix-stage"
+          mkdir -p "$RUNNER_TEMP/neuralblitz-vsix-stage/dist" dist
+
+      - name: Bundle all runtime dependencies except VS Code host API
+        run: |
+          bun build ./src/extension.ts --target node --format cjs \
+            --external vscode --outfile "$RUNNER_TEMP/neuralblitz-vsix-stage/dist/extension.js"
+          node --check "$RUNNER_TEMP/neuralblitz-vsix-stage/dist/extension.js"
+
+      - name: Package pre-release candidate with a pinned VSCE version
+        run: |
+          (
+            cd "$RUNNER_TEMP/neuralblitz-vsix-stage"
+            npx --yes --package=@vscode/vsce@4.1.1 vsce package \
+              --no-dependencies --pre-release --no-rewrite-relative-links \
+              --out "$GITHUB_WORKSPACE/dist/neuralblitz-vscode-${GITHUB_SHA:0:12}-candidate.vsix"
+          )
+
+      - name: Validate package content and write checksum
+        run: |
+          python scripts/vscode_candidate.py verify dist/*.vsix
+          (cd dist && sha256sum *.vsix > SHA256SUMS.txt)
+
+      - name: Retain candidate as a CI artifact (do not publish)
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuralblitz-vsix-candidate-${{ github.run_id }}
+          path: |
+            dist/*.vsix
+            dist/SHA256SUMS.txt
+          retention-days: 14
+          if-no-files-found: error
