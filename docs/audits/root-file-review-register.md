@@ -14,7 +14,7 @@
 | `.gitignore` | gitignore | Configuration/source (reviewed) | Tracked caches remain tracked despite ignore patterns. |
 | `.gitmodules` | gitmodules | Configuration/source (reviewed) | Only lrs_agents is mapped although the repository has four Gitlinks. |
 | `.lrsgate` | lrsgate | Configuration/source (reviewed) | Architecture illustration, not a verified operating service. |
-| `.replit` | replit | Configuration/source (reviewed) | Autoscales an index.js stub, not a working web service; misleading deployment contract. |
+| `.replit` | replit | Configuration/source (reviewed) | The previous autoscale configuration was misleading; the current Replit run fails closed and does not advertise an HTTP deployment. |
 | `advanced_autonomous_agent_framework_README.md` | advanced autonomous agent framework README | Markdown (sections, introductions and claims sampled) | Contains technical or research claims; examples not integration-tested. |
 | `advanced_autonomous_agent_framework.py` | advanced autonomous agent framework | Python source (imports/classes/entry point sampled) | Async in-memory demo; no authenticated multi-host execution. |
 | `agent_communication_protocols.md` | agent communication protocols | Markdown (sections, introductions and claims sampled) | Contains technical or research claims; examples not integration-tested. |
@@ -122,7 +122,7 @@
 ## Root-level findings requiring remediation
 
 1. **Root API truthfulness:** `main.py` previously reported an active integration without a verified authenticated health probe and advertised unsupported performance/security capabilities in HTML. Audit branch edits make these limits visible and mark integration health unverified, with isolated response tests.
-2. **Deployment mismatch:** `.replit` invokes `index.js`, a metadata stub; the Replit autoscale configuration and its advertised service are not equivalent. `pyproject.toml` and `uv.lock` omit dependencies required by the Python gateway and Flask demo.
+2. **Deployment mismatch:** `.replit` invokes `index.js`, a metadata stub; the Replit configuration no longer advertises autoscale or an HTTP deployment. `pyproject.toml` and `uv.lock` omit dependencies required by the Python gateway and Flask demo.
 3. **Simulation presented as deployment:** `deployment_summary.py`, `stage_clusters_5000_9999_deployment.py`, `STAGE_CLUSTERS_5000_9999_DEPLOYMENT_REPORT.md`, and `OMEGA_CTOS_ARCHITECTURE.md` contain large calculated/simulated agent quantities without corroborating worker processes or platform records. Treat as simulation/reference designs, not deployment results.
 4. **Scientific and security assertions:** Computer vision, medical/BCI, federation, custom crypto, quantum, voting and smart-city modules require component-specific dependencies, datasets, negative tests and independent review before operational or safety claims.
 5. **Repository hygiene:** `.coverage` and `generated-icon.png` are binary; `lrs` is a symlink and `lrs_agents` a Gitlink. External Gitlink content was **not** recursively read.
