@@ -63,6 +63,10 @@ python3 scripts/audit_repository_tree.py --out audit-output
 
 These commands are source and offline regression gates. They do not test an operational backend, hardware, large-scale agent deployment, cryptographic protocol efficacy or third-party cloud integrations.
 
+## Frozen CI verification scope
+
+This review is tested on a dedicated fixed-source branch in [PR #32](https://github.com/NeuralBlitz/LRS-NeuralBlitz/pull/32), independent of further edits to the earlier shared audit branch. The root catalog records the **current checkout SHA** for each of the 110 root entries; `scripts/check_root_review.py` must agree with Git's index before a merge is accepted. A successful packaging test does not establish the Python gateway can authenticate requests or launch the unavailable LRS Gitlink.
+
 ## Next engineering actions
 
 1. Validate the gateway startup with pinned FastAPI/uvicorn dependencies and an initialized `lrs_agents` Gitlink; test authenticated requests, lifecycle and route exposure.
