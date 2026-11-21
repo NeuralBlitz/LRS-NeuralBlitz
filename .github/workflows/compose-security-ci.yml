@@ -6,12 +6,14 @@ on:
       - "docker-compose.yml"
       - ".env.example"
       - "scripts/check_compose_security.py"
+      - "tests/test_compose_security.py"
       - ".github/workflows/compose-security-ci.yml"
   pull_request:
     paths:
       - "docker-compose.yml"
       - ".env.example"
       - "scripts/check_compose_security.py"
+      - "tests/test_compose_security.py"
       - ".github/workflows/compose-security-ci.yml"
 
 permissions:
@@ -23,5 +25,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Exercise security policy against unsafe synthetic configurations
+        run: python3 -m unittest discover -s tests -p 'test_compose_security.py' -v
       - name: Check root Compose interpolation and security invariants
         run: python3 scripts/check_compose_security.py
