@@ -66,6 +66,8 @@ jobs:
           python-version: '3.11'
       - name: Check factual README contracts against tracked source
         run: python scripts/check_readme_contract.py
+      - name: Require root file review on every source change
+        run: python scripts/check_root_review.py
       - name: Run dependency-free Python contract tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 
