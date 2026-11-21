@@ -58,19 +58,19 @@ export class NeuralBlitzDebugSession extends DebugSession {
         args: DebugProtocol.InitializeRequestArguments
     ): void {
         response.body = response.body || {};
-        response.body.supportsConfigurationDoneRequest = true;
-        response.body.supportsHitConditionalBreakpoints = true;
-        response.body.supportsConditionalBreakpoints = true;
+        response.body.supportsConfigurationDoneRequest = false;
+        response.body.supportsHitConditionalBreakpoints = false;
+        response.body.supportsConditionalBreakpoints = false;
         response.body.supportsEvaluateForHovers = true;
         response.body.supportsStepBack = false;
         response.body.supportsDataBreakpoints = false;
-        response.body.supportsCompletionsRequest = true;
+        response.body.supportsCompletionsRequest = false;
         response.body.completionTriggerCharacters = ['.', '/', '-'];
-        response.body.supportsCancelRequest = true;
-        response.body.supportsBreakpointLocationsRequest = true;
-        response.body.supportsRestartRequest = true;
-        response.body.supportsExceptionOptions = true;
-        response.body.supportsExceptionFilterOptions = true;
+        response.body.supportsCancelRequest = false;
+        response.body.supportsBreakpointLocationsRequest = false;
+        response.body.supportsRestartRequest = false;
+        response.body.supportsExceptionOptions = false;
+        response.body.supportsExceptionFilterOptions = false;
 
         this.sendResponse(response);
         this.sendEvent(new InitializedEvent());
@@ -124,7 +124,11 @@ export class NeuralBlitzDebugSession extends DebugSession {
         response: DebugProtocol.SetBreakpointsResponse,
         args: DebugProtocol.SetBreakpointsArguments
     ): Promise<void> {
-        const path = args.source.path as string;
+        const path = args.source?.path;
+        if (!path) {
+            this.sendErrorResponse(response, 1003, 'Breakpoint source path is required');
+            return;
+        }
         const clientBreakpoints = args.breakpoints || [];
 
         const breakpoints: DebugProtocol.Breakpoint[] = [];
@@ -135,13 +139,15 @@ export class NeuralBlitzDebugSession extends DebugSession {
             const runtimeBreakpoint: IRuntimeBreakpoint = {
                 id: i + 1,
                 line: this.convertClientLineToDebugger(b.line),
-                verified: true
+                // The backend has not acknowledged or bound this breakpoint.
+                verified: false
             };
 
             runtimeBreakpoints.push(runtimeBreakpoint);
 
             breakpoints.push({
-                verified: true,
+                verified: false,
+                message: 'Unverified: NBOS has not confirmed breakpoint installation',
                 line: b.line,
                 column: b.column,
                 id: runtimeBreakpoint.id
@@ -173,22 +179,22 @@ export class NeuralBlitzDebugSession extends DebugSession {
         response: DebugProtocol.StackTraceResponse,
         args: DebugProtocol.StackTraceArguments
     ): Promise<void> {
-        const frames: IRuntimeStackFrame[] = await this._nbosClient.getStackTrace();
-
-        response.body = {
-            stackFrames: frames.map(f => {
-                return new StackFrame(
+        try {
+            const frames: IRuntimeStackFrame[] = await this._nbosClient.getStackTrace();
+            response.body = {
+                stackFrames: frames.map(f => new StackFrame(
                     f.index,
                     f.name,
                     new Source(f.file, f.file),
                     this.convertDebuggerLineToClient(f.line),
                     f.column ? this.convertDebuggerColumnToClient(f.column) : 0
-                );
-            }),
-            totalFrames: frames.length
-        };
-
-        this.sendResponse(response);
+                )),
+                totalFrames: frames.length
+            };
+            this.sendResponse(response);
+        } catch (error) {
+            this.sendErrorResponse(response, 1002, `Stack trace unavailable: ${error}`);
+        }
     }
 
     protected scopesRequest(
@@ -236,12 +242,8 @@ export class NeuralBlitzDebugSession extends DebugSession {
                 });
             }
         } catch (error) {
-            variables.push({
-                name: 'error',
-                value: `Failed to load: ${error}`,
-                type: 'error',
-                variablesReference: 0
-            });
+            this.sendErrorResponse(response, 1002, `Variables unavailable: ${error}`);
+            return;
         }
 
         response.body = {
@@ -251,53 +253,52 @@ export class NeuralBlitzDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
+    private async respondToBackendAction(
+        response: DebugProtocol.Response,
+        action: () => Promise<void>
+    ): Promise<void> {
+        try {
+            await action();
+            // An HTTP acknowledgement is not proof that a step completed.
+            this.sendResponse(response);
+        } catch (error) {
+            this.sendErrorResponse(response, 1002, `NBOS debugger operation failed: ${error}`);
+        }
+    }
+
     protected async continueRequest(
         response: DebugProtocol.ContinueResponse,
         args: DebugProtocol.ContinueArguments
     ): Promise<void> {
-        await this._nbosClient.continue();
-        this.sendResponse(response);
+        await this.respondToBackendAction(response, () => this._nbosClient.continue());
     }
 
     protected async nextRequest(
         response: DebugProtocol.NextResponse,
         args: DebugProtocol.NextArguments
     ): Promise<void> {
-        await this._nbosClient.stepOver();
-        this.sendResponse(response);
-        this.sendEvent(
-            new StoppedEvent('step', NeuralBlitzDebugSession.threadId)
-        );
+        await this.respondToBackendAction(response, () => this._nbosClient.stepOver());
     }
 
     protected async stepInRequest(
         response: DebugProtocol.StepInResponse,
         args: DebugProtocol.StepInArguments
     ): Promise<void> {
-        await this._nbosClient.stepInto();
-        this.sendResponse(response);
-        this.sendEvent(
-            new StoppedEvent('step', NeuralBlitzDebugSession.threadId)
-        );
+        await this.respondToBackendAction(response, () => this._nbosClient.stepInto());
     }
 
     protected async stepOutRequest(
         response: DebugProtocol.StepOutResponse,
         args: DebugProtocol.StepOutArguments
     ): Promise<void> {
-        await this._nbosClient.stepOut();
-        this.sendResponse(response);
-        this.sendEvent(
-            new StoppedEvent('step', NeuralBlitzDebugSession.threadId)
-        );
+        await this.respondToBackendAction(response, () => this._nbosClient.stepOut());
     }
 
     protected async pauseRequest(
         response: DebugProtocol.PauseResponse,
         args: DebugProtocol.PauseArguments
     ): Promise<void> {
-        await this._nbosClient.pause();
-        this.sendResponse(response);
+        await this.respondToBackendAction(response, () => this._nbosClient.pause());
     }
 
     protected disconnectRequest(
@@ -320,14 +321,10 @@ export class NeuralBlitzDebugSession extends DebugSession {
                 type: typeof result,
                 variablesReference: 0
             };
+            this.sendResponse(response);
         } catch (error) {
-            response.body = {
-                result: `Error: ${error}`,
-                variablesReference: 0
-            };
+            this.sendErrorResponse(response, 1002, `Evaluation failed: ${error}`);
         }
-
-        this.sendResponse(response);
     }
 
     protected completionsRequest(
