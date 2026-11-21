@@ -24,6 +24,23 @@ export class NBOSClient {
     private client: AxiosInstance;
     private connected = false;
 
+    private requireAcknowledgement(data: unknown, operation: string): void {
+        if (!data || typeof data !== 'object' || (data as { ok?: unknown }).ok !== true) {
+            throw new Error(`NBOS did not positively acknowledge ${operation}`);
+        }
+    }
+
+    private requireRecord(data: unknown, operation: string): Record<string, any> {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            throw new Error(`Malformed NBOS ${operation} response: expected an object`);
+        }
+        const record = data as Record<string, any>;
+        if (record.ok === false) {
+            throw new Error(record.error?.message || `NBOS rejected ${operation}`);
+        }
+        return record;
+    }
+
     constructor() {
         const config = vscode.workspace.getConfiguration('neuralblitz');
         const endpoint = config.get<string>('nbosEndpoint', 'http://localhost:8080');
@@ -52,7 +69,7 @@ export class NBOSClient {
                 trace: options.trace || false,
                 strict: vscode.workspace.getConfiguration('neuralblitz').get('strictMode', false)
             });
-            if (!response.data?.ok) {
+            if (response.data?.ok !== true) {
                 throw new Error(response.data?.error?.message || 'NBOS rejected the boot request');
             }
             this.connected = true;
@@ -92,28 +109,49 @@ export class NBOSClient {
 
     async executeCommand(command: string): Promise<any> {
         const response = await this.client.post('/execute', { command });
-        return response.data;
+        const data = this.requireRecord(response.data, 'command execution');
+        if (typeof data.ok !== 'boolean') {
+            throw new Error('Malformed NBOS command response: missing boolean ok');
+        }
+        return data;
     }
 
     async getStackTrace(): Promise<StackFrame[]> {
         const response = await this.client.get('/debug/stack');
-        return response.data?.frames || [];
+        const data = this.requireRecord(response.data, 'stack trace');
+        if (!Array.isArray(data.frames)) {
+            throw new Error('Malformed NBOS stack trace response: expected frames array');
+        }
+        return data.frames;
     }
 
     async getVariables(scope: string): Promise<Record<string, any>> {
         const response = await this.client.get(`/debug/variables/${encodeURIComponent(scope)}`);
-        return response.data?.variables || {};
+        const data = this.requireRecord(response.data, 'variables');
+        if (!data.variables || typeof data.variables !== 'object' || Array.isArray(data.variables)) {
+            throw new Error('Malformed NBOS variables response: expected variables object');
+        }
+        return data.variables;
     }
 
-    async continue(): Promise<void> { await this.client.post('/debug/continue'); }
-    async stepOver(): Promise<void> { await this.client.post('/debug/stepOver'); }
-    async stepInto(): Promise<void> { await this.client.post('/debug/stepInto'); }
-    async stepOut(): Promise<void> { await this.client.post('/debug/stepOut'); }
-    async pause(): Promise<void> { await this.client.post('/debug/pause'); }
+    private async debugAction(path: string): Promise<void> {
+        const response = await this.client.post(path);
+        this.requireAcknowledgement(response.data, path);
+    }
+
+    async continue(): Promise<void> { await this.debugAction('/debug/continue'); }
+    async stepOver(): Promise<void> { await this.debugAction('/debug/stepOver'); }
+    async stepInto(): Promise<void> { await this.debugAction('/debug/stepInto'); }
+    async stepOut(): Promise<void> { await this.debugAction('/debug/stepOut'); }
+    async pause(): Promise<void> { await this.debugAction('/debug/pause'); }
 
     async evaluate(expression: string): Promise<any> {
         const response = await this.client.post('/debug/evaluate', { expression });
-        return response.data?.result;
+        const data = this.requireRecord(response.data, 'evaluation');
+        if (!Object.prototype.hasOwnProperty.call(data, 'result')) {
+            throw new Error('Malformed NBOS evaluation response: missing result');
+        }
+        return data.result;
     }
 
     disconnect(): void { this.connected = false; }
@@ -121,11 +159,11 @@ export class NBOSClient {
 
     async getStatus(): Promise<any> {
         const response = await this.client.get('/status');
-        return response.data;
+        return this.requireRecord(response.data, 'status');
     }
 
     async introspect(scope: string): Promise<any> {
         const response = await this.client.post('/introspect', { scope });
-        return response.data;
+        return this.requireRecord(response.data, 'introspection');
     }
 }
