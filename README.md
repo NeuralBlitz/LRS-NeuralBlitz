@@ -108,6 +108,10 @@ separate components; neither is made production-ready by this root entry point.
 
 ## Documentation and contributing
 
+The [root-file review register](docs/audits/root-file-review-register.md) identifies each of the 110 baseline tracked root entries and its verification limits. The [repository-wide audit](docs/audits/repository-wide-inspection.md) covers nested files at an inventory/structural level, **not** automatic proof that they work.
+
+**Replit status:** The old autoscale configuration invoked a metadata-only Node entry point. The root Replit development command now reports that no deployable root HTTP app exists; it is not a production launch path. Stage-cluster figures in the repository are hypothetical arithmetic simulations, not measured deployment counts.
+
 Start with the [documentation index](docs/README.md), [product release gates](docs/production-readiness.md), [README evidence audit](docs/readme-claim-audit.md), [extension activation contract](docs/extension-activation-contract.md), [debugger execution contract](docs/debugger-execution-contract.md), and [VSIX candidate packaging guide](docs/vscode-candidate-packaging.md).
 
 Use [GitHub Issues](https://github.com/NeuralBlitz/LRS-NeuralBlitz/issues) for reproducible defects and missing evidence. A substantive product-capability claim needs a testable pull request, not just updated marketing copy.
