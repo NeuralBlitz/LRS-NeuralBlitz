@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** Legacy Replit quick-start and speed demonstrations are not validated against the current entry points or a deployed Replit environment. See the [source-backed product README](README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # 🚀 OpenCode LRS Cognitive AI Hub - Simple Replit Version
 
 ## ⚡ QUICK START (Works Immediately!)
