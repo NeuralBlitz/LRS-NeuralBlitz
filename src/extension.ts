@@ -8,7 +8,6 @@ import { NBCLCommands } from './commands/nbclCommands';
 import { NeuralBlitzDebugAdapterFactory } from './debugger/debugAdapterFactory';
 import { GoldenDAGTreeProvider } from './views/goldenDAGTreeProvider';
 import { CKRegistryTreeProvider } from './views/ckRegistryTreeProvider';
-import { IntrospectPanel } from './panels/introspectPanel';
 import { CKRegistry } from './util/ckRegistry';
 import { NBOSClient } from './util/nbosClient';
 
@@ -71,12 +70,6 @@ export function activate(context: vscode.ExtensionContext) {
         ckRegistryProvider
     );
 
-    // Register webview panels
-    const introspectCommand = vscode.commands.registerCommand(
-        'neuralblitz.introspect',
-        () => IntrospectPanel.createOrShow(context.extensionUri)
-    );
-
     // Add all disposables to context
     context.subscriptions.push(
         nbclCompletionProvider,
@@ -86,7 +79,6 @@ export function activate(context: vscode.ExtensionContext) {
         debugAdapterFactory,
         goldenDAGTree,
         ckRegistryTree,
-        introspectCommand,
         ...commandDisposables
     );
 

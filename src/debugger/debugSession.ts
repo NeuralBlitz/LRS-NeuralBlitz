@@ -5,7 +5,6 @@ import {
     TerminatedEvent,
     StoppedEvent,
     BreakpointEvent,
-    OutputEvent,
     Thread,
     StackFrame,
     Scope,
@@ -83,44 +82,41 @@ export class NeuralBlitzDebugSession extends DebugSession {
     ): Promise<void> {
         this._mode = args.mode || 'Sentio';
         this._currentFile = args.program;
+        this._isRunning = false;
 
-        // Boot NeuralBlitz with specified mode
         try {
             await this._nbosClient.boot({
                 mode: this._mode,
                 trace: args.trace || false
             });
-
-            this._isRunning = true;
-            this.sendResponse(response);
-
-            // Start executing the program
-            await this.executeProgram(args.program);
-        } catch (error) {
-            this.sendErrorResponse(response, 1001, `Failed to launch: ${error}`);
-        }
-    }
-
-    private async executeProgram(programPath: string): Promise<void> {
-        try {
-            // Load and parse the NBCL file
-            const result = await this._nbosClient.executeFile(programPath, {
+            const result = await this._nbosClient.executeFile(args.program, {
                 breakpoints: Array.from(this._breakpoints.values()).flat()
             });
 
+            // A successful boot is not evidence that the program executed.
+            // A launch can be acknowledged only after the backend confirms
+            // completion or a real debugging stop.
+            if (result.completed && result.stopped) {
+                throw new Error('NBOS returned contradictory execution states');
+            }
             if (result.completed) {
+                this.sendResponse(response);
                 this.sendEvent(new TerminatedEvent());
-            } else if (result.stopped) {
-                this._currentLine = result.line || 0;
+                return;
+            }
+            if (result.stopped) {
+                this._currentLine = result.line ?? 0;
+                this.sendResponse(response);
                 this.sendEvent(
                     new StoppedEvent('breakpoint', NeuralBlitzDebugSession.threadId)
                 );
+                return;
             }
+
+            throw new Error(result.error || 'NBOS did not confirm program execution');
         } catch (error) {
-            this.sendEvent(
-                new OutputEvent(`Error: ${error}\\n`, 'stderr')
-            );
-            this.sendEvent(new TerminatedEvent());
+            this._nbosClient.disconnect();
+            this.sendErrorResponse(response, 1001, `Failed to launch: ${error}`);
         }
     }
 
