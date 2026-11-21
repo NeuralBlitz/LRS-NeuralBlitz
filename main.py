@@ -305,36 +305,26 @@ async def get_multi_agent_status():
 
 @app.post("/api/multi-agent/execute-workflow")
 async def execute_multi_agent_workflow(request: dict):
-    """Execute a multi-agent workflow with cognitive coordination."""
+    """Fail closed until multi-agent workflow execution is implemented.
+
+    The previous demo returned a completed-workflow response without actually
+    executing any tasks. Do not fabricate execution, telemetry, or success.
+    """
     if not MULTI_AGENT_AVAILABLE:
         raise HTTPException(
             status_code=503, detail="Multi-agent components not available"
         )
 
-    try:
-        task_descriptions = request.get("tasks", [])
-        if not task_descriptions:
-            raise HTTPException(status_code=400, detail="No tasks provided")
-
-        # Import here to avoid circular imports
-        from lrs_agents.lrs.cognitive.cognitive_multi_agent_demo import (
-            demonstrate_cognitive_multi_agent,
-        )
-
-        # For demo purposes, run a simplified version
-        # In production, this would create and execute actual workflow
-        result = {
-            "workflow_executed": True,
-            "tasks_processed": len(task_descriptions),
-            "cognitive_enhancement": COGNITIVE_AVAILABLE,
-            "message": "Multi-agent workflow completed with cognitive coordination",
-        }
-
-        return result
-    except Exception as e:
+    tasks = request.get("tasks")
+    if not isinstance(tasks, list) or not tasks:
         raise HTTPException(
-            status_code=500, detail=f"Multi-agent workflow failed: {str(e)}"
+            status_code=400, detail="Provide a non-empty tasks list"
         )
+
+    raise HTTPException(
+        status_code=501,
+        detail="Multi-agent workflow execution is not implemented; no tasks were run",
+    )
 
 
 if __name__ == "__main__":
