@@ -4,6 +4,15 @@ import { CKRegistry, CKInfo } from '../util/ckRegistry';
 import * as fs from 'fs';
 import * as path from 'path';
 
+function escapeHtml(value: unknown): string {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 export class NBCLCommands {
     private outputChannel: vscode.OutputChannel;
     private statusBarItem: vscode.StatusBarItem;
@@ -130,7 +139,7 @@ export class NBCLCommands {
                 'neuralblitzStatus',
                 'NeuralBlitz Status',
                 vscode.ViewColumn.One,
-                { enableScripts: true }
+                { enableScripts: false }
             );
 
             panel.webview.html = this.getStatusHtml(status);
@@ -154,7 +163,7 @@ export class NBCLCommands {
                 'neuralblitzIntrospect',
                 `Introspect: ${scope}`,
                 vscode.ViewColumn.One,
-                { enableScripts: true }
+                { enableScripts: false }
             );
 
             panel.webview.html = this.getIntrospectHtml(result);
@@ -224,7 +233,7 @@ export class NBCLCommands {
             'neuralblitzCK',
             `${ck.family}/${ck.name}`,
             vscode.ViewColumn.One,
-            { enableScripts: true }
+            { enableScripts: false }
         );
 
         panel.webview.html = this.getCKHtml(ck);
@@ -252,6 +261,8 @@ export class NBCLCommands {
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
                 <style>
                     body { font-family: var(--vscode-font-family); padding: 20px; }
                     .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
@@ -263,16 +274,16 @@ export class NBCLCommands {
             <body>
                 <h1>NeuralBlitz System Status</h1>
                 <div class="status ok">
-                    <h3>${status.system_status || 'Unknown'}</h3>
+                    <h3>${escapeHtml(status?.system_status ?? 'Unknown')}</h3>
                 </div>
                 <h2>Governance Core</h2>
                 <div class="metric">
                     <span>Charter Status:</span>
-                    <span>${status.governance_core?.charter_status || 'Unknown'}</span>
+                    <span>${escapeHtml(status?.governance_core?.charter_status ?? 'Unknown')}</span>
                 </div>
                 <div class="metric">
                     <span>VPCE Score:</span>
-                    <span>${status.governance_core?.veritas_vpce?.score || 0}</span>
+                    <span>${escapeHtml(status?.governance_core?.veritas_vpce?.score ?? 'Unavailable')}</span>
                 </div>
             </body>
             </html>
@@ -284,6 +295,8 @@ export class NBCLCommands {
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
                 <style>
                     body { font-family: var(--vscode-font-family); padding: 20px; }
                     pre { background: var(--vscode-textBlockQuote-background); padding: 10px; overflow: auto; }
@@ -291,7 +304,7 @@ export class NBCLCommands {
             </head>
             <body>
                 <h1>Introspection Bundle</h1>
-                <pre>${JSON.stringify(result, null, 2)}</pre>
+                <pre>${escapeHtml(JSON.stringify(result, null, 2) ?? 'Unavailable')}</pre>
             </body>
             </html>
         `;
@@ -302,6 +315,8 @@ export class NBCLCommands {
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
                 <style>
                     body { font-family: var(--vscode-font-family); padding: 20px; }
                     h1 { color: var(--vscode-symbolIcon-classForeground); }
@@ -314,16 +329,16 @@ export class NBCLCommands {
                 </style>
             </head>
             <body>
-                <h1>${ck.family}/${ck.name}</h1>
-                <p><strong>Version:</strong> ${ck.version}</p>
-                <p><strong>Intent:</strong> ${ck.intent}</p>
+                <h1>${escapeHtml(ck.family)}/${escapeHtml(ck.name)}</h1>
+                <p><strong>Version:</strong> ${escapeHtml(ck.version)}</p>
+                <p><strong>Intent:</strong> ${escapeHtml(ck.intent)}</p>
                 
                 <div class="section">
                     <h2>Inputs</h2>
                     <table>
                         <tr><th>Name</th><th>Type</th></tr>
                         ${Object.entries(ck.inputs).map(([k, v]) => 
-                            `<tr><td>${k}</td><td>${v}</td></tr>`
+                            `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`
                         ).join('')}
                     </table>
                 </div>
@@ -333,7 +348,7 @@ export class NBCLCommands {
                     <table>
                         <tr><th>Name</th><th>Type</th></tr>
                         ${Object.entries(ck.outputs).map(([k, v]) => 
-                            `<tr><td>${k}</td><td>${v}</td></tr>`
+                            `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`
                         ).join('')}
                     </table>
                 </div>
@@ -341,14 +356,14 @@ export class NBCLCommands {
                 <div class="section">
                     <h2>Risk Factors</h2>
                     <ul>
-                        ${ck.riskFactors.map(r => `<li class="risk">⚠️ ${r}</li>`).join('')}
+                        ${ck.riskFactors.map(r => `<li class="risk">⚠️ ${escapeHtml(r)}</li>`).join('')}
                     </ul>
                 </div>
 
                 <div class="section">
                     <h2>Veritas Invariants</h2>
                     <ul>
-                        ${ck.veritasInvariants.map(i => `<li class="invariant">✅ ${i}</li>`).join('')}
+                        ${ck.veritasInvariants.map(i => `<li class="invariant">✅ ${escapeHtml(i)}</li>`).join('')}
                     </ul>
                 </div>
             </body>
