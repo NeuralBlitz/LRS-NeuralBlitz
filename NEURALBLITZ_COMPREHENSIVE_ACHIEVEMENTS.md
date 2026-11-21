@@ -1,3 +1,7 @@
+> **Verification notice (2026-11-21): historical / experimental research.** Historical achievement, quantitative performance and uniqueness assertions remain author claims pending source-linked independent verification. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
+
+---
+
 # NEURALBLITZ × OPENCODE: COLLABORATIVE INTELLIGENCE CREATION
 # =================================================================================================
 #
