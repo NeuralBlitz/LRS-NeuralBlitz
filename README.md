@@ -89,6 +89,22 @@ To promote a claim into the supported README, require: a precise definition, rel
 
 The [legacy claim inventory](docs/audits/readme-legacy-claim-inventory.tsv) preserves extracted original prose assertions with line numbers; **unverified does not mean disproved**. The source archive remains available for systematic follow-up.
 
+## Root-level source and research inspection
+
+The root includes 110 tracked entries spanning code, research specifications,
+metadata, binary artifacts, a symlink and a Gitlink. The
+[filename-indexed root review](docs/audits/root-review-findings.md) and
+[110-entry evidence register](docs/audits/root-file-review.csv) record what
+was inspected, defects found, and the limits of verification. A passing source
+scan is **not** equivalent to running or independently validating every
+subsystem. The [reproducible root review check](scripts/check_root_review.py)
+requires source-hash updates after any root-level change.
+
+For a small working preview that makes **no AI or production claims**, run
+`node index.js` and open `http://127.0.0.1:8000`; its `/healthz` response
+explicitly reports `backend_connected: false` and `production_ready: false`.
+It is separate from the optional Python API gateway and extension.
+
 ## Documentation and contributing
 
 Start with the [documentation index](docs/README.md), [product release gates](docs/production-readiness.md), [README evidence audit](docs/readme-claim-audit.md), [extension activation contract](docs/extension-activation-contract.md), [debugger execution contract](docs/debugger-execution-contract.md), and [VSIX candidate packaging guide](docs/vscode-candidate-packaging.md).
