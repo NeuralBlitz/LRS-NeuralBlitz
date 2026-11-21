@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSET_DIRS = ("syntaxes", "snippets", "language-configurations")
 ASSET_FILES = ("generated-icon.png", "LICENSE")
 ALLOWED_EXTENSION_TOPLEVEL = set(ASSET_DIRS) | {
-    "dist", "generated-icon.png", "LICENSE", "README.md", "package.json"
+    "dist", "generated-icon.png", "LICENSE", "LICENSE.txt",
+    "README.md", "readme.md", "package.json"
 }
 
 
@@ -72,8 +73,8 @@ def verify_candidate(vsix: Path) -> None:
         required = {
             "extension/package.json",
             "extension/dist/extension.js",
-            "extension/README.md",
-            "extension/LICENSE",
+            "extension/readme.md",
+            "extension/LICENSE.txt",
             "extension/generated-icon.png",
             "extension.vsixmanifest",
         }
