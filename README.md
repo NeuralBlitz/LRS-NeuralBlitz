@@ -1,5 +1,18 @@
 # 🚀 OpenCode LRS - The Ultimate AI Development Ecosystem
 
+> **Product status — pre-production (verified 2026-11-21).**
+> This repository combines a VS Code extension, optional Python integrations,
+> development telemetry configuration, and experimental research artifacts.
+> Automated compilation, selected regression tests, linting, and Compose
+> security checks pass on `main`; these are **not** end-to-end production
+> certification, a verified live deployment, or proof of claimed performance.
+> Historical benchmark numbers, research claims, and "production-ready"
+> descriptions below should be treated as unverified until backed by
+> reproducible measurements and deployment evidence.
+> See [Production readiness and release criteria](docs/production-readiness.md)
+> and [deployment security checklist](docs/security-deployment.md).
+
+
 **The World's Most Comprehensive AI Development Platform**  
 *Revolutionary Fusion of Active Inference, Quantum Computing, Cognitive Architecture, and Self-Evolving Systems*
 
