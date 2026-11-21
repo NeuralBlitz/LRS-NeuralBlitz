@@ -23,7 +23,7 @@ def create_golden_dag_entry(operation, agent_count, metadata=None):
 
 def main():
     print("=" * 80)
-    print("STAGE CLUSTERS 5000-9999 - SIMULATED CAPACITY PLAN")
+    print("STAGE CLUSTERS 5000-9999 SIMULATION SUMMARY (NO REAL DEPLOYMENT) - CAPACITY PLAN")
     print("Optimized Simulation - 500 Million Agents")
     print("=" * 80)
     print()
