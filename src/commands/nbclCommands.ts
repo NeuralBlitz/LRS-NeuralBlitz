@@ -96,6 +96,7 @@ export class NBCLCommands {
             this.outputChannel.appendLine('Boot successful!');
             vscode.window.showInformationMessage('NeuralBlitz booted successfully');
         } catch (error) {
+            this.statusBarItem.text = '$(symbol-interface) NBOS: Disconnected';
             vscode.window.showErrorMessage(`Boot failed: ${error}`);
         }
     }
