@@ -261,13 +261,16 @@ def main():
             "entry_id": str(uuid.uuid4()),
             "sequence": i,
             "hash": hash_val,
-            "timestamp": deployment_start + (i * 0.1)
+            "timestamp": deployment_start + (i * 0.1),
+            "simulation_only": True,
+            "timestamp_origin": "synthetic-offset; not observed deployment time",
+            "attestation": None
         })
     
     with open(dag_filename, 'w') as f:
         json.dump(dag_data, f, indent=2)
     
-    print(f"✓ GoldenDAG exported to: {dag_filename}")
+    print(f"✓ Synthetic hash records exported to: {dag_filename} (NOT deployment proof)")
     print()
     
     # Final Summary
