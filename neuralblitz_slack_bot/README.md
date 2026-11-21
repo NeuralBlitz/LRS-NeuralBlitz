@@ -1,3 +1,7 @@
+> **Verification status: experimental / historical (audited 2026-11-21).** Slack commands and workflows in this standalone directory are not validated as part of the tested VS Code extension or root API. See the [source-backed product README](../README.md). Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+
+---
+
 # NeuralBlitz Slack Bot
 
 A comprehensive Slack integration for NeuralBlitz v20 "Apical Synthesis" providing slash commands, interactive workflows, and real-time updates.
