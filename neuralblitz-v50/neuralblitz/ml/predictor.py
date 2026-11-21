@@ -191,7 +191,7 @@ class ConsciousnessPredictor:
         
         models["random_forest"] = self._train_random_forest(X, y)
         models["linear"] = self._train_linear_model(X, y)
-            models["gradient_boosting"] = self._train_gradient_boosting(X, y)
+        models["gradient_boosting"] = self._train_gradient_boosting(X, y)
         
         # Select best model based on validation
         best_score = float('inf')
