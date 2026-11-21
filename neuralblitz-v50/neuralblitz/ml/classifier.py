@@ -412,10 +412,10 @@ def demo_intent_classifier():
     # Test with sample intents
     print("\n🧪 Testing classifier with sample intents...")
     test_intents = [
-        [0.8, 0.7, 0.9, 0.5, 0.6, 0.4], 0.3, 0.5, 0.8],  # Creative
+        [0.8, 0.7, 0.9, 0.5, 0.6, 0.4, 0.3],  # Creative
         [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],  # Social
         [0.9, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],  # Dominant
-        [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],  # Balanced
+        [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],  # Balanced
     ]
     
     from ..minimal import MinimalCognitiveEngine, IntentVector
@@ -437,7 +437,8 @@ def demo_intent_classifier():
         print(f"   Intent: {intent}")
         print(f"   Predicted: {result.category}")
         print(f"   Confidence: {result.confidence:.2%}")
-        print(f"   Probabilities: {dict(sorted(result.probabilities.items(), key=lambda x: x[1], reverse=True)[:3]}")
+        top_probabilities = dict(sorted(result.probabilities.items(), key=lambda x: x[1], reverse=True)[:3])
+        print(f"   Probabilities: {top_probabilities}")
         print(f"   Prediction Time: {result.prediction_time_ms:.2f}ms")
         print()
     
