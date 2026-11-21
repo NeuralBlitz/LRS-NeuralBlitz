@@ -122,8 +122,16 @@ def verify_candidate(vsix: Path) -> None:
             if not isinstance(path, str) or not path:
                 raise ValueError("Manifest contains an invalid asset reference")
             normalized = path.removeprefix("./")
-            if "extension/" + normalized not in names:
+            member = "extension/" + normalized
+            if member not in names:
                 raise ValueError(f"Manifest references missing packaged asset: {normalized}")
+            if normalized.endswith(".json"):
+                try:
+                    json.loads(archive.read(member))
+                except (ValueError, UnicodeDecodeError) as exc:
+                    raise ValueError(
+                        f"Invalid JSON content in packaged extension asset: {normalized}"
+                    ) from exc
         if len([x for x in names if x.startswith("extension/")]) > 150:
             raise ValueError("Too many files in this minimal VSIX candidate")
     print(f"VSIX archive validated: {vsix.name} (minimal declared assets only)")

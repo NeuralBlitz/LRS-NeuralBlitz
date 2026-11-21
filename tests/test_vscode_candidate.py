@@ -85,6 +85,22 @@ class CandidatePackagingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing packaged asset"):
             candidate.verify_candidate(vsix)
 
+    def test_packaged_grammar_json_must_parse(self):
+        manifest = json.loads((self.stage / "package.json").read_text(encoding="utf-8"))
+        path = manifest["contributes"]["grammars"][0]["path"].removeprefix("./")
+        (self.stage / path).write_text("{not valid JSON", encoding="utf-8")
+        vsix = self.create_fixture_vsix()
+        with self.assertRaisesRegex(ValueError, "Invalid JSON content"):
+            candidate.verify_candidate(vsix)
+
+    def test_packaged_language_configuration_json_must_parse(self):
+        manifest = json.loads((self.stage / "package.json").read_text(encoding="utf-8"))
+        path = manifest["contributes"]["languages"][0]["configuration"].removeprefix("./")
+        (self.stage / path).write_text("{missing:comma}", encoding="utf-8")
+        vsix = self.create_fixture_vsix()
+        with self.assertRaisesRegex(ValueError, "Invalid JSON content"):
+            candidate.verify_candidate(vsix)
+
     def test_stage_will_not_overwrite_existing_candidate(self):
         with self.assertRaisesRegex(ValueError, "non-empty stage"):
             candidate.stage_extension(self.stage)
