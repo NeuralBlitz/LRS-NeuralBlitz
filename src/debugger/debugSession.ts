@@ -100,6 +100,7 @@ export class NeuralBlitzDebugSession extends DebugSession {
                 throw new Error('NBOS returned contradictory execution states');
             }
             if (result.completed) {
+                this._nbosClient.disconnect();
                 this.sendResponse(response);
                 this.sendEvent(new TerminatedEvent());
                 return;
