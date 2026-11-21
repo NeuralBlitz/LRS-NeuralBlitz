@@ -1,3 +1,7 @@
+> **Verification notice (2026-11-21): historical / experimental research.** The 500-million-agent deployment figures describe simulation/accounting outputs, not independently confirmed provisioned processes or cloud deployment. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
+
+---
+
 # Stage Clusters 5000-9999 Deployment Report
 
 **Date:** 2026-02-09  
