@@ -523,7 +523,7 @@ class ConsciousnessPredictor:
         recent_actual = []
         
         # Get actual levels from historical data
-        for i in range(min(len(recent_predictions), len(self.historical_data)):
+        for i in range(min(len(recent_predictions), len(self.historical_data))):
             sample = self.historical_data[i]
             if sample.get("consciousness_level"):
                 recent_actual.append(self._encode_consciousness_level(
