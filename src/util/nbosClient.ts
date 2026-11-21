@@ -109,10 +109,11 @@ export class NBOSClient {
 
     async executeCommand(command: string): Promise<any> {
         const response = await this.client.post('/execute', { command });
-        const data = this.requireRecord(response.data, 'command execution');
-        if (typeof data.ok !== 'boolean') {
+        const data = response.data;
+        if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.ok !== 'boolean') {
             throw new Error('Malformed NBOS command response: missing boolean ok');
         }
+        // Preserve explicit ok:false so the command UI can display its backend error.
         return data;
     }
 
