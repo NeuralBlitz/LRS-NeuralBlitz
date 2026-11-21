@@ -109,11 +109,10 @@ def main():
         print("\n   Testing rate limiting...")
         rate_limited = 0
         for i in range(25):
-            rbac.check_rate_limit(admin_key)
             if not rbac.check_rate_limit(admin_key):
                 rate_limited += 1
         
-        print(f"   🚨 Rate Limited Requests: {rate_limited}/25}")
+        print(f"   🚨 Rate Limited Requests: {rate_limited}/25")
         
         # 4. Distributed Tracing
         print("\n📊 Initializing Distributed Tracing...")
