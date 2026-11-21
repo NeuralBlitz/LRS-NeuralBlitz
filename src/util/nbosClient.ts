@@ -67,12 +67,24 @@ export class NBOSClient {
             program: filePath,
             breakpoints: options?.breakpoints || []
         });
-        return {
-            completed: Boolean(response.data?.ok),
-            stopped: response.data?.stopped,
-            line: response.data?.line,
-            error: response.data?.error?.message
-        };
+        const data = response.data;
+        if (!data || typeof data !== 'object' || typeof data.ok !== 'boolean') {
+            throw new Error('Malformed NBOS execution response: missing boolean ok');
+        }
+        if (data.ok === false) {
+            return {
+                completed: false,
+                error: data.error?.message || 'NBOS rejected execution'
+            };
+        }
+        if (data.stopped === true) {
+            return { completed: false, stopped: true, line: data.line };
+        }
+        if (data.completed === true) {
+            return { completed: true, stopped: false };
+        }
+        // HTTP success and ok:true only confirm acceptance, not completed work.
+        throw new Error('NBOS did not confirm execution completion or a stopped state');
     }
 
     async executeCommand(command: string): Promise<any> {
