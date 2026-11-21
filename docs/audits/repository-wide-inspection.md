@@ -107,6 +107,8 @@ The archive intentionally preserves historical links even where the original tar
 
 Historical claims currently labeled experimental cannot be promoted to tiers 4–5 simply because they have source files, simulated outputs, test-count text, a coverage HTML file, or a demo script.
 
+The [root-file review register](root-file-review-register.md) lists all 110 baseline files and special entries at the repository root, with targeted observations and explicit unverified boundaries. This is the deeper next-phase inspection; it is not a substitute for line-by-line code review or integration tests.
+
 ## Follow-up remediation order
 
 1. Require README source contract and repository inventory CI checks on all new changes.
