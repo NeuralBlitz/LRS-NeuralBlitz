@@ -130,9 +130,16 @@ test('backend acknowledgement alone cannot masquerade as execution completion', 
   await assert.rejects(client.executeFile('main.nbcl'), /did not confirm execution completion/);
 });
 
-test('a stopped response never simultaneously reports completion', async () => {
+test('contradictory completion and stopped flags are rejected', async () => {
   const { client } = createHarness({
     post: async () => ({ data: { ok: true, stopped: true, completed: true, line: 8 } }),
+  });
+  await assert.rejects(client.executeFile('main.nbcl'), /Contradictory NBOS execution response/);
+});
+
+test('a real stopped response never simultaneously reports completion', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: true, stopped: true, line: 8 } }),
   });
   const result = await client.executeFile('main.nbcl');
   assert.equal(result.completed, false);
