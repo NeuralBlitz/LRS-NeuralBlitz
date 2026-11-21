@@ -97,7 +97,7 @@ class KnowledgeGraph:
     relations: Dict[str, KnowledgeRelation] = field(default_factory=dict)
     entity_types: Dict[str, Set[str]] = field(default_factory=lambda: defaultdict(set))
     relation_types: Dict[str, Set[str]] = field(default_factory=lambda: defaultdict(set))
-    modality_indices: Dict[KnowledgeModality, Dict[str, Set[str]]] field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
+    modality_indices: Dict[KnowledgeModality, Dict[str, Set[str]]] = field(default_factory=lambda: defaultdict(lambda: defaultdict(set)))
     temporal_index: Dict[str, List[str]] = field(default_factory=lambda: defaultdict(list))
     semantic_index: Dict[str, np.ndarray] = field(default_factory=dict)
     statistics: Dict[str, Any] = field(default_factory=dict)

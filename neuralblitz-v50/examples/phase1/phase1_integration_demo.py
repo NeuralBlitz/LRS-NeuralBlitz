@@ -109,11 +109,10 @@ def main():
         print("\n   Testing rate limiting...")
         rate_limited = 0
         for i in range(25):
-            rbac.check_rate_limit(admin_key)
             if not rbac.check_rate_limit(admin_key):
                 rate_limited += 1
         
-        print(f"   🚨 Rate Limited Requests: {rate_limited}/25}")
+        print(f"   🚨 Rate Limited Requests: {rate_limited}/25")
         
         # 4. Distributed Tracing
         print("\n📊 Initializing Distributed Tracing...")
@@ -160,9 +159,7 @@ def main():
                 result = classifier.predict(test_intent)
                 print(f"Test {i+1}: {result.category} (confidence: {result.confidence:.2%})")
         
-            accuracy = sum(1 for r in test_intents 
-                          if r.category == r['category']) / len(test_intents))
-            print(f"   📈 Prediction Accuracy: {accuracy:.2%}")
+            print("   Note: prediction accuracy requires labeled holdout samples; not measured here.")
         
         # 6. Consciousness Prediction
         print("\n🧮 Testing Consciousness Prediction...")
@@ -255,7 +252,7 @@ def main():
             "status": "PASS" if admin_auth['authorized'] else "FAIL",
             "metrics": {
                 "auth_success": admin_auth['authorized'],
-                "demo_auth_success": demo_auth['authorized']
+                "demo_auth_success": demo_auth['authorized'],
                 "rate_limiting": rate_limited
             }
         })
@@ -274,7 +271,7 @@ def main():
         # Test 5: All systems working together
         integration_results.append({
             "component": "full_integration",
-            "status": "PASS" if all(r['status'] == "PASS" else "FAIL",
+            "status": "PASS" if all(r['status'] == "PASS" for r in integration_results) else "FAIL",
             "details": {
                 "chaos_engine": integration_results[0]["status"],
                 "audit_system": integration_results[1]["status"],

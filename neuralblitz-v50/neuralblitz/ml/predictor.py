@@ -191,7 +191,7 @@ class ConsciousnessPredictor:
         
         models["random_forest"] = self._train_random_forest(X, y)
         models["linear"] = self._train_linear_model(X, y)
-            models["gradient_boosting"] = self._train_gradient_boosting(X, y)
+        models["gradient_boosting"] = self._train_gradient_boosting(X, y)
         
         # Select best model based on validation
         best_score = float('inf')
@@ -446,7 +446,8 @@ class ConsciousnessPredictor:
             "best_model_type": self.best_model_type,
             "best_score": self.best_score,
             "model_path": self.model_path,
-            "models": {k: v["model_type"]: k["score"] for k, v in self.models.items()},
+            "models": {k: {"model_type": v["model_type"], "score": v["score"]}
+                       for k, v in self.models.items()},
             "feature_count": len(self.feature_names),
             "feature_names": self.feature_names,
             "historical_samples": len(self.historical_data),
@@ -460,42 +461,18 @@ class ConsciousnessPredictor:
         }
     
     def get_prediction_accuracy(self, window_size: int = 20) -> Dict[str, Any]:
-        """Calculate prediction accuracy over recent window."""
-        if len(self.prediction_history) < window_size:
-            return {"status": "insufficient_data"}
-        
-        # Get recent predictions and actual values
-        predictions = [p.predicted_level for p in self.prediction_history[-window_size:]]
-        actual_values = [p.predicted_value for p in self.prediction_history[-window_size:]]
-        
-        # Map back to actual levels for comparison
-        predicted_levels = [self._encode_consciousness_level(
-            {"consciousness_level": self.LEVELS[int(p.predicted_level), "DORMANT"}] for p in self.prediction_history
-        ) for p in self.prediction_history[-window_size:]]
-        
-        # Calculate accuracy
-        correct = sum(1 for p, a in zip(predicted_levels, actual_values) if p == a)
-        accuracy = correct / len(predictions)
-        
-        # Calculate MAE
-        mae = np.mean([abs(p - a) for p, a in zip(predicted_levels, actual_values)])
-        
-        # RMSE
-        rmse = np.mean((p - a) ** 2 for p, a in zip(predicted_levels, actual_values))
-        
+        """Fail closed until independent observed targets are recorded.
+
+        Prediction history does not currently store matched future outcomes.
+        Comparing two predictions, or the prediction to the same feature
+        sample, is not a legitimate measured forecast accuracy metric.
+        """
         return {
+            "status": "unavailable",
             "window_size": window_size,
-            "accuracy": accuracy,
-            "mae": mae,
-            "rmse": rmse,
-            "predicted_levels": predictions,
-            "actual_values": actual_values,
-            "accuracy_per_level": {
-                level: sum(1 for p, a in zip(predicted_levels, actual_values) if p == a) / 
-                sum(1 for p, a in zip(predicted_levels, actual_values))
-            }
+            "reason": "No independently observed target labels are recorded for these forecasts",
         }
-    
+
     def update_with_engine_result(self, engine_result: Dict[str, Any]) -> None:
         """Update predictor with new engine result."""
         # Extract features from engine result
@@ -546,7 +523,7 @@ class ConsciousnessPredictor:
         recent_actual = []
         
         # Get actual levels from historical data
-        for i in range(min(len(recent_predictions), len(self.historical_data)):
+        for i in range(min(len(recent_predictions), len(self.historical_data))):
             sample = self.historical_data[i]
             if sample.get("consciousness_level"):
                 recent_actual.append(self._encode_consciousness_level(
@@ -670,14 +647,13 @@ def demo_consciousness_predictor():
                 coherence += random_event * 0.2
                 
                 synthetic_data.append({
-                    "timestamp": f"2023-01-{day:02d:02:02:05}", 5, hour:minute, second:05"),
+                    "timestamp": f"2023-01-{day + 1:02d}T{hour:02d}:{minute:02d}:00",
                     "coherence": coherence,
                     "processing_time_ms": processing_time,
-                    "consciousness_level": {
-                        "DORMANT" if day < 5 else "AWARE",
-                        "AWARE" if 5 <= day < 17 else "FOCUSED",
-                        "TRANSCENDENT" if day >= 17 else "SINGULARITY"
-                    },
+                    # Synthetic category label: not a measured consciousness state.
+                    "consciousness_level": (
+                        "DORMANT" if day < 2 else "AWARE" if day < 5 else "FOCUSED"
+                    ),
                     "metadata": {
                         "synthetic": True,
                         "day": day,

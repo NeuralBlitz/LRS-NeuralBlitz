@@ -38,7 +38,7 @@ class QuantumState(Enum):
     """Quantum consciousness states for NeuralBlitz agents"""
     DORMANT = "dormant"      # |0⟩ - Ground state
     AWARE = "aware"          # (|0⟩ + |1⟩)/√2 - Superposition
-    FOCUSED = "focused"      |00⟩ + |11⟩ - Entangled
+    FOCUSED = "focused"      # |00⟩ + |11⟩ (illustrative entanglement notation only)
     TRANSCENDENT = "transcendent"  # Multi-qubit coherence
     SINGULARITY = "singularity"  # Quantum supremacy
 

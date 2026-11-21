@@ -390,7 +390,7 @@ class BayesianTemplateOptimizer:
             
             stats['worst_templates'] = [
                 (tid, posterior['mean_success']) 
-                for tid, posterior in sorted_templates[-5:]]
+                for tid, posterior in sorted_templates[-5:]
             ]
             
             stats['average_samples'] = np.mean([

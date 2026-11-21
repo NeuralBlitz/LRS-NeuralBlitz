@@ -288,7 +288,7 @@ class RealEcosystemDemo:
                     for line in lines:
                         print(f"         {line}")
                     if len(code.split("\n")) > 10:
-                        print(f"         ... ({len(code.split('\n')) - 10} more lines)")
+                        print("         ... ({} more lines)".format(max(0, len(code.splitlines()) - 10)))
 
         # === PHASE 4: VERIFY MATHEMATICAL CLAIMS ===
         print("\n🔢 PHASE 4: Verifying Mathematical Claims")
