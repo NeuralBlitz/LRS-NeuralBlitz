@@ -1,3 +1,7 @@
+> **Verification notice (2026-11-21): historical / experimental research.** Claims of production-ready blockchain integration are not backed by a verified live-chain, Fabric-network, or audited-contract test in this repository. This notice does not discard the underlying ideas or code, but separates them from the verified [current product scope](README.md).
+
+---
+
 # Blockchain Integration Architecture Report
 ## NeuralBlitz v20.0 - Enterprise Blockchain Integration
 
