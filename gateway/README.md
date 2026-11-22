@@ -23,7 +23,7 @@ All direct/transitive packages in `requirements-pinned.txt` have explicit versio
 
 ## Separate read-only NBOS reference adapter
 
-A distinct, opt-in [NBOS protocol reference](../docs/nbos-readonly-reference.md) can be launched using `python -m uvicorn gateway.nbos_reference:app --host 127.0.0.1 --port 8765 --no-access-log`. It shares the same bearer-token validation and bounded-body middleware but implements **only** read-only status, system introspection, and two finite commands (`/status`, `/help`). It is intentionally **not** an NBCL engine, agent boot service, debugger or replacement for this gateway. Its Python ASGI tests and real Axios-to-Uvicorn integration test are separate from this gateway's negative compatibility test.
+A distinct, opt-in [NBOS protocol reference](../docs/nbos-readonly-reference.md) can be launched using `python -m uvicorn gateway.nbos_reference:app --host 127.0.0.1 --port 8765 --no-access-log`. It shares the same bearer-token validation and bounded-body middleware but implements **only** read-only status, system introspection, three pure commands (`/status`, `/help`, bounded integer `/calc`), and prevalidated short inline programs. It is intentionally **not** a full NBCL engine, agent boot service, debugger or replacement for this gateway. Review the [finite subset contract](../docs/nbcl-bounded-execution.md) before sending any source. Its Python ASGI tests and real Axios-to-Uvicorn integration test are separate from this gateway's negative compatibility test.
 
 ## Local authenticated requests
 
