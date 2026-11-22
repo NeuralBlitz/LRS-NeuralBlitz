@@ -6,6 +6,7 @@ Return to the [main README](../README.md) for the verified product scope. The or
 
 ## Start here
 
+- [Verified Gitlink provenance and dependency mapping](audits/gitlink-provenance.md) — four pinned upstreams, approved source URLs and integrity tests
 - [Root-file review register](audits/root-file-review-register.md) — all 110 baseline root Git entries, filename-specific risks and evidence tiers
 - [README evidence audit](readme-claim-audit.md) — corrected assertions, historical claim categories, and promotion standards
 - [Legacy prose claim inventory](audits/readme-legacy-claim-inventory.tsv) — source line references for substantive narrative assertions; no implication of independent verification

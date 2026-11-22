@@ -80,7 +80,7 @@ The archive intentionally preserves historical links even where the original tar
 
 - `neuralblitz-v50/README.md`, `FEATURES_COMPLETE.md`, and `ECOSYSTEM_COMPLETE.md` assert production readiness and measured outcomes that were not independently reproduced.
 - The nested `docs/API_REFERENCE.md`, `docs/IMPLEMENTATION_GUIDE.md`, and `k8s/README.md` mix proposed interfaces/deployments with claims of completion. Their tests and environments must be inspected independently.
-- The tree includes three nested unresolved gitlinks beneath `neuralblitz-v50`, plus root `lrs_agents`; gitlink source and installation compatibility are **outside checkout scope** until properly resolved.
+- The baseline tree contained three nested Gitlinks missing `.gitmodules` mappings plus root `lrs_agents`. **2026-11-22:** their exact upstream repositories and pinned commits were [verified and mapped](gitlink-provenance.md), but code contents and runtime compatibility are still outside the audited checkout scope.
 - `neuralblitz-v50/nural.md` is an approximately 1.1 MB Markdown source requiring dedicated document-level substantive review; scanning it as UTF-8 does **not** validate its assertions.
 
 ### Integrations and VS Code extensions
@@ -95,7 +95,7 @@ The archive intentionally preserves historical links even where the original tar
 - `htmlcov/` contains ~207 tracked files (mostly generated HTML coverage pages), not hand-reviewed product implementations.
 - Tracked `.coverage`, `.pytest_cache/`, `.ruff_cache/`, `demo_cache/` and `neuralblitz-v50/python/neuralblitz_v50.db` warrant provenance, privacy and cleanup review. Do not blindly remove them without checking whether they contain important evidence or user data.
 - Root Compose still contains privileged cAdvisor mounts and mutable image references; CI checks the current baseline but cannot prove live deployment safety.
-- The Git checkout logs have shown nested gitlink warnings; a dedicated dependency integrity fix must be planned, not guessed by inventing missing submodule URLs.
+- Git checkout previously reported missing nested Gitlink URLs. **2026-11-22:** fixed by verifying the upstream repositories and exact pinned commits, adding root `.gitmodules` mappings, and enforcing a [Gitlink integrity check](gitlink-provenance.md). This does not validate or execute the dependencies.
 
 ## Evidence tiers for each document or feature
 
@@ -111,7 +111,7 @@ Historical claims currently labeled experimental cannot be promoted to tiers 4â€
 
 1. Require README source contract and repository inventory CI checks on all new changes.
 2. Reconcile secondary markdowns with demonstrated source; label outdated, aspirational or hypothetical work clearly.
-3. Repair broken local links discovered in nested documentation and the missing submodule linkage; preserve provenance and avoid substituting guessed URLs.
+3. Continue repairing nested local links. Gitlink URL mapping was reconciled on 2026-11-22 from individually verified upstream repos and commits; review their source and licenses before initializing them in CI.
 4. Address repository hygiene and potentially sensitive committed binary/cache artifacts.
 5. Perform module-specific Python, Go, Rust, JavaScript, extension, API and infrastructure integration tests with documented dependency isolation.
 6. Add benchmark harnesses before reintroducing numeric speed, scalability, security or scientific assertions.

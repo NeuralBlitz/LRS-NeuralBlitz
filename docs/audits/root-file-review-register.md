@@ -12,7 +12,7 @@
 | `.env.example` | env | Configuration/source (reviewed) | Placeholder secrets only; operational credentials and rotation have not been verified. |
 | `.eslintrc.cjs` | eslintrc | Configuration/source (reviewed) | Minimal lint rules; type-aware security review remains. |
 | `.gitignore` | gitignore | Configuration/source (reviewed) | Tracked caches remain tracked despite ignore patterns. |
-| `.gitmodules` | gitmodules | Configuration/source (reviewed) | Only lrs_agents is mapped although the repository has four Gitlinks. |
+| `.gitmodules` | gitmodules | Configuration/source (reviewed) | As of 2026-11-22, all four Gitlinks have verified upstream commit mappings and are checked in CI; their contents are not recursively inspected. |
 | `.lrsgate` | lrsgate | Configuration/source (reviewed) | Architecture illustration, not a verified operating service. |
 | `.replit` | replit | Configuration/source (reviewed) | The previous autoscale configuration was misleading; the current Replit run fails closed and does not advertise an HTTP deployment. |
 | `advanced_autonomous_agent_framework_README.md` | advanced autonomous agent framework README | Markdown (sections, introductions and claims sampled) | Contains technical or research claims; examples not integration-tested. |
