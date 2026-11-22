@@ -23,7 +23,7 @@ main**, every push to main, and manual dispatch:
 
 - `Extension compile lint and regression`: locked dependencies, TypeScript
   compile, lint baseline, offline Node regression tests, manifest asset checks.
-- `Python API contracts and authenticated ASGI integration`: installs a pinned
+- `Python API contracts, ASGI integration and live Uvicorn smoke`: installs a pinned
   FastAPI/httpx environment and sends real HTTP requests through the application
   through an in-process transport; a separate [real Uvicorn loopback smoke
   test](gateway-nbos-boundary.md) launches the process and exercises HTTP over
