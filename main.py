@@ -8,36 +8,28 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
-import sys
 import os
-import subprocess
 import hmac
 
-# Add current directory to Python path
-sys.path.insert(
-    0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lrs-agents")
-)
-
-# Optional LRS integration: Gitlink content is not present in a normal
-# checkout. Missing modules must not prevent the source-only status API from
-# starting, and must never be represented as an operational integration.
+# The Gitlink is named "lrs_agents" (underscore), not "lrs-agents".
+# Python can resolve lrs_agents.lrs from the checked-out repository root;
+# never add a fabricated sibling path to sys.path or initialize tools here.
+# Merely importing the lightweight class is NOT evidence of operational health.
 try:
     from lrs_agents.lrs.opencode.simplified_integration import (
         OpenCodeTool, SimplifiedLRSAgent,
-    )
-    from lrs_agents.lrs.benchmarking.benchmark_integration import (
-        integrate_benchmarks_into_main,
-    )
-    from lrs_agents.lrs.enterprise.enterprise_security_monitoring import (
-        integrate_enterprise_features,
     )
     BACKEND_IMPORT_AVAILABLE = True
 except ImportError:
     OpenCodeTool = None
     SimplifiedLRSAgent = None
-    integrate_benchmarks_into_main = None
-    integrate_enterprise_features = None
     BACKEND_IMPORT_AVAILABLE = False
+
+# Optional benchmark/enterprise plugins have additional, unpinned dependencies
+# and may register broad routes or middleware. Import them only when an
+# operator explicitly enables the unsafe experimental development surface.
+integrate_benchmarks_into_main = None
+integrate_enterprise_features = None
 
 # Import cognitive components
 try:
@@ -220,10 +212,21 @@ app.add_middleware(GatewayAuthMiddleware)
 # authentication and authorization properties. Never expose those routes by
 # default; require explicit local opt-in while integration tests are pending.
 if os.environ.get("LRS_ENABLE_EXPERIMENTAL_ROUTES") == "1":
-    if integrate_benchmarks_into_main is not None:
-        integrate_benchmarks_into_main(app)
-    if integrate_enterprise_features is not None:
-        integrate_enterprise_features(app)
+    # An explicit opt-in with missing dependencies must FAIL startup rather
+    # than silently exposing a partially registered/unverified API.
+    try:
+        from lrs_agents.lrs.benchmarking.benchmark_integration import (
+            integrate_benchmarks_into_main,
+        )
+        from lrs_agents.lrs.enterprise.enterprise_security_monitoring import (
+            integrate_enterprise_features,
+        )
+    except ImportError as exc:
+        raise RuntimeError(
+            "Experimental LRS routes require separately reviewed dependencies"
+        ) from exc
+    integrate_benchmarks_into_main(app)
+    integrate_enterprise_features(app)
 
 
 # Data models
@@ -239,13 +242,12 @@ class IntegrationResponse(BaseModel):
     integration_notes: str
 
 
-# Optional backend classes are absent in a checkout without the Gitlink.
-# Preserve detection for status reporting, never fabricate a working agent.
-opencode_tool = OpenCodeTool() if BACKEND_IMPORT_AVAILABLE else None
-lrs_agent = (
-    SimplifiedLRSAgent(tools=[opencode_tool])
-    if opencode_tool is not None else None
-)
+# The pinned OpenCodeTool constructor calls a subprocess to probe the
+# executable. Do not run host commands merely by importing this HTTP app.
+# Neither a package import nor a successful --version probe constitutes a
+# verified LRS/NBOS backend. Actual adapters need separate explicit setup.
+opencode_tool = None
+lrs_agent = None
 
 
 @app.get("/", response_class=HTMLResponse)
