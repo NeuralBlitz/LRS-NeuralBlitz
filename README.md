@@ -51,6 +51,8 @@ To inspect the **unpublished** test VSIX candidate, open the [VSIX release-candi
 
 The authenticated `GET /nbos/v1/capabilities` endpoint explicitly returns `protocol: "nbos/1"`, `compatible: false` and no supported operations. The VS Code client requires a compatible versioned response and per-operation declaration **before** sending NBCL source, commands or debug requests. A discovery response does not establish backend trust or execution capability. The gateway remains intentionally incompatible.
 
+The gateway now avoids automatic OpenCode subprocess probing and keeps benchmark/enterprise module imports behind explicit experimental opt-in. These modules are not required for local status and are **not** deployed as production services. See the [pinned LRS dependency review](docs/audits/lrs-submodule-runtime-compatibility.md).
+
 The multi-agent execution route explicitly **does not execute tasks**. It rejects unavailable components (HTTP 503), invalid task lists (HTTP 400), and otherwise reports that the executor is not implemented (HTTP 501). Any earlier example describing successful workflow execution through this route is outdated. See [workflow implementation status](docs/multi-agent-workflow-status.md).
 
 There is **no repo-wide verified coverage percentage**, no supported assurance of JWT/RBAC or multi-cloud deployment, and **no real external backend/production-service integration test**. CI does now exercise the actual ASGI app with a local development Bearer token. See the [gateway installation and authentication contract](gateway/README.md).
