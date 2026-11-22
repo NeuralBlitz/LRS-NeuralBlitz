@@ -12,5 +12,12 @@
       "/verify"
     ],
     "description": "NBCL verification command; results require a live backend and independent evidence."
+  },
+  "Calculate bounded integers with NBCL subset": {
+    "prefix": "/calc",
+    "body": [
+      "/calc --a=${1:12} --op=${2|add,sub,mul|} --b=${3:7}"
+    ],
+    "description": "Deterministic reference-only integer calculation; operands limited to ±1,000,000; no general NBCL engine."
   }
 }
