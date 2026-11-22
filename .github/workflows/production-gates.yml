@@ -56,7 +56,7 @@ jobs:
           NODE
 
   python-contracts:
-    name: Python API contracts and authenticated ASGI integration
+    name: Python API contracts, ASGI integration and live Uvicorn smoke
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -72,7 +72,7 @@ jobs:
         run: python scripts/check_readme_contract.py
       - name: Require root file review on every source change
         run: python scripts/check_root_review.py
-      - name: Run Python contracts and real HTTP/ASGI integration tests
+      - name: Run Python contracts, authenticated ASGI and live TCP gateway smoke
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 
   compose-security:
