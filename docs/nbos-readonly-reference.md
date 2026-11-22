@@ -3,8 +3,10 @@
 **Status: pre-production, opt-in, intentionally limited.** This repository
 includes a real, bounded, read-only HTTP reference implementation of the
 `nbos/1` protocol under [`gateway/nbos_reference.py`](../gateway/nbos_reference.py).
-It does **not** implement the NeuralBlitz engine, agent boot, NBCL file
-execution, debugger events, governance proof, or LRS-Agents integration.
+It does **not** implement the NeuralBlitz engine, agent boot, arbitrary NBCL/file
+execution, debugger events, governance proof, or LRS-Agents integration. It does
+provide a [deterministic, bounded NBCL subset](nbcl-bounded-execution.md) for
+pure commands and short inline source programs.
 It is distinct from the root [`main.py`](../main.py) gateway, which still
 reports **negative** NBOS compatibility.
 
@@ -15,9 +17,9 @@ reports **negative** NBOS compatibility.
 | `GET /nbos/v1/capabilities` | Authenticated protocol discovery: `compatible: true` **only for the operations below**. Advertises `execution_engine_available: false`, `agent_boot_available: false`, and `debugger_available: false`. |
 | `GET /status` | Returns the reference process's own read-only status; `agent_booted: false`, `integration_verified: false`, governance values explicitly unverified. |
 | `POST /introspect` | Accepts exactly `{"scope":"system"}` and returns its **own** status and capabilities. Other scopes get HTTP 422. |
-| `POST /execute` | Executes exactly two finite pure read-only reference commands: `/status` and `/help`. Returns `ok: true, completed: true` only after the corresponding in-memory handler completes. Other commands and file-path requests return HTTP 422 with `ok: false`. |
+| `POST /execute` | Executes three supported pure commands (`/status`, `/help`, and strict integer `/calc`), or at most 16 instructions from prevalidated inline `{source}` text. Real arithmetic results and per-step completion evidence are returned. All other commands, file paths and unbounded programs return HTTP 422 with `ok: false`. |
 
-Discovery advertises `execution_modes: ["command"]`. The VS Code client now blocks file execution at **capability preflight**, before sending local file paths to this command-only server; direct file requests to the reference HTTP endpoint also receive HTTP 422.
+Discovery advertises `execution_modes: ["command", "source"]`. The VS Code client now blocks file execution at **capability preflight**, before sending local file paths to this restricted reference process; direct file requests to the reference HTTP endpoint also receive HTTP 422. Source mode accepts only in-memory text, never local paths; see the [precise grammar and budgets](nbcl-bounded-execution.md).
 
 It never evaluates input as Python, invokes a shell, reads submitted paths,
 opens arbitrary files, launches a model, or fabricates successful NBCL work.
@@ -78,8 +80,8 @@ read-only command execution as well as rejected boot, preflight-blocked file, de
 unauthorized requests. The earlier test continues to prove that the root
 gateway **must remain incompatible** with NBOS execution.
 
-Passing these tests verifies only the three deliberately limited reference
-operations on the tested commit and environment. There is no arbitrary NBCL
+Passing these tests verifies only the deliberately limited reference
+operations and finite, tested NBCL subset on the tested commit and environment. There is no full or arbitrary NBCL
 interpreter, user session isolation, production security, authenticated
 identity management, TLS, traffic/rate limiting, deployed service, validated
 LRS backends, or VS Code Extension Host verification.
