@@ -30,6 +30,10 @@ jobs:
         run: python3 scripts/check_root_review.py
       - name: Enforce complete root file review register
         run: python3 scripts/check_root_review_register.py
+      - name: Require verified source mapping for every pinned Gitlink
+        run: |
+          python3 scripts/check_submodule_integrity.py
+          python3 -m unittest discover -s tests -p 'test_submodule_integrity.py' -v
       - name: Run isolated audit tool regression checks
         run: python3 -m unittest discover -s tests -p 'test_repository_tree_audit.py' -v
       - name: Read and inventory every tracked checkout file
