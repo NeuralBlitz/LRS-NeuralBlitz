@@ -49,6 +49,9 @@ merges; the GitHub integration may lack branch-protection administration scope.
   installation](../gateway/README.md) covers only isolated HTTP/ASGI behavior;
   the optional Gitlink backend and external authorization are not integrated.
 - Add real VS Code Extension Host integration tests and debugger tests.
+  The NBOS client now requires an explicit secure endpoint; there is no compatible
+  default service or secure token provisioning workflow, so execution remains
+  unavailable without an independently verified NBOS backend.
 - Review all webviews/command surfaces and secrets handling, not just
   the three hardened static panels.
 - Pin container image versions/digests, address cAdvisor privileged mounts,
