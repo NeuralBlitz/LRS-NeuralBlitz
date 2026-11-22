@@ -29,6 +29,8 @@ Return to the [main README](../README.md) for the verified product scope. The or
 
 ## API and telemetry
 
+- [Gateway pinned dependencies and ASGI authentication](../gateway/README.md) — actual request-level integration tests, local Bearer guard, and remaining live-backend limitations
+
 - [Multi-agent workflow status](multi-agent-workflow-status.md) — route does **not** execute tasks
 - [Compose security baseline](compose-security-baseline.md) — local development configuration checks, remaining privileged-container and image-pinning issues
 - [Source API gateway](../main.py) — FastAPI route declarations; not an independently verified authenticated service
