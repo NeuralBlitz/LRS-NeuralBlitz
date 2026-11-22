@@ -27,6 +27,20 @@ python -m unittest discover -s tests -p 'test_gateway_live_process.py' -v
 
 This smoke test is a **development-only** gate. It does not validate TLS, mTLS, Uvicorn workers, service supervision, authenticated deployment behind a proxy, arbitrary origin controls, secret rotation, resource limits, or functionality of missing optional Gitlinks.
 
+## Actual cross-runtime interoperability regression (new)
+
+A second test, [`tests/nbosGateway.real.integration.cjs`](../tests/nbosGateway.real.integration.cjs), launches **the real Python Uvicorn server over a TCP socket** and exercises the actual TypeScript `NBOSClient` through **real Axios**, with only the VS Code settings/SecretStorage host API stubbed. The client is configured at user scope and uses an ephemeral test-only Bearer token stored via the simulated secret store.
+
+It verifies that the gateway's own `/api/integration/status` authenticates successfully and still declares `integration_verified: false`, while the *actual client* receives authenticated **404** responses on `/boot`, `/execute`, `/status`, `/introspect`, and `/debug/stack`. Without a stored token, client boot gets **401**. No NBOS client call is allowed to fabricate a successful boot or execution.
+
+CI installs pinned Python dependencies and frozen Bun dependencies before running:
+
+```sh
+node --test tests/nbosGateway.real.integration.cjs
+```
+
+This is a reproducible **negative integration contract** demonstrating incompatibility, **not a usable backend bridge**. The real VS Code Extension Host and an actual NBOS server remain untested.
+
 ## Integration risks to resolve
 
 - **Port collision remediated in the client:** the extension now defaults to **no NBOS endpoint**. Earlier releases assumed `http://localhost:8080`, overlapping with `server.py` and Compose cAdvisor. Commands fail locally until the user explicitly configures `neuralblitz.nbosEndpoint` for a verified compatible server; the gateway on 8000 remains **incompatible**.

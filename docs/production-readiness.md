@@ -29,6 +29,11 @@ main**, every push to main, and manual dispatch:
   test](gateway-nbos-boundary.md) launches the process and exercises HTTP over
   TCP. Tests local Bearer token enforcement and fail-closed error contracts,
   but **does not validate any live LRS/NBOS backend**.
+- `Real NBOS client versus live gateway protocol`: boots the real Python
+  Uvicorn gateway and sends actual Axios requests from the transpiled VS Code
+  NBOS client, proving correct authentication and **no false NBOS success**
+  on incompatible backend routes. This is a negative compatibility check,
+  not a completed NBOS integration.
 - `Compose security regression`: policy unit tests and `docker compose config`
   validation with disposable test-only credentials.
 
