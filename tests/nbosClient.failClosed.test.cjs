@@ -430,6 +430,7 @@ test('command-only service cannot receive file paths even though /execute is adv
       operations: ['POST /execute'],
       execution_modes: ['command'],
     },
+    post: async () => ({ data: { ok: true, completed: true } }),
   });
   await assert.rejects(
     h.client.executeFile('/private/workspace/program.nbcl'),
