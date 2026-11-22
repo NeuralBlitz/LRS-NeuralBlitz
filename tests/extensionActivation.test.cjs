@@ -98,6 +98,8 @@ function createHarness() {
         return Promise.resolve(undefined);
       },
       showWarningMessage: (message) => { warnings.push(message); },
+      showErrorMessage: (message) => { warnings.push(message); },
+      showInputBox: async () => undefined,
     },
     workspace: {
       createFileSystemWatcher: () => ({
@@ -116,7 +118,7 @@ function createHarness() {
     vscode,
     fs,
     path,
-    '../util/nbosClient': {},
+    '../util/nbosClient': { NBOS_TOKEN_SECRET_KEY: 'nbos.authToken' },
     '../util/ckRegistry': {},
   });
 
@@ -134,7 +136,15 @@ function createHarness() {
     './util/nbosClient': { NBOSClient: Stub },
   };
   const extension = evaluateSource('src/extension.ts', { vscode, ...classes });
-  const context = { subscriptions: [] };
+  const secretValues = new Map();
+  const context = {
+    subscriptions: [],
+    secrets: {
+      get: async (key) => secretValues.get(key),
+      store: async (key, value) => { secretValues.set(key, value); },
+      delete: async (key) => { secretValues.delete(key); },
+    },
+  };
   return {
     vscode, extension, context, registeredCommands, registeredViews,
     executedCommands, warnings, welcomeCalls, disposables,
@@ -201,4 +211,33 @@ test('inline debugger does not reference a nonexistent adapter program', () => {
   assert.ok(debuggerContribution, 'neuralblitz debugger missing');
   assert.equal(debuggerContribution.program, undefined);
   assert.equal(debuggerContribution.runtime, undefined);
+});
+
+test('credential commands save and remove tokens only through the secret storage API', async () => {
+  const h = createHarness();
+  h.extension.activate(h.context);
+  const secret = 'example-placeholder-secret-that-is-not-a-real-credential';
+  h.vscode.window.showInputBox = async (options) => {
+    assert.equal(options.password, true, 'token prompt must mask input');
+    assert.equal(options.ignoreFocusOut, true);
+    return secret;
+  };
+  await h.registeredCommands.get('neuralblitz.credentials.set')();
+  assert.equal(await h.context.secrets.get('nbos.authToken'), secret);
+  await h.registeredCommands.get('neuralblitz.credentials.clear')();
+  assert.equal(await h.context.secrets.get('nbos.authToken'), undefined);
+  assert.ok(!JSON.stringify(h.welcomeCalls).includes(secret), 'UI feedback must never echo a token');
+});
+
+test('cancelled token entry preserves old secret, while invalid input is rejected', async () => {
+  const h = createHarness();
+  h.extension.activate(h.context);
+  await h.context.secrets.store('nbos.authToken', 'existing-placeholder-value');
+  h.vscode.window.showInputBox = async () => undefined;
+  await h.registeredCommands.get('neuralblitz.credentials.set')();
+  assert.equal(await h.context.secrets.get('nbos.authToken'), 'existing-placeholder-value');
+  h.vscode.window.showInputBox = async () => '   ';
+  await h.registeredCommands.get('neuralblitz.credentials.set')();
+  assert.equal(await h.context.secrets.get('nbos.authToken'), 'existing-placeholder-value');
+  assert.ok(h.warnings.some(x => /non-empty/.test(x)));
 });
