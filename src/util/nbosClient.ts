@@ -107,7 +107,7 @@ export class NBOSClient {
      */
     private async requireCapability(
         baseURL: string, method: 'GET' | 'POST', path: string,
-        executionKind?: 'command' | 'file'
+        executionKind?: 'command' | 'file' | 'source'
     ): Promise<void> {
         const response = await this.client.get(NBOS_CAPABILITIES_PATH, { baseURL });
         const data: unknown = response.data;
@@ -133,9 +133,9 @@ export class NBOSClient {
         // individual commands. A command-only service may not receive files.
         if (method === 'POST' && path === '/execute') {
             const modes = record.execution_modes;
-            if (!Array.isArray(modes) || modes.length > 2 ||
+            if (!Array.isArray(modes) || modes.length > 3 ||
                 modes.some((value: unknown) =>
-                    value !== 'command' && value !== 'file')) {
+                    value !== 'command' && value !== 'file' && value !== 'source')) {
                 throw new Error('NBOS backend did not declare valid execution modes');
             }
             if (!executionKind || !modes.includes(executionKind)) {
@@ -145,7 +145,7 @@ export class NBOSClient {
     }
 
     private async post(
-        path: string, data?: unknown, executionKind?: 'command' | 'file'
+        path: string, data?: unknown, executionKind?: 'command' | 'file' | 'source'
     ) {
         const baseURL = this.requireEndpoint();
         await this.requireCapability(baseURL, 'POST', path, executionKind);
@@ -263,6 +263,50 @@ export class NBOSClient {
         }
         // A positive transport acknowledgement is not executed work.
         throw new Error('NBOS did not confirm command execution completion or a stopped state');
+    }
+
+    /**
+     * Run a bounded inline NBCL subset program, not a client-side file path.
+     * The server must explicitly advertise source mode and return one
+     * well-formed result record for every completed instruction.
+     */
+    async executeSource(source: string): Promise<CommandExecutionResult> {
+        if (typeof source !== 'string' || !source.trim()) {
+            throw new Error('Refusing to send an empty NBCL source program');
+        }
+        if (source.length > 4096) {
+            throw new Error('NBCL source exceeds the 4096-character local limit');
+        }
+        const response = await this.post('/execute', { source }, 'source');
+        const data: unknown = response.data;
+        if (!data || typeof data !== 'object' || Array.isArray(data) ||
+            typeof (data as Record<string, unknown>).ok !== 'boolean') {
+            throw new Error('Malformed NBOS source response: missing boolean ok');
+        }
+        const result = data as Record<string, unknown>;
+        if (result.ok === false) {
+            return result as CommandExecutionResult;
+        }
+        if (result.completed !== true || result.stopped === true) {
+            throw new Error('NBOS did not confirm source program completion');
+        }
+        const count = result.instruction_count;
+        const steps = result.steps;
+        if (typeof count !== 'number' || !Number.isSafeInteger(count) ||
+            count < 1 || count > 16 || !Array.isArray(steps) ||
+            steps.length !== count || steps.some((step: unknown) => {
+                if (!step || typeof step !== 'object' || Array.isArray(step)) {
+                    return true;
+                }
+                const entry = step as Record<string, unknown>;
+                return typeof entry.line !== 'number' ||
+                    !Number.isSafeInteger(entry.line) || entry.line < 1 ||
+                    typeof entry.command !== 'string' ||
+                    !Object.prototype.hasOwnProperty.call(entry, 'result');
+            })) {
+            throw new Error('Malformed NBOS source response: missing verified step records');
+        }
+        return result as CommandExecutionResult;
     }
 
     async getStackTrace(): Promise<StackFrame[]> {
