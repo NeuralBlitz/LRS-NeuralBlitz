@@ -1,6 +1,6 @@
 # LRS-NeuralBlitz API reference — current gateway source contract
 
-**Status: pre-production; local prototype only.** This reference describes the six explicit routes in [`main.py`](../main.py) on the current repository branch. It is **not** documentation for a deployed, authenticated production API, an NBOS backend, or the optional experimental route registrations.
+**Status: pre-production; local prototype only.** This reference describes the seven explicit routes in [`main.py`](../main.py) on the current repository branch. It is **not** documentation for a deployed, authenticated production API, an NBOS backend, or the optional experimental route registrations.
 
 The earlier specification included unimplemented JWT login, cloud URLs, request quotas, and illustrative benchmark responses. It remains [archived as historical, unverified material](history/API_REFERENCE-legacy-2026-11-22.md). Do not use that archive as an operational contract.
 
@@ -40,14 +40,24 @@ The token shown here is an environment variable reference, never a real credenti
 | --- | --- | --- |
 | GET | `/` | Public HTML status page explaining pre-production limitations |
 | GET | `/api/integration/status` | Component detection; `integration_active` and `integration_verified` are **false** |
+| GET | `/nbos/v1/capabilities` | Authenticated negative NBOS discovery; `compatible: false`, no operations |
 | GET | `/api/cognitive/status` | Availability/status of optional cognitive analyzer |
 | POST | `/api/cognitive/analyze` | Optional analyzer only; HTTP 503 if component unavailable |
 | GET | `/api/multi-agent/status` | Availability/status of optional coordinator |
 | POST | `/api/multi-agent/execute-workflow` | No execution: HTTP 503 if component missing; HTTP 400 for invalid task list when present; otherwise HTTP 501 |
 
-All five `/api/` routes require the Bearer token. The existence of a route or a `200` status response does not mean the optional backend is functional, measured, or production certified.
+All five `/api/` routes plus `/nbos/v1/capabilities` require the Bearer token. The existence of a route or a `200` status response does not mean the optional backend is functional, measured, or production certified.
 
 ## Request and response notes
+
+**`GET /nbos/v1/capabilities`** returns a versioned discovery envelope, currently
+`{"protocol":"nbos/1","service":"lrs-neuralblitz-gateway","compatible":false,"operations":[],"reason":"This gateway does not implement an NBOS execution runtime"}`.
+An HTTP 200 response to discovery is **not** proof of runtime compatibility.
+The VS Code NBOS client requires `compatible: true`, exact `protocol: "nbos/1"`,
+and an explicit matching operation such as `POST /execute` before it sends source,
+commands or debug requests. This gateway deliberately advertises none, so
+the client refuses the operation. A positive capability declaration from an
+untrusted server would still require independent security and runtime validation.
 
 **`GET /api/integration/status`** returns JSON containing `lrs_available`, `opencode_available`, `cognitive_available`, `multi_agent_available`, `integration_active: false`, `integration_verified: false`, and a message. Some agent values can be `null` when modules have not been installed. These are source-level detection values, not health probes.
 
