@@ -1,6 +1,6 @@
 # Gateway process and NBOS protocol compatibility — November 22, 2026
 
-**Status: pre-production.** The Python API gateway and VS Code NBOS client do **not** yet speak the same protocol. This document records observed source-level contracts and the reproducible loopback integration test. It is not a claim that a working NBOS agent runtime exists.
+**Status: pre-production.** The root Python API gateway and VS Code NBOS client do **not** yet speak the same execution protocol. A **separate opt-in read-only reference service** now provides narrowly supported NBOS methods and actual tested command results; it does not change the root gateway or implement the LRS engine. This document records observed source-level contracts and the reproducible loopback integration test. It is not a claim that a working NBOS agent runtime exists.
 
 ## Validated endpoints and required evidence
 
@@ -39,13 +39,13 @@ CI installs pinned Python dependencies and frozen Bun dependencies before runnin
 node --test tests/nbosGateway.real.integration.cjs
 ```
 
-This is a reproducible **negative integration contract** demonstrating incompatibility, **not a usable backend bridge**. The real VS Code Extension Host and an actual NBOS server remain untested.
+This is a reproducible **negative integration contract** demonstrating incompatibility of the root gateway. A second [positive read-only adapter test](../tests/nbosReference.real.integration.cjs) starts `gateway.nbos_reference:app` on loopback and sends real Axios requests for `/status`, `/help` and system introspection. That separate service advertises only the operations it implements, rejects boot, debugger and file execution, and is [documented here](nbos-readonly-reference.md). The real VS Code Extension Host and a full NBOS execution engine remain untested.
 
 ## Integration risks to resolve
 
 - **Port collision remediated in the client:** the extension now defaults to **no NBOS endpoint**. Earlier releases assumed `http://localhost:8080`, overlapping with `server.py` and Compose cAdvisor. Commands fail locally until the user explicitly configures `neuralblitz.nbosEndpoint` for a verified compatible server; the gateway on 8000 remains **incompatible**.
 - **Credential storage (now implemented for local client):** the extension no longer reads legacy plaintext `neuralblitz.authToken` settings. Use the password-masked commands **Save NBOS Bearer Token Securely** and **Clear Stored NBOS Bearer Token** to store/delete a token in `ExtensionContext.secrets`. Both ordinary commands and inline debugger sessions share the same extension secret. A workspace-local `neuralblitz.nbosEndpoint` override is rejected to prevent redirecting this stored token through an untrusted repository. This is **client-side secret storage**, not production backend authentication or token lifecycle certification. Remove any legacy plaintext token from user/workspace settings manually.
-- **Backend provenance:** the root `lrs_agents` Gitlink is not initialized as a verified compatible NBOS service. No HTTP adapter, execution engine, debugger event stream, or end-to-end validation exists for it in this repo.
+- **Backend provenance:** the root `lrs_agents` Gitlink is not initialized as a verified compatible NBOS service. A separate read-only protocol reference now has limited HTTP integration tests; **no LRS-backed NBCL execution engine, debugger event stream or end-to-end program execution** exists in this repo.
 - **Fail closed:** until an explicit versioned bridge is implemented and tested, return errors for missing capabilities. Do not install generic catch-all `/boot` or `/execute` handlers that merely reply `ok: true`.
 
 ## Criteria for a future real NBOS bridge
