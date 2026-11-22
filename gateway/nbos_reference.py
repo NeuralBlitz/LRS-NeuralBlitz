@@ -60,6 +60,8 @@ async def reference_capabilities():
         "service": "lrs-neuralblitz-readonly-reference",
         "compatible": True,
         "operations": list(REFERENCE_OPERATIONS),
+        # POST /execute accepts only {command}, never a client file path.
+        "execution_modes": ["command"],
         "supported_commands": list(REFERENCE_COMMANDS),
         "execution_engine_available": False,
         "agent_boot_available": False,
