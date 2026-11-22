@@ -39,6 +39,7 @@ class ReferenceAdapterASGITests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(caps["protocol"], "nbos/1")
         self.assertIs(caps["compatible"], True)
         self.assertEqual(caps["operations"], list(reference.REFERENCE_OPERATIONS))
+        self.assertEqual(caps["execution_modes"], ["command"])
         self.assertFalse(caps["execution_engine_available"])
         self.assertFalse(caps["agent_boot_available"])
         self.assertFalse(caps["debugger_available"])

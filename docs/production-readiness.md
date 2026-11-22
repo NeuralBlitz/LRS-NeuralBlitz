@@ -48,6 +48,7 @@ merges; the GitHub integration may lack branch-protection administration scope.
   returning false success, and define authentication/authorization.
 - Validate security hardening beyond the tested 1 MiB authenticated request-body limit and sanitized optional-component error responses: rate limiting, reverse proxy limits, slow-client timeouts, operational monitoring and external ingress remain unverified.
 - Resolve the [pinned LRS-Agents import and dependency risks](audits/lrs-submodule-runtime-compatibility.md), including subprocess-based OpenCode probing and optional enterprise middleware, before enabling any execution adapter.
+- Preserve the explicit `execution_modes` (`command` versus `file`) preflight when adding new backends; a command-only server must never receive file path payloads, and vice versa.
 - Implement a full backend supporting the versioned `nbos/1` capability contract with independently verified agent boot, program execution and debugger states. The read-only reference verifies a **strict subset** only; the root gateway remains incompatible. A positive capability declaration alone does not prove execution or production security.
 - Verify backend startup and contracts using the checked-out `lrs_agents`
   dependency and real request/response fixtures. The [gateway developer

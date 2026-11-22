@@ -24,6 +24,7 @@ function createHarness({
   capabilityResponse = {
     protocol: 'nbos/1',
     compatible: true,
+    execution_modes: ['command', 'file'],
     operations: [
       'POST /boot', 'POST /execute', 'GET /status', 'POST /introspect',
       'GET /debug/stack', 'GET /debug/variables/*',
@@ -422,6 +423,70 @@ test('explicit negative or malformed capability responses never receive commands
   }
 });
 
+test('command-only service cannot receive file paths even though /execute is advertised', async () => {
+  const h = createHarness({
+    capabilityResponse: {
+      protocol: 'nbos/1', compatible: true,
+      operations: ['POST /execute'],
+      execution_modes: ['command'],
+    },
+    post: async () => ({ data: { ok: true, completed: true } }),
+  });
+  await assert.rejects(
+    h.client.executeFile('/private/workspace/program.nbcl'),
+    /does not advertise file execution/,
+  );
+  assert.deepEqual(h.requests.map(x => x.endpoint), ['/nbos/v1/capabilities']);
+  const result = await h.client.executeCommand('/status');
+  assert.equal(result.ok, true);
+  assert.equal(result.completed, true);
+  assert.deepEqual(h.requests.map(x => x.endpoint), [
+    '/nbos/v1/capabilities', '/nbos/v1/capabilities', '/execute',
+  ]);
+});
+
+test('file-only service cannot receive command source unless explicitly authorized', async () => {
+  const h = createHarness({
+    capabilityResponse: {
+      protocol: 'nbos/1', compatible: true,
+      operations: ['POST /execute'],
+      execution_modes: ['file'],
+    },
+  });
+  await assert.rejects(
+    h.client.executeCommand('sensitive NBCL command'),
+    /does not advertise command execution/,
+  );
+  assert.deepEqual(h.requests.map(x => x.endpoint), ['/nbos/v1/capabilities']);
+  await assert.rejects(
+    h.client.executeFile('demo.nbcl'),
+    /did not confirm execution completion/,
+  );
+  assert.deepEqual(h.requests.map(x => x.endpoint), [
+    '/nbos/v1/capabilities', '/nbos/v1/capabilities', '/execute',
+  ]);
+});
+
+test('missing, invalid and unknown execution mode declarations fail closed', async () => {
+  for (const execution_modes of [
+    undefined, null, 'file', [], ['command', 1],
+    ['legacy'], ['command', 'file', 'unknown'],
+  ]) {
+    const h = createHarness({
+      capabilityResponse: {
+        protocol: 'nbos/1', compatible: true,
+        operations: ['POST /execute'],
+        execution_modes,
+      },
+    });
+    await assert.rejects(
+      h.client.executeCommand('private code'),
+      /valid execution modes|does not advertise command execution/,
+    );
+    assert.deepEqual(h.requests.map(x => x.endpoint), ['/nbos/v1/capabilities']);
+  }
+});
+
 test('capability restrictions are per operation and cannot be bypassed', async () => {
   const h = createHarness({
     capabilityResponse: {
@@ -441,6 +506,7 @@ test('capability discovery is repeated after a backend contract changes', async 
   const h = createHarness({
     capabilityResponse: {
       protocol: 'nbos/1', compatible: true, operations: ['POST /execute'],
+      execution_modes: ['command'],
     },
     post: async () => {
       supported = false;

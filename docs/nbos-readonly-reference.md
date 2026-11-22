@@ -17,6 +17,8 @@ reports **negative** NBOS compatibility.
 | `POST /introspect` | Accepts exactly `{"scope":"system"}` and returns its **own** status and capabilities. Other scopes get HTTP 422. |
 | `POST /execute` | Executes exactly two finite pure read-only reference commands: `/status` and `/help`. Returns `ok: true, completed: true` only after the corresponding in-memory handler completes. Other commands and file-path requests return HTTP 422 with `ok: false`. |
 
+Discovery advertises `execution_modes: ["command"]`. The VS Code client now blocks file execution at **capability preflight**, before sending local file paths to this command-only server; direct file requests to the reference HTTP endpoint also receive HTTP 422.
+
 It never evaluates input as Python, invokes a shell, reads submitted paths,
 opens arbitrary files, launches a model, or fabricates successful NBCL work.
 `POST /boot` and all `/debug/*` methods are **not implemented** and are not
@@ -72,7 +74,7 @@ node --test tests/nbosGateway.real.integration.cjs tests/nbosReference.real.inte
 
 The real client tests launch the Python reference process on an ephemeral
 loopback TCP port and verify actual authenticated source-backed status and
-read-only command execution as well as rejected boot, file, debugger and
+read-only command execution as well as rejected boot, preflight-blocked file, debugger and
 unauthorized requests. The earlier test continues to prove that the root
 gateway **must remain incompatible** with NBOS execution.
 
