@@ -198,8 +198,8 @@
       "properties": {
         "neuralblitz.nbosEndpoint": {
           "type": "string",
-          "default": "http://localhost:8080",
-          "description": "NeuralBlitz Operating System endpoint"
+          "default": "",
+          "description": "Required explicit URL of a compatible NBOS backend (HTTPS, or HTTP on loopback only); leave unset to disable remote commands. The Python gateway is NOT an NBOS backend."
         },
         "neuralblitz.goldenDagViewer": {
           "type": "boolean",
