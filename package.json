@@ -126,6 +126,16 @@
         "command": "neuralblitz.ck.documentation",
         "title": "Show CK Documentation",
         "category": "NeuralBlitz"
+      },
+      {
+        "command": "neuralblitz.credentials.set",
+        "title": "Save NBOS Bearer Token Securely",
+        "category": "NeuralBlitz"
+      },
+      {
+        "command": "neuralblitz.credentials.clear",
+        "title": "Clear Stored NBOS Bearer Token",
+        "category": "NeuralBlitz"
       }
     ],
     "menus": {
