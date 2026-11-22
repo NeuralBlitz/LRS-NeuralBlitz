@@ -46,9 +46,9 @@ export class NeuralBlitzDebugSession extends DebugSession {
     private _isRunning = false;
     private _mode: LaunchRequestArguments['mode'] = 'Sentio';
 
-    public constructor() {
+    public constructor(secrets?: vscode.SecretStorage) {
         super();
-        this._nbosClient = new NBOSClient();
+        this._nbosClient = new NBOSClient(secrets);
         this.setDebuggerLinesStartAt1(true);
         this.setDebuggerColumnsStartAt1(true);
     }
