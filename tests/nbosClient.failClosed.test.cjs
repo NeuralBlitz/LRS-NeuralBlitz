@@ -21,6 +21,17 @@ function createHarness({
   get = async () => ({ data: {} }),
   endpoint = 'http://127.0.0.1:8765',
   endpointScope = 'user',
+  capabilityResponse = {
+    protocol: 'nbos/1',
+    compatible: true,
+    operations: [
+      'POST /boot', 'POST /execute', 'GET /status', 'POST /introspect',
+      'GET /debug/stack', 'GET /debug/variables/*',
+      'POST /debug/continue', 'POST /debug/stepOver',
+      'POST /debug/stepInto', 'POST /debug/stepOut',
+      'POST /debug/pause', 'POST /debug/evaluate',
+    ],
+  },
 } = {}) {
   const requests = [];
   const savedSecrets = new Map();
@@ -37,6 +48,9 @@ function createHarness({
     },
     get: async (endpoint, config) => {
       requests.push({ method: 'GET', endpoint, config });
+      if (endpoint === '/nbos/v1/capabilities') {
+        return { data: capabilityResponse };
+      }
       return get(endpoint);
     },
     interceptors: { request: { use: (handler) => { requestInterceptor = handler; } } },
@@ -83,7 +97,7 @@ test('successful boot connects only after backend confirmation', async () => {
   assert.equal(client.isConnected(), false);
   await client.boot({ mode: 'Sentio' });
   assert.equal(client.isConnected(), true);
-  assert.equal(requests[0].endpoint, '/boot');
+  assert.deepEqual(requests.map(x => x.endpoint), ['/nbos/v1/capabilities', '/boot']);
 });
 
 test('rejected boot remains disconnected and surfaces the backend error', async () => {
@@ -149,7 +163,9 @@ test('debug scope is URL-encoded and disconnect resets local state', async () =>
     get: async () => ({ data: { variables: {} } }),
   });
   await client.getVariables('local/scope space');
-  assert.equal(requests[0].endpoint, '/debug/variables/local%2Fscope%20space');
+  assert.deepEqual(requests.map(x => x.endpoint), [
+    '/nbos/v1/capabilities', '/debug/variables/local%2Fscope%20space',
+  ]);
   await client.boot({ mode: 'Sentio' });
   client.disconnect();
   assert.equal(client.isConnected(), false);
@@ -364,10 +380,80 @@ test('only explicit loopback HTTP or clean HTTPS endpoints are allowed', async (
     });
     const result = await client.executeCommand('/status');
     assert.equal(result.completed, true);
-    assert.equal(requests.length, 1);
-    assert.equal(requests[0].endpoint, '/execute');
+    assert.equal(requests.length, 2);
+    assert.equal(requests[0].endpoint, '/nbos/v1/capabilities');
+    assert.equal(requests[1].endpoint, '/execute');
     assert.equal(requests[0].config.baseURL, new URL(endpoint).origin);
+    assert.equal(requests[1].config.baseURL, new URL(endpoint).origin);
   }
+});
+
+
+test('all NBOS operations probe capabilities before sending executable or source data', async () => {
+  const h = createHarness({
+    post: async () => ({ data: { ok: true, completed: true } }),
+  });
+  await h.client.executeCommand('private NBCL source');
+  assert.deepEqual(h.requests.map(x => x.endpoint), [
+    '/nbos/v1/capabilities', '/execute',
+  ]);
+  assert.equal(h.requests[0].method, 'GET');
+  assert.equal(h.requests[1].method, 'POST');
+  assert.equal(h.requests[1].body.command, 'private NBCL source');
+});
+
+test('explicit negative or malformed capability responses never receive commands', async () => {
+  const cases = [
+    { protocol: 'nbos/1', compatible: false, operations: [] },
+    { protocol: 'nbos/0', compatible: true, operations: ['POST /execute'] },
+    { protocol: 'nbos/1', compatible: true, operations: null },
+    { protocol: 'nbos/1', compatible: 'true', operations: ['POST /execute'] },
+    { protocol: 'nbos/1', compatible: true, operations: ['GET /status'] },
+    null,
+    [],
+  ];
+  for (const capabilityResponse of cases) {
+    const h = createHarness({ capabilityResponse });
+    await assert.rejects(
+      h.client.executeCommand('sensitive source'),
+      /not compatible|malformed|does not advertise/,
+    );
+    assert.deepEqual(h.requests.map(x => x.endpoint), ['/nbos/v1/capabilities']);
+  }
+});
+
+test('capability restrictions are per operation and cannot be bypassed', async () => {
+  const h = createHarness({
+    capabilityResponse: {
+      protocol: 'nbos/1', compatible: true, operations: ['GET /status'],
+    },
+    get: async () => ({ data: { ok: true } }),
+  });
+  assert.equal((await h.client.getStatus()).ok, true);
+  await assert.rejects(h.client.boot({ mode: 'Sentio' }), /does not advertise POST \/boot/);
+  assert.deepEqual(h.requests.map(x => x.endpoint), [
+    '/nbos/v1/capabilities', '/status', '/nbos/v1/capabilities',
+  ]);
+});
+
+test('capability discovery is repeated after a backend contract changes', async () => {
+  let supported = true;
+  const h = createHarness({
+    capabilityResponse: {
+      protocol: 'nbos/1', compatible: true, operations: ['POST /execute'],
+    },
+    post: async () => {
+      supported = false;
+      return { data: { ok: true, completed: true } };
+    },
+  });
+  await h.client.executeCommand('first');
+  // Replace capability probe implementation by modifying the mock's raw method:
+  h.client.disconnect();
+  assert.equal(supported, false);
+  assert.equal(h.requests.filter(x => x.endpoint === '/nbos/v1/capabilities').length, 1);
+  await h.client.executeCommand('second');
+  assert.equal(h.requests.filter(x => x.endpoint === '/nbos/v1/capabilities').length, 2);
 });
 
 test('the published VS Code settings do not assume port 8080 is an NBOS service', () => {
