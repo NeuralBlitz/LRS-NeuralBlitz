@@ -13,6 +13,12 @@ python -m pip install -r gateway/requirements-pinned.txt
 python -m unittest discover -s tests -p 'test_gateway_asgi_integration.py' -v
 ```
 
+Run the [real-process smoke test](../docs/gateway-nbos-boundary.md) to verify that Uvicorn actually starts on loopback, enforces Bearer authentication, and returns honest 404 errors for the NBOS routes not implemented by this gateway:
+
+```sh
+python -m unittest discover -s tests -p 'test_gateway_live_process.py' -v
+```
+
 All direct/transitive packages in `requirements-pinned.txt` have explicit versions; **hash-pinned artifacts and a cross-platform lock are not yet provided**. Use the CI job for an actual installation validation. The repository-root `pyproject.toml` / `uv.lock` still describe a historical empty workspace, **not** the gateway installation, and should not be presented as sufficient dependencies.
 
 ## Local authenticated requests
