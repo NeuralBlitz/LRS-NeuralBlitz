@@ -75,6 +75,27 @@ jobs:
       - name: Run Python contracts, authenticated ASGI and live TCP gateway smoke
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 
+  gateway-nbos-compatibility:
+    name: Real NBOS client versus live gateway protocol
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install pinned FastAPI server dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r gateway/requirements-pinned.txt
+          python -m pip check
+      - name: Install locked extension client dependencies
+        run: bun install --frozen-lockfile
+      - name: Prove actual Axios client rejects incompatible Uvicorn gateway
+        run: node --test tests/nbosGateway.real.integration.cjs
+
   compose-security:
     name: Compose security regression
     runs-on: ubuntu-latest
