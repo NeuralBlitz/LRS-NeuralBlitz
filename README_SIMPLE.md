@@ -1,75 +1,51 @@
-> **Verification status: experimental / historical (audited 2026-11-21).** Legacy Replit quick-start and speed demonstrations are not validated against the current entry points or a deployed Replit environment. See the [source-backed product README](README.md) and the repository-wide audit. Do not use this page alone to establish scientific validity, secure deployment, or production readiness.
+# LRS-NeuralBlitz — Quick start (verified development paths)
 
----
+**Status: pre-production.** This repository is not a one-click hosted AI product. The root [`.replit`](.replit) launches a diagnostic Node command, not a web server. The steps below distinguish locally testable components from unimplemented integrations.
 
-# 🚀 OpenCode LRS Cognitive AI Hub - Simple Replit Version
+## Option 1: Work on the VS Code extension
 
-## ⚡ QUICK START (Works Immediately!)
+The root `package.json` defines an experimental VS Code extension. These commands run TypeScript compilation, linting and **mocked/offline** regression tests; they do not prove a live NBOS backend or Extension Host integration.
 
-### **Just Click "Run" on Replit!**
-
-That's it! The app will start automatically and be available at your Replit URL.
-
-## 🎯 WHAT YOU GET
-
-### **Interactive AI Code Analysis**
-- **Paste any code** (Python, JavaScript, Java)
-- **Real-time AI analysis** in milliseconds
-- **Pattern recognition** and insights
-- **Performance metrics** and scoring
-- **Cognitive recommendations**
-
-### **Live Demo Features**
-- ✅ **264,447x Performance** simulation
-- ✅ **Cognitive AI Analysis** with real-time feedback
-- ✅ **Pattern Detection** (functions, classes, loops, conditionals)
-- ✅ **Professional UI** with modern design
-- ✅ **Instant Results** - no waiting, no setup
-
-## 🧠 HOW TO USE
-
-1. **Visit your Replit URL** (generated automatically)
-2. **Paste code** in the left panel
-3. **Click "Analyze with Cognitive AI"**
-4. **See results** in the right panel instantly!
-
-## 📊 SAMPLE EXPERIENCE
-
-**Input:**
-```python
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n-1) + fibonacci(n-2)
+```sh
+git clone https://github.com/NeuralBlitz/LRS-NeuralBlitz.git
+cd LRS-NeuralBlitz
+bun install --frozen-lockfile
+bun run compile
+bun run lint
+bun run test
 ```
 
-**AI Results:**
-- ⚡ **Analysis Time:** 1.2ms (264,447x faster!)
-- 🎯 **Patterns Found:** Functions, Conditionals, Recursion
-- 🧠 **Cognitive Score:** 0.87 (High attention)
-- 💡 **AI Insights:** Well-structured recursive algorithm
+Use a compatible Bun/Node development installation and VS Code `^1.80.0`. See [the extension setup and security boundary](README.md#vs-code-extension-development) and [candidate packaging](docs/vscode-candidate-packaging.md). A generated VSIX candidate is not a published or certified extension.
 
-## 🚀 WHY THIS WORKS
+## Option 2: Start the isolated local FastAPI gateway
 
-- **No complex setup** - just click Run
-- **Flask-based** - lightweight and reliable
-- **Client-side AI simulation** - instant results
-- **Professional UI** - looks and feels like enterprise software
-- **Educational value** - demonstrates AI-assisted development
+Python **3.11** is the tested CI baseline. Create a separate Python environment and install only the pinned gateway dependencies:
 
-## 🎉 SHARE YOUR CREATION
-
-```
-🌟 I just deployed revolutionary AI code analysis!
-
-🧠 OpenCode LRS Cognitive AI Hub
-🔗 https://[your-replit-url]
-
-Try the Cognitive Demo - paste code and see AI magic! ⚡
-#AI #DevTools #CognitiveComputing
+```sh
+python3.11 -m venv .venv-gateway
+. .venv-gateway/bin/activate
+python -m pip install -r gateway/requirements-pinned.txt
+python -m unittest discover -s tests -p 'test_gateway_asgi_integration.py' -v
 ```
 
----
+Generate a **new, private** local Bearer token and start Uvicorn on loopback:
 
-**Ready to revolutionize software development? Click Run and experience the future!** 🚀🧠</content>
-<parameter name="filePath">README_SIMPLE.md
+```sh
+export LRS_GATEWAY_API_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+In a second terminal, pass that same token to the client **without committing or logging it**:
+
+```sh
+curl -fsS -H "Authorization: Bearer ${LRS_GATEWAY_API_TOKEN}" \
+  http://127.0.0.1:8000/api/integration/status
+```
+
+`GET /` presents an unauthenticated **pre-production status page**; API routes require the local Bearer token. The status endpoint reports component detection and `integration_verified: false`. Cognitive analysis requires currently optional dependencies, and `POST /api/multi-agent/execute-workflow` **does not execute tasks**. No compatible NBOS backend has been demonstrated. See [the current API contract](docs/API_REFERENCE.md) and [gateway setup](gateway/README.md).
+
+## Replit and deployment status
+
+Clicking **Run** in the current Replit configuration invokes `node index.js`, which intentionally reports that there is no deployable root HTTP application. It does **not** create an interactive public analysis dashboard or automatically produce a working Replit URL. Do not expose the gateway beyond trusted loopback development; production identity, TLS, resource controls and release certification remain open work.
+
+The former simulation-oriented Replit instructions are retained [as historical, unverified documentation](docs/history/README_SIMPLE-legacy-2026-11-22.md). For the supported product scope and evidence boundaries, read [README.md](README.md) and [production readiness](docs/production-readiness.md).
