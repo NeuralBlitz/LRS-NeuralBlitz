@@ -12,9 +12,12 @@ policy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(policy)
 
 
-def valid_configuration():
+def valid_configuration(include_host_metrics=False):
     services = {}
-    for name, (published, target) in policy.LOCAL_PORTS.items():
+    expected = dict(policy.LOCAL_PORTS)
+    if include_host_metrics:
+        expected.update(policy.OPT_IN_PORTS)
+    for name, (published, target) in expected.items():
         services[name] = {
             "ports": [{
                 "host_ip": "127.0.0.1",
@@ -42,7 +45,8 @@ def valid_configuration():
         "GF_SECURITY_ADMIN_USER": policy.DUMMY_ENV["GRAFANA_ADMIN_USER"],
         "GF_SECURITY_ADMIN_PASSWORD": policy.DUMMY_ENV["GRAFANA_ADMIN_PASSWORD"],
     }
-    services["cadvisor"]["privileged"] = True  # Existing exception only.
+    if include_host_metrics:
+        services["cadvisor"]["privileged"] = True  # Explicit opt-in exception only.
     return {"services": services}
 
 
@@ -50,14 +54,44 @@ class ComposePolicyTests(unittest.TestCase):
     def setUp(self):
         self.config = valid_configuration()
 
-    def assert_rejected(self, text):
-        failures = policy.check_configuration(self.config)
+    def assert_rejected(self, text, *, include_host_metrics=False):
+        failures = policy.check_configuration(
+            self.config, include_host_metrics=include_host_metrics
+        )
         self.assertTrue(
             any(text in failure for failure in failures), failures
         )
 
     def test_existing_known_baseline_is_accepted(self):
         self.assertEqual(policy.check_configuration(self.config), [])
+
+    def test_opt_in_host_metrics_maintains_known_security_debt(self):
+        self.config = valid_configuration(include_host_metrics=True)
+        self.assertEqual(
+            policy.check_configuration(self.config, include_host_metrics=True), []
+        )
+        self.assertTrue(self.config["services"]["cadvisor"]["privileged"])
+
+    def test_privileged_cadvisor_in_default_profile_is_rejected(self):
+        self.config = valid_configuration(include_host_metrics=True)
+        self.assert_rejected("unexpected service enabled in this profile")
+        self.assert_rejected("new privileged container")
+
+    def test_profiled_cadvisor_must_be_present_when_opted_in(self):
+        self.config = valid_configuration(include_host_metrics=True)
+        del self.config["services"]["cadvisor"]
+        self.assert_rejected(
+            "expected monitoring service is missing", include_host_metrics=True
+        )
+
+    def test_profiled_cadvisor_cannot_bind_wildcard_address(self):
+        self.config = valid_configuration(include_host_metrics=True)
+        self.config["services"]["cadvisor"]["ports"][0]["host_ip"] = "0.0.0.0"
+        self.assert_rejected("not bound to localhost", include_host_metrics=True)
+
+    def test_unexpected_unpublished_default_service_is_rejected(self):
+        self.config["services"]["rogue"] = {"image": "busybox:1", "ports": []}
+        self.assert_rejected("unexpected service enabled in this profile")
 
     def test_wildcard_host_binding_is_rejected(self):
         self.config["services"]["grafana"]["ports"][0]["host_ip"] = "0.0.0.0"
@@ -86,7 +120,7 @@ class ComposePolicyTests(unittest.TestCase):
         self.assert_rejected("mutable latest image")
 
     def test_service_disappearance_is_rejected(self):
-        del self.config["services"]["cadvisor"]
+        del self.config["services"]["grafana"]
         self.assert_rejected("expected monitoring service is missing")
 
 
