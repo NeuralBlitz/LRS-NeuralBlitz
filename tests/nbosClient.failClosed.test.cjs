@@ -223,6 +223,71 @@ test('command execution requires boolean ok without losing backend rejection det
   assert.equal(result.error.message, 'not authorized');
 });
 
+
+test('positive command acknowledgement without completion evidence fails closed', async () => {
+  for (const data of [
+    { ok: true }, { ok: true, result: 'accepted' }, { ok: true, completed: false },
+  ]) {
+    const { client } = createHarness({ post: async () => ({ data }) });
+    await assert.rejects(client.executeCommand('/status'), /did not confirm command execution completion/);
+  }
+});
+
+test('command success requires an explicit completed state', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: true, completed: true, output: 'done' } }),
+  });
+  const result = await client.executeCommand('/status');
+  assert.equal(result.ok, true);
+  assert.equal(result.completed, true);
+  assert.equal(result.output, 'done');
+});
+
+test('valid stopped command remains paused, with one-based integer line', async () => {
+  const { client } = createHarness({
+    post: async () => ({ data: { ok: true, stopped: true, line: 9 } }),
+  });
+  const result = await client.executeCommand('/status');
+  assert.equal(result.stopped, true);
+  assert.notEqual(result.completed, true);
+  assert.equal(result.line, 9);
+  for (const line of [undefined, 0, -1, 1.5, '8', Number.MAX_SAFE_INTEGER + 1]) {
+    const invalid = createHarness({
+      post: async () => ({ data: { ok: true, stopped: true, line } }),
+    });
+    await assert.rejects(invalid.client.executeCommand('/status'), /invalid stopped line/);
+  }
+});
+
+test('command responses with invalid or contradictory state flags fail closed', async () => {
+  for (const data of [
+    { ok: true, completed: true, stopped: true },
+    { ok: true, completed: true, stopped: 'false' },
+    { ok: true, stopped: 'true', line: 3 },
+  ]) {
+    const { client } = createHarness({ post: async () => ({ data }) });
+    await assert.rejects(client.executeCommand('/status'), /Contradictory|invalid execution flags/);
+  }
+});
+
+test('empty NBCL commands are rejected locally before any request', async () => {
+  const { client, requests } = createHarness();
+  for (const command of ['', '   ', '\t\n']) {
+    await assert.rejects(client.executeCommand(command), /empty NBCL command/);
+  }
+  assert.equal(requests.length, 0);
+});
+
+test('file debugger stops require a valid one-based line and boolean flags', async () => {
+  for (const data of [
+    { ok: true, stopped: true }, { ok: true, stopped: true, line: -3 },
+    { ok: true, stopped: true, line: '3' }, { ok: true, completed: 'true' },
+  ]) {
+    const { client } = createHarness({ post: async () => ({ data }) });
+    await assert.rejects(client.executeFile('main.nbcl'), /invalid stopped line|invalid execution flags/);
+  }
+});
+
 test('debug control actions require explicit positive backend acknowledgement', async () => {
   const negative = createHarness({
     post: async () => ({ data: { ok: false, error: { message: 'step refused' } } }),
@@ -293,8 +358,12 @@ test('malformed, remote HTTP and embedded-credential URLs cannot receive NBCL da
 
 test('only explicit loopback HTTP or clean HTTPS endpoints are allowed', async () => {
   for (const endpoint of ['http://127.0.0.1:8765', 'http://localhost:8765', 'http://[::1]:8765', 'https://nbos.example.org']) {
-    const { client, requests } = createHarness({ endpoint });
-    await client.executeCommand('/status');
+    const { client, requests } = createHarness({
+      endpoint,
+      post: async () => ({ data: { ok: true, completed: true } }),
+    });
+    const result = await client.executeCommand('/status');
+    assert.equal(result.completed, true);
     assert.equal(requests.length, 1);
     assert.equal(requests[0].endpoint, '/execute');
     assert.equal(requests[0].config.baseURL, new URL(endpoint).origin);
