@@ -16,14 +16,30 @@ const compiled = ts.transpileModule(source, {
 });
 assert.equal((compiled.diagnostics || []).filter(d => d.category === ts.DiagnosticCategory.Error).length, 0);
 
-function createHarness({ post = async () => ({ data: { ok: true } }), get = async () => ({ data: {} }) } = {}) {
+function createHarness({
+  post = async () => ({ data: { ok: true } }),
+  get = async () => ({ data: {} }),
+  endpoint = 'http://127.0.0.1:8765',
+} = {}) {
   const requests = [];
   const client = {
-    post: async (endpoint, body) => { requests.push({ method: 'POST', endpoint, body }); return post(endpoint, body); },
-    get: async (endpoint) => { requests.push({ method: 'GET', endpoint }); return get(endpoint); },
+    post: async (endpoint, body, config) => {
+      requests.push({ method: 'POST', endpoint, body, config });
+      return post(endpoint, body);
+    },
+    get: async (endpoint, config) => {
+      requests.push({ method: 'GET', endpoint, config });
+      return get(endpoint);
+    },
     interceptors: { request: { use: () => {} } },
   };
-  const vscode = { workspace: { getConfiguration: () => ({ get: (_key, fallback) => fallback }) } };
+  const vscode = {
+    workspace: {
+      getConfiguration: () => ({
+        get: (key, fallback) => key === 'nbosEndpoint' ? endpoint : fallback,
+      }),
+    },
+  };
   const exports = {};
   vm.runInNewContext(compiled.outputText, {
     exports,
@@ -34,6 +50,7 @@ function createHarness({ post = async () => ({ data: { ok: true } }), get = asyn
     },
     console,
     encodeURIComponent,
+    URL,
   }, { filename: 'nbosClient.compiled.cjs' });
   return { client: new exports.NBOSClient(), requests };
 }
@@ -226,4 +243,37 @@ test('status and introspection reject unavailable or negative response envelopes
     post: async () => ({ data: { ok: false, error: { message: 'forbidden' } } }),
   });
   await assert.rejects(rejected.client.introspect('system'), /forbidden/);
+});
+
+test('the NBOS client refuses all requests until a compatible endpoint is explicitly chosen', async () => {
+  const { client, requests } = createHarness({ endpoint: '' });
+  await assert.rejects(client.boot({ mode: 'Sentio' }), /NBOS endpoint is not configured/);
+  await assert.rejects(client.executeCommand('/status'), /NBOS endpoint is not configured/);
+  await assert.rejects(client.getStatus(), /NBOS endpoint is not configured/);
+  await assert.rejects(client.getStackTrace(), /NBOS endpoint is not configured/);
+  assert.equal(requests.length, 0);
+  assert.equal(client.isConnected(), false);
+});
+
+test('malformed, remote HTTP and embedded-credential URLs cannot receive NBCL data', async () => {
+  for (const endpoint of [
+    'not a url', 'ftp://127.0.0.1:9001', 'http://example.org:9001',
+    'http://user:pass@localhost:9999', 'http://localhost:8000/api',
+    'http://localhost:8000/?token=test', 'http://localhost:8000/#frag',
+    'http://0.0.0.0:9001',
+  ]) {
+    const { client, requests } = createHarness({ endpoint });
+    await assert.rejects(client.executeCommand('/execute sensitive source'), /Invalid NBOS endpoint|Invalid neuralblitz.nbosEndpoint/);
+    assert.equal(requests.length, 0, 'No traffic must be sent to invalid endpoint: ' + endpoint);
+  }
+});
+
+test('only explicit loopback HTTP or clean HTTPS endpoints are allowed', async () => {
+  for (const endpoint of ['http://127.0.0.1:8765', 'http://localhost:8765', 'http://[::1]:8765', 'https://nbos.example.org']) {
+    const { client, requests } = createHarness({ endpoint });
+    await client.executeCommand('/status');
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].endpoint, '/execute');
+    assert.equal(requests[0].config.baseURL, new URL(endpoint).origin);
+  }
 });
