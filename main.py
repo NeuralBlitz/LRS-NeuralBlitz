@@ -69,6 +69,12 @@ except ImportError:
 
 app = FastAPI(title="OpenCode ↔ LRS-Agents Integration Hub", version="2.0.0")
 
+# Bound authenticated HTTP request bodies before FastAPI decodes JSON or loads
+# optional experimental handlers. This is a local resource limit, not a rate
+# limiter, reverse proxy, or production DoS defense.
+MAX_GATEWAY_BODY_BYTES = 1024 * 1024
+
+
 class GatewayAuthMiddleware:
     """Small fail-closed development bearer-token boundary for HTTP and WS.
 
@@ -134,6 +140,76 @@ class GatewayAuthMiddleware:
                 )
                 await response(scope, receive, send)
             return
+        if scope_type == "http":
+            # Authenticate first so unauthenticated traffic cannot force body
+            # buffering. Enforce both declared size and streamed bytes; chunked
+            # requests must not bypass the limit.
+            lengths = [
+                value for name, value in scope.get("headers", [])
+                if name.lower() == b"content-length"
+            ]
+            if len(lengths) > 1:
+                response = JSONResponse(
+                    {"detail": "Invalid Content-Length headers"},
+                    status_code=400, headers={"Cache-Control": "no-store"},
+                )
+                await response(scope, receive, send)
+                return
+            if lengths:
+                try:
+                    declared = int(lengths[0].decode("ascii"))
+                    if declared < 0:
+                        raise ValueError("negative length")
+                except (UnicodeDecodeError, ValueError):
+                    response = JSONResponse(
+                        {"detail": "Invalid Content-Length"},
+                        status_code=400, headers={"Cache-Control": "no-store"},
+                    )
+                    await response(scope, receive, send)
+                    return
+                if declared > MAX_GATEWAY_BODY_BYTES:
+                    response = JSONResponse(
+                        {"detail": "Gateway request body limit exceeded"},
+                        status_code=413, headers={"Cache-Control": "no-store"},
+                    )
+                    await response(scope, receive, send)
+                    return
+
+            chunks = []
+            size = 0
+            while True:
+                message = await receive()
+                if message["type"] == "http.disconnect":
+                    return
+                if message["type"] != "http.request":
+                    continue
+                chunk = message.get("body", b"")
+                size += len(chunk)
+                if size > MAX_GATEWAY_BODY_BYTES:
+                    response = JSONResponse(
+                        {"detail": "Gateway request body limit exceeded"},
+                        status_code=413, headers={"Cache-Control": "no-store"},
+                    )
+                    await response(scope, receive, send)
+                    return
+                chunks.append(chunk)
+                if not message.get("more_body", False):
+                    break
+
+            # Replay the bounded body exactly once to the existing ASGI app;
+            # later receive calls retain disconnect semantics.
+            body = b"".join(chunks)
+            replayed = False
+
+            async def replay_receive():
+                nonlocal replayed
+                if not replayed:
+                    replayed = True
+                    return {"type": "http.request", "body": body, "more_body": False}
+                return await receive()
+
+            return await self.app(scope, replay_receive, send)
+
         return await self.app(scope, receive, send)
 
 
@@ -257,7 +333,8 @@ async def get_cognitive_status():
             "temporal_sequences": cognitive_stats.get("temporal_sequences_learned", 0),
         }
     except Exception as e:
-        return {"cognitive_available": False, "error": str(e)}
+        # Do not echo internal filenames, secrets, or dependency details to clients.
+        return {"cognitive_available": False, "message": "Cognitive status unavailable"}
 
 
 @app.post("/api/cognitive/analyze")
@@ -282,7 +359,7 @@ async def analyze_code_with_cognition(request: dict):
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Cognitive analysis failed: {str(e)}"
+            status_code=500, detail="Cognitive analysis failed"
         )
 
 
@@ -310,7 +387,7 @@ async def get_multi_agent_status():
             else 0,
         }
     except Exception as e:
-        return {"multi_agent_available": False, "error": str(e)}
+        return {"multi_agent_available": False, "message": "Multi-agent status unavailable"}
 
 
 @app.post("/api/multi-agent/execute-workflow")
