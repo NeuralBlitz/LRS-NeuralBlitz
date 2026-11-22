@@ -1,14 +1,18 @@
 """Opt-in, read-only NBOS protocol reference server (NOT an LRS/NBCL engine).
 
-This separate local-development process executes precisely two pure read-only
-commands. It never boots an agent, runs arbitrary code, reads client file
-paths, evaluates expressions or offers debugger operations. Discovery only
-advertises methods implemented and tested here.
+This separate local-development process runs a finite, side-effect-free NBCL
+subset of status/help/integer arithmetic, including bounded inline programs.
+It never boots an agent, runs arbitrary code, reads client file paths or
+offers debugger operations. Discovery advertises only tested methods.
 """
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
 from gateway.security import GatewayAuthMiddleware
+from gateway.nbcl_subset import (
+    SUPPORTED_COMMANDS, SubsetSyntaxError, parse_instruction,
+    run_instruction, run_program,
+)
 
 app = FastAPI(
     title="NeuralBlitz Read-only NBOS Reference Adapter",
@@ -21,7 +25,7 @@ REFERENCE_OPERATIONS = (
     "POST /introspect",
     "POST /execute",
 )
-REFERENCE_COMMANDS = ("/status", "/help")
+REFERENCE_COMMANDS = SUPPORTED_COMMANDS
 
 
 def reference_status():
@@ -47,7 +51,7 @@ async def reference_home():
         "<title>NBOS read-only reference</title></head><body>"
         "<h1>Pre-production research prototype: read-only NBOS reference</h1>"
         "<p>No agent boot, arbitrary NBCL execution, file access or debugger."
-        " Only /status and /help read-only commands are implemented.</p>"
+        " Only /status, /help and bounded /calc source programs are implemented.</p>"
         "</body></html>"
     )
 
@@ -61,7 +65,8 @@ async def reference_capabilities():
         "compatible": True,
         "operations": list(REFERENCE_OPERATIONS),
         # POST /execute accepts only {command}, never a client file path.
-        "execution_modes": ["command"],
+        "execution_modes": ["command", "source"],
+        "subset_interpreter_available": True,
         "supported_commands": list(REFERENCE_COMMANDS),
         "execution_engine_available": False,
         "agent_boot_available": False,
@@ -94,39 +99,31 @@ async def reference_introspect(payload: dict):
 
 @app.post("/execute")
 async def execute_read_only_command(payload: dict):
-    # The VS Code client sends {command: "..."} for individual commands, but
-    # {program: "..."} for files. Never resolve a supplied path on the server.
-    if set(payload) != {"command"} or not isinstance(payload.get("command"), str):
+    """Evaluate exact command OR bounded inline source; no filesystem access."""
+    if set(payload) not in ({"command"}, {"source"}):
         return JSONResponse(
             status_code=422,
             content={
-                "ok": False,
-                "completed": False,
-                "error": {
-                    "message": "Only single read-only command requests are supported; no file execution"
-                },
+                "ok": False, "completed": False,
+                "error": {"message": "Expected exactly command or inline source; no file execution"},
             },
         )
-    command = payload["command"]
-    if command not in REFERENCE_COMMANDS:
+    try:
+        if "command" in payload:
+            parsed = parse_instruction(payload["command"], line=1)
+            value = run_instruction(parsed, reference_status)
+            return {"ok": True, "completed": True, "result": value}
+        return run_program(payload["source"], reference_status)
+    except SubsetSyntaxError as exc:
+        # Error messages contain a short classification and line number only,
+        # never the caller's source/commands/secrets.
         return JSONResponse(
             status_code=422,
             content={
-                "ok": False,
-                "completed": False,
-                "error": {"message": "Unsupported read-only reference command"},
+                "ok": False, "completed": False,
+                "error": {"message": str(exc)},
             },
         )
-    if command == "/status":
-        value = reference_status()
-    else:
-        value = {
-            "supported_commands": list(REFERENCE_COMMANDS),
-            "description": "Read-only local reference operations; no NBCL engine",
-        }
-    # completed:true is returned only after the permitted operation ran.
-    return {"ok": True, "completed": True, "result": value}
-
 
 if __name__ == "__main__":
     import uvicorn

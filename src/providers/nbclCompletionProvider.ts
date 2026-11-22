@@ -17,6 +17,7 @@ export class NBCLCompletionProvider implements vscode.CompletionItemProvider {
             { name: '/boot', detail: 'Initialize NBOS', insertText: '/boot --charter=ϕ1..ϕ15 --goldendag=enable --mode=${1|Sentio,Dynamo|} ${2:--trace}' },
             { name: '/nbos', detail: 'Global NBOS commands', insertText: '/nbos ${1|up,down,status,config|}' },
             { name: '/status', detail: 'Display system status', insertText: '/status --scope=${1:all}' },
+            { name: '/calc', detail: 'Reference subset: bounded integer arithmetic (not general NBCL execution)', insertText: '/calc --a=${1:12} --op=${2|add,sub,mul|} --b=${3:7}' },
             { name: '/verify', detail: 'Trigger Veritas proofs', insertText: '/verify --scope=${1:system} --threshold=${2:0.985}' },
             { name: '/export', detail: 'Externalize artifacts', insertText: '/export ${1|codex,drs,logs|} --volume="${2:name}"' },
             

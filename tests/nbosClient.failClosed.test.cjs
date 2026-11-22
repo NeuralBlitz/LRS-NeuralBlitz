@@ -24,7 +24,7 @@ function createHarness({
   capabilityResponse = {
     protocol: 'nbos/1',
     compatible: true,
-    execution_modes: ['command', 'file'],
+    execution_modes: ['command', 'file', 'source'],
     operations: [
       'POST /boot', 'POST /execute', 'GET /status', 'POST /introspect',
       'GET /debug/stack', 'GET /debug/variables/*',
@@ -485,6 +485,75 @@ test('missing, invalid and unknown execution mode declarations fail closed', asy
     );
     assert.deepEqual(h.requests.map(x => x.endpoint), ['/nbos/v1/capabilities']);
   }
+});
+
+
+test('source mode transmits only inline source after explicit mode preflight', async () => {
+  const program = '# local\n/calc --a=1 --op=add --b=2';
+  const h = createHarness({
+    capabilityResponse: {
+      protocol: 'nbos/1', compatible: true,
+      operations: ['POST /execute'],
+      execution_modes: ['command', 'source'],
+    },
+    post: async () => ({
+      data: {
+        ok: true, completed: true, instruction_count: 1,
+        steps: [{ line: 2, command: '/calc', result: { value: 3 } }],
+      },
+    }),
+  });
+  const result = await h.client.executeSource(program);
+  assert.equal(result.completed, true);
+  assert.equal(result.instruction_count, 1);
+  assert.deepEqual(h.requests.map(r => r.endpoint),
+    ['/nbos/v1/capabilities', '/execute']);
+  assert.equal(h.requests[1].body.source, program);
+  assert.equal(h.requests[1].body.program, undefined);
+  await assert.rejects(h.client.executeFile('/private/data.nbcl'), /does not advertise file execution/);
+  assert.deepEqual(h.requests.map(r => r.endpoint),
+    ['/nbos/v1/capabilities', '/execute', '/nbos/v1/capabilities']);
+});
+
+test('source-mode preflight refuses payloads to command-only server', async () => {
+  const h = createHarness({
+    capabilityResponse: {
+      protocol: 'nbos/1', compatible: true,
+      operations: ['POST /execute'],
+      execution_modes: ['command'],
+    },
+  });
+  await assert.rejects(h.client.executeSource('/status\n/help'), /does not advertise source execution/);
+  assert.deepEqual(h.requests.map(r => r.endpoint), ['/nbos/v1/capabilities']);
+});
+
+test('inline source requires independently confirmed per-step completion records', async () => {
+  const broken = [
+    { ok: true, completed: true },
+    { ok: true, completed: false, instruction_count: 1, steps: [{}] },
+    { ok: true, completed: true, instruction_count: 0, steps: [] },
+    { ok: true, completed: true, instruction_count: 1, steps: [] },
+    { ok: true, completed: true, instruction_count: 1, steps: [null] },
+    { ok: true, completed: true, instruction_count: 1,
+      steps: [{ line: 0, command: '/status', result: {} }] },
+    { ok: true, completed: true, instruction_count: 1,
+      steps: [{ line: 1.5, command: '/status', result: {} }] },
+    { ok: true, completed: true, instruction_count: 1,
+      steps: [{ line: 1, command: '/status' }] },
+    { ok: 'true', completed: true },
+  ];
+  for (const body of broken) {
+    const h = createHarness({ post: async () => ({ data: body }) });
+    await assert.rejects(h.client.executeSource('/status\n/help'), /source response|source program completion/);
+  }
+});
+
+test('source refuses empty and overlong programs without any network traffic', async () => {
+  const h = createHarness();
+  for (const source of ['', ' \n ', 'x'.repeat(4097)]) {
+    await assert.rejects(h.client.executeSource(source), /empty NBCL source|4096-character/);
+  }
+  assert.equal(h.requests.length, 0);
 });
 
 test('capability restrictions are per operation and cannot be bypassed', async () => {

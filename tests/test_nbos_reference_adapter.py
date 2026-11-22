@@ -39,7 +39,8 @@ class ReferenceAdapterASGITests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(caps["protocol"], "nbos/1")
         self.assertIs(caps["compatible"], True)
         self.assertEqual(caps["operations"], list(reference.REFERENCE_OPERATIONS))
-        self.assertEqual(caps["execution_modes"], ["command"])
+        self.assertEqual(caps["execution_modes"], ["command", "source"])
+        self.assertIs(caps["subset_interpreter_available"], True)
         self.assertFalse(caps["execution_engine_available"])
         self.assertFalse(caps["agent_boot_available"])
         self.assertFalse(caps["debugger_available"])
@@ -58,7 +59,7 @@ class ReferenceAdapterASGITests(unittest.IsolatedAsyncioTestCase):
 
     async def test_status_and_help_execute_only_after_pure_operations(self):
         with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
-            for command in reference.REFERENCE_COMMANDS:
+            for command in ("/status", "/help"):
                 with self.subTest(command=command):
                     response = await self.send(
                         "POST", "/execute", json={"command": command}
@@ -68,6 +69,83 @@ class ReferenceAdapterASGITests(unittest.IsolatedAsyncioTestCase):
                     self.assertIs(payload["ok"], True)
                     self.assertIs(payload["completed"], True)
                     self.assertIsInstance(payload["result"], dict)
+
+
+    async def test_integer_calculation_is_executed_not_faked(self):
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            response = await self.send(
+                "POST", "/execute",
+                json={"command": "/calc --a=-12 --op=mul --b=5"},
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIs(body["ok"], True)
+        self.assertIs(body["completed"], True)
+        self.assertEqual(body["result"], {
+            "operation": "mul", "a": -12, "b": 5, "value": -60,
+        })
+
+    async def test_bounded_inline_program_executes_ordered_preparsed_steps(self):
+        program = "# only pure commands\n/status\n/calc --a=7 --op=add --b=8\n/help\n"
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            response = await self.send(
+                "POST", "/execute", json={"source": program}
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIs(body["ok"], True)
+        self.assertIs(body["completed"], True)
+        self.assertEqual(body["instruction_count"], 3)
+        self.assertEqual([step["line"] for step in body["steps"]], [2, 3, 4])
+        self.assertEqual([step["command"] for step in body["steps"]],
+                         ["/status", "/calc", "/help"])
+        self.assertEqual(body["steps"][1]["result"]["value"], 15)
+        self.assertEqual(body["steps"][0]["result"]["agent_booted"], False)
+
+    async def test_untrusted_inline_programs_are_rejected_without_partial_results(self):
+        disallowed = (
+            "/status\n/boot\n/help",
+            "/status\n/apply --payload=secret",
+            "/status\n/calc --a=1 --op=pow --b=9999999",
+            "/status\n/calc --a=9999999 --op=mul --b=9999999",
+            "/status\n" * 17,
+            "/status\n" * 65,
+            "# comment only",
+            "x" * 4097,
+        )
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            for source in disallowed:
+                with self.subTest(prefix=repr(source[:35])):
+                    response = await self.send(
+                        "POST", "/execute", json={"source": source}
+                    )
+                    self.assertEqual(response.status_code, 422)
+                    result = response.json()
+                    self.assertIs(result["ok"], False)
+                    self.assertIs(result["completed"], False)
+                    self.assertNotIn("steps", result)
+                    self.assertNotIn("secret", response.text)
+
+    async def test_malformed_command_or_source_envelopes_never_run(self):
+        bad = (
+            {"source": "/status", "command": "/status"},
+            {"source": "/status", "program": "/tmp/secrets"},
+            {"source": []},
+            {"source": None},
+            {"source": ""},
+            {"source": "# comment\n"},
+            {"command": "/calc --a=1 --op=pow --b=2"},
+            {"command": "/status\n/help"},
+            {"command": "/help", "trace": True},
+        )
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            for payload in bad:
+                with self.subTest(payload=repr(payload)):
+                    response = await self.send(
+                        "POST", "/execute", json=payload
+                    )
+                    self.assertEqual(response.status_code, 422)
+                    self.assertIs(response.json()["completed"], False)
 
     async def test_rejects_arbitrary_nbcl_scripts_files_debugger_and_boot(self):
         unsafe = (
