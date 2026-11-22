@@ -87,6 +87,8 @@ export class NBOSClient {
     constructor() {
         this.client = axios.create({
             timeout: 30000,
+            // Do not let an NBOS server silently redirect source or credentials.
+            maxRedirects: 0,
             headers: { 'Content-Type': 'application/json' }
         });
         this.client.interceptors.request.use(
