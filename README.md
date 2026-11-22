@@ -12,7 +12,7 @@ The former ~2,900-line README mixed executable interfaces, sketches, numerical p
 | --- | --- | --- |
 | VS Code extension | `package.json` defines three language IDs (`nbcl`, `reflexaellang`, `lon`), nine commands, two contributed tree views, and an inline debug adapter; TypeScript compilation, lint, and offline regression tests run in CI | Real VS Code Extension Host operation and authenticated NBOS integration are **not yet certified** |
 | VSIX packaging | A [GitHub Actions workflow](.github/workflows/vscode-vsix-candidate.yml) bundles the extension, creates a minimal pre-release candidate, verifies its contents, and records SHA-256 integrity metadata | A downloadable CI test artifact is **not** Marketplace publication or a production release |
-| Python gateway | `main.py` contains six declared FastAPI routes; a dependency-free suite checks the fail-closed behavior of the multi-agent execution endpoint | These isolated checks do **not** establish real server startup, token security, or an operational multi-agent executor |
+| Python gateway | `main.py` contains six declared FastAPI routes; CI installs a [version-pinned ASGI environment](gateway/requirements-pinned.txt) and sends authenticated HTTP requests through the real FastAPI application, testing status, unauthorized access, and non-executing workflow errors | Token-gated **local prototype only**; real LRS/NBOS backend integration, production identity, TLS and deployment remain unverified |
 | Telemetry configuration | `docker-compose.yml` configures InfluxDB, TimescaleDB, Prometheus, Grafana, Node Exporter, and cAdvisor; CI checks root Compose interpolation and default loopback port binding | Services have **not** been verified as a production deployment; image pinning, cAdvisor privileges, and previously committed credential rotation require work |
 | Other research directories | Source trees and proposals exist under folders such as `neuralblitz-v50/`, `iot_mesh_system/`, `voice_interface/` and `edge_computing/` | Presence of a directory or example does **not** establish implementation completeness, accuracy, performance, or hardware compatibility |
 
@@ -50,7 +50,7 @@ To inspect the **unpublished** test VSIX candidate, open the [VSIX release-candi
 
 The multi-agent execution route explicitly **does not execute tasks**. It rejects unavailable components (HTTP 503), invalid task lists (HTTP 400), and otherwise reports that the executor is not implemented (HTTP 501). Any earlier example describing successful workflow execution through this route is outdated. See [workflow implementation status](docs/multi-agent-workflow-status.md).
 
-There is **no repo-wide verified coverage percentage**, no supported assurance of complete JWT/RBAC or multi-cloud deployment, and no authenticated end-to-end FastAPI smoke test in the current release gates.
+There is **no repo-wide verified coverage percentage**, no supported assurance of JWT/RBAC or multi-cloud deployment, and **no real external backend/production-service integration test**. CI does now exercise the actual ASGI app with a local development Bearer token. See the [gateway installation and authentication contract](gateway/README.md).
 
 ## Local telemetry configuration
 
@@ -64,7 +64,7 @@ Before even considering external exposure or production use, read [deployment se
 # Check source-backed README statements and all local Markdown links
 python3 scripts/check_readme_contract.py
 
-# Python contract and policy regression tests (offline)
+# Python contracts and HTTP/ASGI integration (first install pinned gateway dependencies)
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 # VS Code extension compilation, lint, and mocked regression checks
