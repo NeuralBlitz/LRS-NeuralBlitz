@@ -70,7 +70,7 @@
 | `LICENSE` | LICENSE | Configuration/source (reviewed) | No release-level functional validation established. |
 | `lrs` | lrs | Symlink (target not followed) | Tracked symlink; destination not recursively inspected. |
 | `lrs_agents` | lrs agents | Gitlink (not read) | Gitlink outside this repository; content not inspected. |
-| `main.py` | main | Python source (imports/classes/entry point sampled) | Gateway route source inspected; no authenticated ASGI test; work in audit branch removes fabricated status and speeds. |
+| `main.py` | main | Python source (imports/classes/entry point sampled) | HTTP/ASGI bearer-token guard is now exercised in CI with a pinned isolated runtime; authenticated external backend, TLS, RBAC and production deployment remain unverified |
 | `malware_signature_analyzer_ck.py` | malware signature analyzer ck | Python source (imports/classes/entry point sampled) | Demo threat signatures lack ROC/FP/evasion assessment. |
 | `MLMAS_RESEARCH_REPORT.md` | MLMAS RESEARCH REPORT | Markdown (sections, introductions and claims sampled) | Composite architectural claims not reproduced as a working system. |
 | `mlmas_upgrades_report.py` | mlmas upgrades report | Python source (imports/classes/entry point sampled) | Optional aioredis/aio-pika dependency and multi-node behavior untested. |
