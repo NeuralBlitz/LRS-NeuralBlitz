@@ -22,6 +22,8 @@ backend currently complies. A backend returning an empty body for a successful
 debug-control request must be upgraded to return a positive acknowledgement
 before it can be used with this client.
 
+The Python gateway does **not** implement these NBOS endpoints. [Gateway/NBOS route compatibility](gateway-nbos-boundary.md) documents the missing bridge, overlapping port 8080 uses, insecure/undeclared authentication configuration, and a real loopback HTTP test for deliberate 404 results.
+
 The isolated test suite uses mocked transport responses. API authentication,
 real server interoperability, error format versioning, DAP events and
 timeouts must be validated in an end-to-end staging environment.
