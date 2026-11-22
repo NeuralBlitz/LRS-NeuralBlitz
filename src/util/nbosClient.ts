@@ -60,8 +60,11 @@ export class NBOSClient {
         } catch {
             throw new Error('Invalid neuralblitz.nbosEndpoint URL');
         }
+        const hostname = url.hostname.startsWith('[')
+            ? url.hostname.slice(1, -1)
+            : url.hostname;
         const localHost = ['localhost', '127.0.0.1', '::1']
-            .includes(url.hostname.replace(/^\\[|\\]$/g, ''));
+            .includes(hostname);
         if ((url.protocol !== 'https:' && !(url.protocol === 'http:' && localHost)) ||
             url.username || url.password || url.search || url.hash ||
             url.pathname !== '/') {
