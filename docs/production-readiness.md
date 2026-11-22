@@ -50,6 +50,7 @@ merges; the GitHub integration may lack branch-protection administration scope.
 - Implement and integration-test actual workflow execution rather than
   returning false success, and define authentication/authorization.
 - Validate security hardening beyond the tested 1 MiB authenticated request-body limit and sanitized optional-component error responses: rate limiting, reverse proxy limits, slow-client timeouts, operational monitoring and external ingress remain unverified.
+- Implement a real backend supporting the versioned `nbos/1` capability contract with independently verified operation results. The new preflight currently refuses this incompatible Python gateway; a positive capability declaration alone would not prove execution or production security.
 - Verify backend startup and contracts using the checked-out `lrs_agents`
   dependency and real request/response fixtures. The [gateway developer
   installation](../gateway/README.md) covers only isolated HTTP/ASGI behavior;
