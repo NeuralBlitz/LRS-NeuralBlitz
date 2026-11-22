@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Initialize core utilities
     const ckRegistry = new CKRegistry();
-    const nbosClient = new NBOSClient();
+    const nbosClient = new NBOSClient(context.secrets);
 
     // Register completion providers
     const nbclCompletionProvider = vscode.languages.registerCompletionItemProvider(
@@ -48,13 +48,13 @@ export function activate(context: vscode.ExtensionContext) {
     diagnosticProvider.activate(context);
 
     // Register commands
-    const commands = new NBCLCommands(nbosClient, ckRegistry);
+    const commands = new NBCLCommands(nbosClient, ckRegistry, context.secrets);
     const commandDisposables = commands.register(context);
 
     // Register debug adapter factory
     const debugAdapterFactory = vscode.debug.registerDebugAdapterDescriptorFactory(
         'neuralblitz',
-        new NeuralBlitzDebugAdapterFactory()
+        new NeuralBlitzDebugAdapterFactory(context.secrets)
     );
 
     // Register tree views
