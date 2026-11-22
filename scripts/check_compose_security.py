@@ -35,8 +35,10 @@ LOCAL_PORTS = {
     "prometheus": (9090, 9090),
     "grafana": (3000, 3000),
     "node-exporter": (9100, 9100),
-    "cadvisor": (8080, 8080),
 }
+
+# Privileged host metrics must be explicitly enabled.
+OPT_IN_PORTS = {"cadvisor": (8080, 8080)}
 
 # Existing security debt: see issue #12. An allowlist must not be construed
 # as approval; it merely prevents adding new exceptions silently.
@@ -49,7 +51,7 @@ EXISTING_MUTABLE_IMAGES = {
 }
 
 
-def load_interpolated_compose():
+def load_interpolated_compose(*, include_host_metrics=False):
     env = os.environ.copy()
     env.update(DUMMY_ENV)
     for name in list(env):
@@ -58,6 +60,7 @@ def load_interpolated_compose():
     command = [
         "docker",
         "compose",
+        * (["--profile", "host-metrics"] if include_host_metrics else []),
         "--env-file",
         os.devnull,
         "-f",
@@ -88,11 +91,15 @@ def load_interpolated_compose():
         raise RuntimeError("Docker Compose did not return valid JSON") from exc
 
 
-def check_configuration(config):
+def check_configuration(config, *, include_host_metrics=False):
     errors = []
     services = config.get("services", {})
     if not isinstance(services, dict):
         return ["No services found in Compose configuration"]
+
+    expected_ports = dict(LOCAL_PORTS)
+    if include_host_metrics:
+        expected_ports.update(OPT_IN_PORTS)
 
     for name, entry in services.items():
         if not isinstance(entry, dict):
@@ -100,10 +107,12 @@ def check_configuration(config):
             continue
 
         ports = entry.get("ports", [])
-        expected = LOCAL_PORTS.get(name)
-        if expected is None and ports:
-            errors.append(f"{name}: unexpected published host port(s)")
-        elif expected is not None:
+        expected = expected_ports.get(name)
+        if expected is None:
+            errors.append(f"{name}: unexpected service enabled in this profile")
+            if ports:
+                errors.append(f"{name}: unexpected published host port(s)")
+        else:
             if len(ports) != 1:
                 errors.append(f"{name}: expected exactly one published localhost port")
             for port in ports:
@@ -120,14 +129,14 @@ def check_configuration(config):
                     if actual != expected:
                         errors.append(f"{name}: unexpected published port mapping")
 
-        if entry.get("privileged", False) and name != "cadvisor":
+        if entry.get("privileged", False) and not (include_host_metrics and name == "cadvisor"):
             errors.append(f"{name}: new privileged container is prohibited")
 
         image = entry.get("image", "")
         if ":latest" in image and EXISTING_MUTABLE_IMAGES.get(name) != image:
             errors.append(f"{name}: new or modified mutable latest image reference")
 
-    for name in LOCAL_PORTS:
+    for name in expected_ports:
         if name not in services:
             errors.append(f"{name}: expected monitoring service is missing")
 
@@ -165,6 +174,11 @@ def main():
     try:
         config = load_interpolated_compose()
         errors = check_configuration(config)
+        opted_in = load_interpolated_compose(include_host_metrics=True)
+        errors.extend(
+            "host-metrics: " + issue
+            for issue in check_configuration(opted_in, include_host_metrics=True)
+        )
     except RuntimeError as exc:
         print(f"Compose security validation failed: {exc}", file=sys.stderr)
         return 1
@@ -176,10 +190,10 @@ def main():
 
     print(
         "PASS: root Compose uses injected dummy credentials and localhost-only "
-        "published ports; no new privileged/latest-image exceptions."
+        "published ports; privileged cAdvisor is off by default and opt-in only."
     )
     print(
-        "KNOWN DEBT: cAdvisor privilege and existing mutable images remain "
+        "KNOWN DEBT: opted-in cAdvisor privilege and existing mutable images remain "
         "unresolved; see issue #12."
     )
     return 0

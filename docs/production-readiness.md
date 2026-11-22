@@ -62,6 +62,7 @@ merges; the GitHub integration may lack branch-protection administration scope.
   without an independently verified compatible runtime.
 - Review all webviews/command surfaces and secrets handling, not just
   the three hardened static panels.
+- Confirm optional `host-metrics` cAdvisor remains absent from the default Compose profile; explicitly opted-in deployments are still privileged and require separate host-hardening review.
 - Pin container image versions/digests, address cAdvisor privileged mounts,
   audit the full dependency inventory, and validate runtime health.
 - Confirm whether previously committed demonstration credentials were ever

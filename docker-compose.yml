@@ -112,8 +112,11 @@ services:
     networks:
       - tsdb-network
 
-  # cAdvisor for container metrics
+  # High-privilege host metrics are OFF by default. Only opt in on
+  # trusted local machines using: docker compose --profile host-metrics up -d
+  # This does not make privileged cAdvisor a production-safe configuration.
   cadvisor:
+    profiles: ["host-metrics"]
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     ports:

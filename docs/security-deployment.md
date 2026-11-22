@@ -51,6 +51,7 @@ it does **not** prove that initialization, auth, persistence, or services work.
 - Review exposed Compose ports (including 8080, 8086, 5432, 9090, 3000 and
   9100). Bind to `127.0.0.1` for local-only development or deploy behind
   authenticated, firewalled private networking as appropriate.
+- Privileged cAdvisor is excluded from the default Compose profile. `docker compose --profile host-metrics up -d` deliberately enables its host/device access; do not use it on untrusted hosts or as a production deployment recipe.
 - Review cAdvisor's `privileged: true` setting and host/device mounts. Remove
   unnecessary privilege and mounts after verifying required metrics.
 - Pin reviewed container image versions or digests instead of relying on
