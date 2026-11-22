@@ -27,14 +27,19 @@ Set a unique bearer token, generated outside the repository, with at least 32 AS
 
 ```sh
 export LRS_GATEWAY_API_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-uvicorn main:app --host 127.0.0.1 --port 8000
+uvicorn main:app --host 127.0.0.1 --port 8000 &
+LRS_GATEWAY_PID=$!
 ```
 
-In another terminal use the same token securely supplied to the client:
+In the **same shell**, where the generated token is still available, query the gateway (the retries cover local startup):
 
 ```sh
-curl -fsS -H "Authorization: Bearer ${LRS_GATEWAY_API_TOKEN}" \
+curl --retry 5 --retry-connrefused --retry-delay 1 -fsS \
+  -H "Authorization: Bearer ${LRS_GATEWAY_API_TOKEN}" \
   http://127.0.0.1:8000/api/integration/status
+
+# Stop the process when finished:
+kill "$LRS_GATEWAY_PID"
 ```
 
 Only `GET /` (the static pre-production page) is public. **Every other HTTP path**, including OpenAPI/docs and dynamically registered routes, requires a matching Bearer token; WebSocket handshakes are checked by the same ASGI guard. If the token is missing or malformed, the API responds **503**; if configured but absent/incorrect, **401** with `WWW-Authenticate: Bearer`. The guard uses constant-time comparison, does not log tokens, and is not OAuth, JWT, RBAC, mTLS or production identity management.

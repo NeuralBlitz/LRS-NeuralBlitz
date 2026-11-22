@@ -6,14 +6,15 @@ The earlier specification included unimplemented JWT login, cloud URLs, request 
 
 ## Local setup and authentication
 
-Install the [isolated pinned gateway requirements](../gateway/requirements-pinned.txt), generate a random local token, and run the app **on loopback only**:
+Install the [isolated pinned gateway requirements](../gateway/requirements-pinned.txt), generate a random local token, and start the app **on loopback in the background of the same shell** so the client sees the same environment:
 
 ```sh
 python3.11 -m venv .venv-gateway
 . .venv-gateway/bin/activate
 python -m pip install -r gateway/requirements-pinned.txt
 export LRS_GATEWAY_API_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-uvicorn main:app --host 127.0.0.1 --port 8000
+uvicorn main:app --host 127.0.0.1 --port 8000 &
+LRS_GATEWAY_PID=$!
 ```
 
 Base URL for this **local process only**: `http://127.0.0.1:8000`.
@@ -23,8 +24,12 @@ Except for `GET /`, HTTP paths require exactly one `Authorization: Bearer <token
 Check status locally:
 
 ```sh
-curl -fsS -H "Authorization: Bearer ${LRS_GATEWAY_API_TOKEN}" \
+curl --retry 5 --retry-connrefused --retry-delay 1 -fsS \
+  -H "Authorization: Bearer ${LRS_GATEWAY_API_TOKEN}" \
   http://127.0.0.1:8000/api/integration/status
+
+# Stop the local development process after inspection:
+kill "$LRS_GATEWAY_PID"
 ```
 
 The token shown here is an environment variable reference, never a real credential. Do not store real secrets in Git or run the prototype behind a public ingress.
