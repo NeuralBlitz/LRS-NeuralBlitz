@@ -26,6 +26,8 @@ before it can be used with this client.
 
 The Python gateway does **not** implement these NBOS endpoints. [Gateway/NBOS route compatibility](gateway-nbos-boundary.md) documents the missing bridge, overlapping port 8080 uses, insecure/undeclared authentication configuration, and a real loopback HTTP test for deliberate 404 results.
 
+The original unit suite uses mocked transport responses. The new [real Node Axios ↔ Uvicorn protocol test](gateway-nbos-boundary.md) exercises an actual network connection and checks that authenticated but unsupported NBOS requests fail with HTTP 404. This is not proof that any NBOS backend supports execution or debugger functionality.
+
 The isolated test suite uses mocked transport responses. API authentication,
 real server interoperability, error format versioning, DAP events and
 timeouts must be validated in an end-to-end staging environment.
