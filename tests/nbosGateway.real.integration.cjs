@@ -138,26 +138,55 @@ test('real NBOS Axios client rejects authenticated but incompatible FastAPI gate
       assert.equal(allowed.data.integration_active, false);
     });
 
-    await t.test('real NBOS boot fails on authenticated 404 and stays disconnected', async () => {
+    await t.test('gateway exposes only authenticated negative nbos/1 discovery', async () => {
+      const denied = await axios.get(baseURL + '/nbos/v1/capabilities', {
+        timeout: 3000, proxy: false, maxRedirects: 0,
+        validateStatus: () => true,
+      });
+      assert.equal(denied.status, 401);
+      const allowed = await axios.get(baseURL + '/nbos/v1/capabilities', {
+        timeout: 3000, proxy: false, maxRedirects: 0,
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      assert.equal(allowed.status, 200);
+      assert.equal(allowed.data.protocol, 'nbos/1');
+      assert.equal(allowed.data.compatible, false);
+      assert.deepEqual(allowed.data.operations, []);
+    });
+
+    await t.test('real NBOS boot is blocked by negative compatibility before /boot', async () => {
       const client = makeActualClient(baseURL, token);
+      const paths = [];
+      client.client.interceptors.request.use(config => {
+        paths.push(config.url);
+        return config;
+      });
       await assert.rejects(
         client.boot({ mode: 'Sentio' }),
-        error => error?.response?.status === 404,
+        error => /not compatible with nbos\/1/.test(error.message),
       );
+      assert.deepEqual(paths, ['/nbos/v1/capabilities']);
       assert.equal(client.isConnected(), false);
     });
 
-    await t.test('real NBOS source commands, introspection and debugger never fabricate success', async () => {
+    await t.test('real Axios client refuses source, introspection and debugger requests before dispatch', async () => {
       const client = makeActualClient(baseURL, token);
-      for (const operation of [
+      const paths = [];
+      client.client.interceptors.request.use(config => {
+        paths.push(config.url);
+        return config;
+      });
+      const operations = [
         () => client.executeCommand('/status'),
         () => client.executeFile('test.nbcl'),
         () => client.getStatus(),
         () => client.introspect('system'),
         () => client.getStackTrace(),
-      ]) {
-        await assert.rejects(operation(), error => error?.response?.status === 404);
+      ];
+      for (const operation of operations) {
+        await assert.rejects(operation(), error => /not compatible with nbos\/1/.test(error.message));
       }
+      assert.deepEqual(paths, operations.map(() => '/nbos/v1/capabilities'));
       assert.equal(client.isConnected(), false);
     });
 
