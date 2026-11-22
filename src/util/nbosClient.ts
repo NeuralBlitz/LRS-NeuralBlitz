@@ -15,6 +15,15 @@ export interface ExecutionResult {
     line?: number;
     error?: string;
 }
+export interface CommandExecutionResult {
+    ok: boolean;
+    completed?: boolean;
+    stopped?: boolean;
+    line?: number;
+    error?: { message?: string };
+    [field: string]: unknown;
+}
+
 export interface StackFrame {
     index: number;
     name: string;
@@ -150,10 +159,17 @@ export class NBOSClient {
                 error: data.error?.message || 'NBOS rejected execution'
             };
         }
+        if ((data.completed !== undefined && typeof data.completed !== 'boolean') ||
+            (data.stopped !== undefined && typeof data.stopped !== 'boolean')) {
+            throw new Error('Malformed NBOS execution response: invalid execution flags');
+        }
         if (data.completed === true && data.stopped === true) {
             throw new Error('Contradictory NBOS execution response: completed and stopped');
         }
         if (data.stopped === true) {
+            if (!Number.isSafeInteger(data.line) || data.line < 1) {
+                throw new Error('Malformed NBOS execution response: invalid stopped line');
+            }
             return { completed: false, stopped: true, line: data.line };
         }
         if (data.completed === true) {
@@ -163,14 +179,37 @@ export class NBOSClient {
         throw new Error('NBOS did not confirm execution completion or a stopped state');
     }
 
-    async executeCommand(command: string): Promise<any> {
+    async executeCommand(command: string): Promise<CommandExecutionResult> {
+        if (typeof command !== 'string' || !command.trim()) {
+            throw new Error('Refusing to send an empty NBCL command');
+        }
         const response = await this.post('/execute', { command });
         const data = response.data;
         if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.ok !== 'boolean') {
             throw new Error('Malformed NBOS command response: missing boolean ok');
         }
-        // Preserve explicit ok:false so the command UI can display its backend error.
-        return data;
+        // Rejections are returned for the command UI, never shown as success.
+        if (data.ok === false) {
+            return data as CommandExecutionResult;
+        }
+        if ((data.completed !== undefined && typeof data.completed !== 'boolean') ||
+            (data.stopped !== undefined && typeof data.stopped !== 'boolean')) {
+            throw new Error('Malformed NBOS command response: invalid execution flags');
+        }
+        if (data.completed === true && data.stopped === true) {
+            throw new Error('Contradictory NBOS command response: completed and stopped');
+        }
+        if (data.stopped === true) {
+            if (!Number.isSafeInteger(data.line) || data.line < 1) {
+                throw new Error('Malformed NBOS command response: invalid stopped line');
+            }
+            return data as CommandExecutionResult;
+        }
+        if (data.completed === true) {
+            return data as CommandExecutionResult;
+        }
+        // A positive transport acknowledgement is not executed work.
+        throw new Error('NBOS did not confirm command execution completion or a stopped state');
     }
 
     async getStackTrace(): Promise<StackFrame[]> {
