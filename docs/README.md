@@ -29,6 +29,7 @@ Return to the [main README](../README.md) for the verified product scope. The or
 
 ## API and telemetry
 
+- [Gateway/NBOS route compatibility and Uvicorn smoke](gateway-nbos-boundary.md) — real loopback process and incompatible VS Code backend interfaces
 - [Gateway pinned dependencies and ASGI authentication](../gateway/README.md) — actual request-level integration tests, local Bearer guard, and remaining live-backend limitations
 
 - [Multi-agent workflow status](multi-agent-workflow-status.md) — route does **not** execute tasks

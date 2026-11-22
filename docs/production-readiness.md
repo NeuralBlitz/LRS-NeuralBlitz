@@ -23,10 +23,12 @@ main**, every push to main, and manual dispatch:
 
 - `Extension compile lint and regression`: locked dependencies, TypeScript
   compile, lint baseline, offline Node regression tests, manifest asset checks.
-- `Python API contracts and authenticated ASGI integration`: installs a pinned
+- `Python API contracts, ASGI integration and live Uvicorn smoke`: installs a pinned
   FastAPI/httpx environment and sends real HTTP requests through the application
-  without opening a network port. Tests local Bearer token enforcement, error
-  contracts, and no-false-success behavior. **Does not validate a live LRS backend.**
+  through an in-process transport; a separate [real Uvicorn loopback smoke
+  test](gateway-nbos-boundary.md) launches the process and exercises HTTP over
+  TCP. Tests local Bearer token enforcement and fail-closed error contracts,
+  but **does not validate any live LRS/NBOS backend**.
 - `Compose security regression`: policy unit tests and `docker compose config`
   validation with disposable test-only credentials.
 
