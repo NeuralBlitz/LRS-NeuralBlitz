@@ -28,18 +28,23 @@ python -m pip install -r gateway/requirements-pinned.txt
 python -m unittest discover -s tests -p 'test_gateway_asgi_integration.py' -v
 ```
 
-Generate a **new, private** local Bearer token and start Uvicorn on loopback:
+Generate a **new, private** local Bearer token and start Uvicorn **in the background of the same shell**. This keeps the token available to the local client without printing it:
 
 ```sh
 export LRS_GATEWAY_API_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-uvicorn main:app --host 127.0.0.1 --port 8000
+uvicorn main:app --host 127.0.0.1 --port 8000 &
+LRS_GATEWAY_PID=$!
 ```
 
-In a second terminal, pass that same token to the client **without committing or logging it**:
+Use the **same terminal** to query the gateway. The retry options allow for local server startup; no token is committed or logged:
 
 ```sh
-curl -fsS -H "Authorization: Bearer ${LRS_GATEWAY_API_TOKEN}" \
+curl --retry 5 --retry-connrefused --retry-delay 1 -fsS \
+  -H "Authorization: Bearer ${LRS_GATEWAY_API_TOKEN}" \
   http://127.0.0.1:8000/api/integration/status
+
+# Stop the development process when finished:
+kill "$LRS_GATEWAY_PID"
 ```
 
 `GET /` presents an unauthenticated **pre-production status page**; API routes require the local Bearer token. The status endpoint reports component detection and `integration_verified: false`. Cognitive analysis requires currently optional dependencies, and `POST /api/multi-agent/execute-workflow` **does not execute tasks**. No compatible NBOS backend has been demonstrated. See [the current API contract](docs/API_REFERENCE.md) and [gateway setup](gateway/README.md).
