@@ -21,6 +21,10 @@ python -m unittest discover -s tests -p 'test_gateway_live_process.py' -v
 
 All direct/transitive packages in `requirements-pinned.txt` have explicit versions; **hash-pinned artifacts and a cross-platform lock are not yet provided**. Use the CI job for an actual installation validation. The repository-root `pyproject.toml` / `uv.lock` still describe a historical empty workspace, **not** the gateway installation, and should not be presented as sufficient dependencies.
 
+## Separate read-only NBOS reference adapter
+
+A distinct, opt-in [NBOS protocol reference](../docs/nbos-readonly-reference.md) can be launched using `python -m uvicorn gateway.nbos_reference:app --host 127.0.0.1 --port 8765 --no-access-log`. It shares the same bearer-token validation and bounded-body middleware but implements **only** read-only status, system introspection, and two finite commands (`/status`, `/help`). It is intentionally **not** an NBCL engine, agent boot service, debugger or replacement for this gateway. Its Python ASGI tests and real Axios-to-Uvicorn integration test are separate from this gateway's negative compatibility test.
+
 ## Local authenticated requests
 
 Set a unique bearer token, generated outside the repository, with at least 32 ASCII characters (do not check it into Git or expose it in logs). For example:
