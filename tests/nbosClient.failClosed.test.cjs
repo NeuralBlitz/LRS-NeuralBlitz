@@ -20,8 +20,16 @@ function createHarness({
   post = async () => ({ data: { ok: true } }),
   get = async () => ({ data: {} }),
   endpoint = 'http://127.0.0.1:8765',
+  endpointScope = 'user',
 } = {}) {
   const requests = [];
+  const savedSecrets = new Map();
+  const secrets = {
+    get: async (key) => savedSecrets.get(key),
+    store: async (key, value) => { savedSecrets.set(key, value); },
+    delete: async (key) => { savedSecrets.delete(key); },
+  };
+  let requestInterceptor;
   const client = {
     post: async (endpoint, body, config) => {
       requests.push({ method: 'POST', endpoint, body, config });
@@ -31,12 +39,22 @@ function createHarness({
       requests.push({ method: 'GET', endpoint, config });
       return get(endpoint);
     },
-    interceptors: { request: { use: () => {} } },
+    interceptors: { request: { use: (handler) => { requestInterceptor = handler; } } },
   };
   const vscode = {
     workspace: {
       getConfiguration: () => ({
-        get: (key, fallback) => key === 'nbosEndpoint' ? endpoint : fallback,
+        get: (key, fallback) => {
+          if (key === 'authToken') throw new Error('Legacy plaintext authToken setting must not be read');
+          return key === 'nbosEndpoint' ? endpoint : fallback;
+        },
+        inspect: (key) => key === 'nbosEndpoint'
+          ? {
+              globalValue: endpointScope === 'user' ? endpoint : undefined,
+              workspaceValue: endpointScope === 'workspace' ? endpoint : undefined,
+              workspaceFolderValue: endpointScope === 'folder' ? endpoint : undefined,
+            }
+          : undefined,
       }),
     },
   };
@@ -52,7 +70,12 @@ function createHarness({
     encodeURIComponent,
     URL,
   }, { filename: 'nbosClient.compiled.cjs' });
-  return { client: new exports.NBOSClient(), requests };
+  return {
+    client: new exports.NBOSClient(secrets),
+    requests, secrets,
+    tokenKey: exports.NBOS_TOKEN_SECRET_KEY,
+    interceptRequest: async (config) => requestInterceptor(config),
+  };
 }
 
 test('successful boot connects only after backend confirmation', async () => {
@@ -283,4 +306,28 @@ test('the published VS Code settings do not assume port 8080 is an NBOS service'
   const property = manifest.contributes.configuration.properties['neuralblitz.nbosEndpoint'];
   assert.equal(property.default, '');
   assert.match(property.description, /compatible NBOS backend/);
+});
+
+test('NBOS Authorization comes only from SecretStorage and never from plaintext settings', async () => {
+  const { secrets, tokenKey, interceptRequest } = createHarness();
+  assert.equal(tokenKey, 'nbos.authToken');
+  let headers = (await interceptRequest({ headers: {} })).headers;
+  assert.equal(headers.Authorization, undefined);
+  await secrets.store(tokenKey, 'test-only-secret-irreversible-placeholder');
+  headers = (await interceptRequest({ headers: {} })).headers;
+  assert.equal(headers.Authorization, 'Bearer test-only-secret-irreversible-placeholder');
+  await secrets.delete(tokenKey);
+  headers = (await interceptRequest({ headers: {} })).headers;
+  assert.equal(headers.Authorization, undefined);
+});
+
+test('workspace and folder endpoints cannot redirect authentication secrets', async () => {
+  for (const endpointScope of ['workspace', 'folder']) {
+    const { client, requests, secrets, tokenKey } = createHarness({
+      endpoint: 'https://untrusted.example.org', endpointScope,
+    });
+    await secrets.store(tokenKey, 'test-only-stored-token');
+    await assert.rejects(client.executeCommand('secret example'), /User settings, not workspace settings/);
+    assert.equal(requests.length, 0);
+  }
 });
