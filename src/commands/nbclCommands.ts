@@ -167,17 +167,25 @@ export class NBCLCommands {
 
         try {
             this.outputChannel.appendLine('Executing NBCL command...');
-            this.outputChannel.appendLine(text);
+            // Avoid duplicating user source text (potentially containing secrets) in logs.
+            this.outputChannel.appendLine('Source omitted (' + text.length + ' characters)');
             this.outputChannel.appendLine('---');
 
             const result = await this.nbosClient.executeCommand(text);
-            
             this.outputChannel.appendLine(JSON.stringify(result, null, 2));
-            
-            if (result.ok) {
-                vscode.window.showInformationMessage('Command executed successfully');
+
+            if (result.ok === false) {
+                vscode.window.showErrorMessage(
+                    'Execution failed: ' + (result.error?.message || 'NBOS rejected the command')
+                );
+            } else if (result.completed === true && result.stopped !== true) {
+                vscode.window.showInformationMessage('Command execution completed');
+            } else if (result.stopped === true && result.completed !== true) {
+                vscode.window.showWarningMessage(
+                    'Command stopped at line ' + result.line + '; execution is not complete'
+                );
             } else {
-                vscode.window.showErrorMessage(`Execution failed: ${result.error?.message}`);
+                vscode.window.showErrorMessage('NBOS did not confirm command completion');
             }
         } catch (error) {
             vscode.window.showErrorMessage(`Execution error: ${error}`);
