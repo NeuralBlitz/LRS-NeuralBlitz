@@ -60,8 +60,11 @@ set `neuralblitz.nbosEndpoint` in **VS Code User settings** to
 `http://127.0.0.1:8765`, and provision the same local bearer token using
 **NeuralBlitz: Save NBOS Bearer Token Securely**. Do not commit tokens or
 put them in workspace settings. The editor's Execute NBCL Command operation
-will complete **only** for a selection containing exactly `/status` or
-`/help`. Boot and debugger commands still fail because they are genuinely
+will complete **only** for a selection containing a supported
+single command (`/status`, `/help`, or bounded integer `/calc`).
+Multi-line documents or selections use the strictly prevalidated inline
+source mode; comments and blank lines are permitted within the documented
+budgets. Boot and debugger commands still fail because they are genuinely
 unavailable.
 
 ## Verification and remaining limitations
