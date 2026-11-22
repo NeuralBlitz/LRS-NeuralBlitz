@@ -19,7 +19,7 @@ LRS_GATEWAY_PID=$!
 
 Base URL for this **local process only**: `http://127.0.0.1:8000`.
 
-Except for `GET /`, HTTP paths require exactly one `Authorization: Bearer <token>` header matching `LRS_GATEWAY_API_TOKEN`. Configuration accepts an ASCII token of 32–512 characters with no whitespace. The gateway rejects missing/invalid token configuration with HTTP **503** and missing/incorrect credentials with HTTP **401** (with `WWW-Authenticate: Bearer`). OpenAPI and docs routes are also gated. This is a small development safeguard, **not** JWT authentication, OAuth, RBAC, a rate limiter, or a production security review.
+Except for `GET /`, HTTP paths require exactly one `Authorization: Bearer <token>` header matching `LRS_GATEWAY_API_TOKEN`. Configuration accepts an ASCII token of 32–512 characters with no whitespace. The gateway rejects missing/invalid token configuration with HTTP **503** and missing/incorrect credentials with HTTP **401** (with `WWW-Authenticate: Bearer`). OpenAPI and docs routes are also gated. This is a small development safeguard, **not** JWT authentication, OAuth, RBAC, a rate limiter, or a production security review. After successful authentication, the gateway bounds each HTTP request body to **1 MiB (1,048,576 bytes)**; it rejects oversized declared or streamed bodies with HTTP **413**. Invalid Content-Length headers receive HTTP **400**. This bound is not a request-rate quota, traffic-shaping system, or public-ingress defense.
 
 Check status locally:
 
