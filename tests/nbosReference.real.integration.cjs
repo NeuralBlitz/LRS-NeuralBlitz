@@ -181,7 +181,7 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       assert.deepEqual(paths, ['/nbos/v1/capabilities', '/nbos/v1/capabilities']);
     });
 
-    await t.test('unsupported commands and file execution never report completion', async () => {
+    await t.test('unsupported commands fail and file paths never leave the client', async () => {
       const client = makeActualClient(baseURL, token);
       for (const command of ['/apply --modify-file=private', '/status; ls', '/status\n/boot']) {
         await assert.rejects(
@@ -189,10 +189,16 @@ test('read-only NBOS reference responds to actual Axios client without inventing
           error => error?.response?.status === 422,
         );
       }
+      const paths = [];
+      client.client.interceptors.request.use(config => {
+        paths.push(config.url);
+        return config;
+      });
       await assert.rejects(
         client.executeFile('/tmp/secret.nbcl'),
-        error => error?.response?.status === 422,
+        /does not advertise file execution/,
       );
+      assert.deepEqual(paths, ['/nbos/v1/capabilities']);
       const directBoot = await axios.post(baseURL + '/boot', { mode: 'Sentio' }, {
         headers: { Authorization: 'Bearer ' + token },
         timeout: 3000, proxy: false, maxRedirects: 0,
