@@ -30,6 +30,8 @@ Return to the [main README](../README.md) for the verified product scope. The or
 
 ## API and telemetry
 
+- [Pinned LRS-Agents import and runtime review](audits/lrs-submodule-runtime-compatibility.md) — exact Gitlink source evidence, startup side-effect isolation and adapter blockers
+
 - [Current FastAPI API reference](API_REFERENCE.md) — exact route list, local Bearer boundary, honest 503/400/501 failure behavior
 - [Factual quick start](../README_SIMPLE.md) — extension/test and isolated gateway development instructions; no Replit deployment promise
 - [Gateway/NBOS route compatibility and Uvicorn smoke](gateway-nbos-boundary.md) — real Python and Node/Axios cross-runtime negative integration tests — real loopback process and incompatible VS Code backend interfaces
