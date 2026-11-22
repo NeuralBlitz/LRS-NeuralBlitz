@@ -24,6 +24,7 @@ Return to the [main README](../README.md) for the verified product scope. The or
 - [Extension activation contract](extension-activation-contract.md) — manifest commands, tree views, and offline activation checks
 - [Debugger execution contract](debugger-execution-contract.md) — failure behavior, real execution evidence, and unsupported debugger capabilities
 - [NBOS client response validation](nbos-client-protocol-validation.md) — transport acknowledgements versus completed work
+- [Read-only NBOS protocol reference](nbos-readonly-reference.md) — opt-in real HTTP adapter, two safe commands and positive Axios/Uvicorn tests; no NBCL engine
 - [Language asset boundaries](vscode-extension-language-assets.md) — provisional ReflexælLang / LoN grammar support
 - [VS Code webview security](vscode-webview-security.md) — tested text escaping and webview script restrictions
 - [VSIX candidate packaging](vscode-candidate-packaging.md) — allowlisted bundle, artifact checksums, and no-publish boundary
@@ -34,7 +35,7 @@ Return to the [main README](../README.md) for the verified product scope. The or
 
 - [Current FastAPI API reference](API_REFERENCE.md) — exact route list, local Bearer boundary, honest 503/400/501 failure behavior
 - [Factual quick start](../README_SIMPLE.md) — extension/test and isolated gateway development instructions; no Replit deployment promise
-- [Gateway/NBOS route compatibility and Uvicorn smoke](gateway-nbos-boundary.md) — real Python and Node/Axios cross-runtime negative integration tests — real loopback process and incompatible VS Code backend interfaces
+- [Gateway/NBOS route compatibility and Uvicorn smoke](gateway-nbos-boundary.md) — real loopback negative gateway test, alongside the separate positive read-only protocol reference
 - [Gateway pinned dependencies and ASGI authentication](../gateway/README.md) — actual request-level integration tests, local Bearer guard, and remaining live-backend limitations
 
 - [Multi-agent workflow status](multi-agent-workflow-status.md) — route does **not** execute tasks
