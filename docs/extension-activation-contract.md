@@ -12,6 +12,9 @@ exactly once during extension activation.
   `neuralblitz.introspect`, `neuralblitz.ck.search`,
   `neuralblitz.ck.documentation`, and `neuralblitz.debug.start`
   register in `NBCLCommands`.
+- `neuralblitz.credentials.set` and `neuralblitz.credentials.clear` expose a
+  password-masked SecretStorage workflow; they do not write tokens into
+  workspace settings, logs or committed files.
 - `neuralblitz.debug.step` and `neuralblitz.debug.continue` delegate to
   VS Code's built-in debugger commands, but only when the active debug
   session type is `neuralblitz`. They do not claim backend step completion.
