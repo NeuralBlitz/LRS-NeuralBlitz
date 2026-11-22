@@ -102,6 +102,24 @@ class GatewayASGIIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIs(result["integration_active"], False)
         self.assertEqual(openapi.status_code, 200)
         self.assertIn("/api/multi-agent/execute-workflow", openapi.json()["paths"])
+        self.assertIn("/nbos/v1/capabilities", openapi.json()["paths"])
+
+    async def test_versioned_nbos_discovery_authenticates_but_refuses_compatibility(self):
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            missing = await self.request("GET", "/nbos/v1/capabilities")
+            accepted = await self.request(
+                "GET", "/nbos/v1/capabilities", token=TOKEN
+            )
+        self.assertEqual(missing.status_code, 401)
+        self.assertEqual(accepted.status_code, 200)
+        self.assertEqual(accepted.json(), {
+            "protocol": "nbos/1",
+            "service": "lrs-neuralblitz-gateway",
+            "compatible": False,
+            "operations": [],
+            "reason": "This gateway does not implement an NBOS execution runtime",
+        })
+        self.assertNotIn(TOKEN, accepted.text)
 
     async def test_no_executor_returns_actual_http_errors_not_success(self):
         with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
