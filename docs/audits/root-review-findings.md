@@ -69,7 +69,7 @@ This review is tested on a dedicated fixed-source branch in [PR #32](https://git
 
 ## Next engineering actions
 
-1. Validate the gateway startup with pinned FastAPI/uvicorn dependencies and an initialized `lrs_agents` Gitlink; test authenticated requests, lifecycle and route exposure.
+1. **2026-11-22 update:** A version-pinned isolated FastAPI runtime and real in-process authenticated HTTP/ASGI test suite now validate local token gating and fail-closed workflow errors. The root `pyproject.toml` remains a legacy empty workspace. Next validate actual server process startup, an initialized `lrs_agents` Gitlink, lifecycle and external-backend response contracts.
 2. Classify and resolve all nested Gitlink paths without editing other repositories or inventing dependency origins.
 3. Add separate install/build/test matrices for the root Python capability families: AI/CKs, federated learning, vector DB, blockchain, security, smart city, governance, agent runtime and research demos.
 4. Review data/credential provenance in binary artifacts and tracked caches before safe removal, and implement secrets-scanning policy.

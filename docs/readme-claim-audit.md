@@ -84,6 +84,6 @@ Running `python3 scripts/check_compose_security.py` additionally requires Docker
 
 - Confirm current and historical Python/module imports through a **locked, isolated environment**, including nested experimental repositories. Exclude modules that cannot legally or safely be executed from automated tests.
 - Create representative performance benchmarks (baseline, hardware, workload, variance) before restoring numerical claims.
-- Implement authenticated backend integration/ASGI tests and a live VS Code Extension Host smoke test.
+- **2026-11-22 update:** A local authenticated ASGI transport suite now checks the actual FastAPI application through pinned gateway dependencies. This does **not** exercise a real `lrs_agents` or NBOS backend, OAuth, JWT or production transport security. Implement authenticated **external-backend** integration tests and a real VS Code Extension Host smoke test.
 - Produce an exhaustive module-by-module research ledger with runnable examples and unresolved scientific hypotheses; the historical TSV is a **review queue**, not 239 passing tests.
 - Repair container privilege and image-pinning issues, rotate credentials where deployed, and enable enforced GitHub branch protection.

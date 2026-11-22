@@ -23,8 +23,10 @@ main**, every push to main, and manual dispatch:
 
 - `Extension compile lint and regression`: locked dependencies, TypeScript
   compile, lint baseline, offline Node regression tests, manifest asset checks.
-- `Python API contract regression`: isolated standard-library regression
-  tests for the multi-agent endpoint, not end-to-end FastAPI tests.
+- `Python API contracts and authenticated ASGI integration`: installs a pinned
+  FastAPI/httpx environment and sends real HTTP requests through the application
+  without opening a network port. Tests local Bearer token enforcement, error
+  contracts, and no-false-success behavior. **Does not validate a live LRS backend.**
 - `Compose security regression`: policy unit tests and `docker compose config`
   validation with disposable test-only credentials.
 
@@ -41,7 +43,9 @@ merges; the GitHub integration may lack branch-protection administration scope.
 - Implement and integration-test actual workflow execution rather than
   returning false success, and define authentication/authorization.
 - Verify backend startup and contracts using the checked-out `lrs_agents`
-  dependency and real request/response fixtures.
+  dependency and real request/response fixtures. The [gateway developer
+  installation](../gateway/README.md) covers only isolated HTTP/ASGI behavior;
+  the optional Gitlink backend and external authorization are not integrated.
 - Add real VS Code Extension Host integration tests and debugger tests.
 - Review all webviews/command surfaces and secrets handling, not just
   the three hardened static panels.

@@ -6,11 +6,12 @@ import json
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 import sys
 import os
 import subprocess
+import hmac
 
 # Add current directory to Python path
 sys.path.insert(
@@ -67,6 +68,77 @@ except ImportError:
     print("Warning: LRS-Agents not available")
 
 app = FastAPI(title="OpenCode ↔ LRS-Agents Integration Hub", version="2.0.0")
+
+class GatewayAuthMiddleware:
+    """Small fail-closed development bearer-token boundary for HTTP and WS.
+
+    Only the static public homepage (GET /) is unauthenticated. This protects
+    both declared HTTP routes and any optional, dynamically added endpoints.
+    The token must be provisioned outside the repository. This is not OAuth,
+    RBAC, session authentication, or evidence of production-ready security.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        scope_type = scope.get("type")
+        if scope_type not in ("http", "websocket"):
+            return await self.app(scope, receive, send)
+        if (
+            scope_type == "http"
+            and scope.get("path") == "/"
+            and scope.get("method") == "GET"
+        ):
+            return await self.app(scope, receive, send)
+
+        token = os.environ.get("LRS_GATEWAY_API_TOKEN", "")
+        # Long tokens reduce accidental use of short demo credentials. Refuse
+        # to serve non-public routes with unset/weak configuration.
+        configured = (
+            32 <= len(token) <= 512
+            and token.isascii()
+            and not any(c.isspace() for c in token)
+        )
+        if not configured:
+            if scope_type == "websocket":
+                await send({"type": "websocket.close", "code": 1013})
+            else:
+                response = JSONResponse(
+                    {"detail": "Gateway authentication is not configured"},
+                    status_code=503,
+                    headers={"Cache-Control": "no-store"},
+                )
+                await response(scope, receive, send)
+            return
+
+        supplied = [
+            value for name, value in scope.get("headers", [])
+            if name.lower() == b"authorization"
+        ]
+        expected = b"Bearer " + token.encode("ascii")
+        authorized = len(supplied) == 1 and hmac.compare_digest(
+            supplied[0], expected
+        )
+        if not authorized:
+            if scope_type == "websocket":
+                await send({"type": "websocket.close", "code": 4401})
+            else:
+                response = JSONResponse(
+                    {"detail": "Bearer token required"},
+                    status_code=401,
+                    headers={
+                        "WWW-Authenticate": "Bearer",
+                        "Cache-Control": "no-store",
+                    },
+                )
+                await response(scope, receive, send)
+            return
+        return await self.app(scope, receive, send)
+
+
+app.add_middleware(GatewayAuthMiddleware)
+
 
 # The legacy LRS modules may register additional routes with unknown
 # authentication and authorization properties. Never expose those routes by
