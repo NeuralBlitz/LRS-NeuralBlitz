@@ -147,7 +147,7 @@ function createHarness() {
   };
   return {
     vscode, extension, context, registeredCommands, registeredViews,
-    executedCommands, warnings, welcomeCalls, disposables,
+    executedCommands, warnings, welcomeCalls, disposables, cmdModule,
   };
 }
 
@@ -240,4 +240,50 @@ test('cancelled token entry preserves old secret, while invalid input is rejecte
   await h.registeredCommands.get('neuralblitz.credentials.set')();
   assert.equal(await h.context.secrets.get('nbos.authToken'), 'existing-placeholder-value');
   assert.ok(h.warnings.some(x => /non-empty/.test(x)));
+});
+
+
+test('interactive NBCL UI displays completion, pause, or refusal accurately', async () => {
+  const h = createHarness();
+  const userSource = 'private-nbcl-source-example';
+  h.vscode.window.activeTextEditor = {
+    selection: { isEmpty: true },
+    document: { languageId: 'nbcl', getText: () => userSource },
+  };
+  const logs = [];
+  const notices = [];
+  h.vscode.window.createOutputChannel = () => ({
+    appendLine: line => logs.push(line), dispose: () => {},
+  });
+  h.vscode.window.showInformationMessage = message => notices.push(['info', message]);
+  h.vscode.window.showWarningMessage = message => notices.push(['warning', message]);
+  h.vscode.window.showErrorMessage = message => notices.push(['error', message]);
+  let backendResult = { ok: true };
+  const backend = { executeCommand: async command => {
+    assert.equal(command, userSource);
+    return backendResult;
+  } };
+  const commands = new h.cmdModule.NBCLCommands(backend, {}, h.context.secrets);
+  commands.register(h.context);
+  const execute = h.registeredCommands.get('neuralblitz.execute');
+
+  await execute();
+  assert.equal(notices.at(-1)[0], 'error');
+  assert.match(notices.at(-1)[1], /did not confirm command completion/);
+  assert.ok(!logs.some(line => line.includes(userSource)), 'Raw user source must not be logged');
+
+  backendResult = { ok: true, stopped: true, line: 11 };
+  await execute();
+  assert.equal(notices.at(-1)[0], 'warning');
+  assert.match(notices.at(-1)[1], /stopped at line 11/);
+
+  backendResult = { ok: false, error: { message: 'not authorized' } };
+  await execute();
+  assert.equal(notices.at(-1)[0], 'error');
+  assert.match(notices.at(-1)[1], /not authorized/);
+
+  backendResult = { ok: true, completed: true };
+  await execute();
+  assert.equal(notices.at(-1)[0], 'info');
+  assert.match(notices.at(-1)[1], /execution completed/);
 });
