@@ -102,7 +102,8 @@ export class NBCLCommands {
             ignoreFocusOut: true
         });
         if (token === undefined) return; // Cancelled, preserve existing secret.
-        if (!token.trim() || /[\\r\\n]/.test(token)) {
+        if (!token.trim() || token.includes(String.fromCharCode(10)) ||
+            token.includes(String.fromCharCode(13))) {
             vscode.window.showWarningMessage('Provide a non-empty single-line NBOS token');
             return;
         }
