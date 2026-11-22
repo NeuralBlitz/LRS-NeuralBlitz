@@ -106,7 +106,8 @@ export class NBOSClient {
      * Discovery proves a declared contract, not backend trust or correctness.
      */
     private async requireCapability(
-        baseURL: string, method: 'GET' | 'POST', path: string
+        baseURL: string, method: 'GET' | 'POST', path: string,
+        executionKind?: 'command' | 'file'
     ): Promise<void> {
         const response = await this.client.get(NBOS_CAPABILITIES_PATH, { baseURL });
         const data: unknown = response.data;
@@ -128,11 +129,26 @@ export class NBOSClient {
         if (!record.operations.includes(operation)) {
             throw new Error(`NBOS backend does not advertise ${operation}`);
         }
+        // /execute has two incompatible payloads: source-file paths and
+        // individual commands. A command-only service may not receive files.
+        if (method === 'POST' && path === '/execute') {
+            const modes = record.execution_modes;
+            if (!Array.isArray(modes) || modes.length > 2 ||
+                modes.some((value: unknown) =>
+                    value !== 'command' && value !== 'file')) {
+                throw new Error('NBOS backend did not declare valid execution modes');
+            }
+            if (!executionKind || !modes.includes(executionKind)) {
+                throw new Error(`NBOS backend does not advertise ${executionKind || 'requested'} execution`);
+            }
+        }
     }
 
-    private async post(path: string, data?: unknown) {
+    private async post(
+        path: string, data?: unknown, executionKind?: 'command' | 'file'
+    ) {
         const baseURL = this.requireEndpoint();
-        await this.requireCapability(baseURL, 'POST', path);
+        await this.requireCapability(baseURL, 'POST', path, executionKind);
         return this.client.post(path, data, { baseURL });
     }
 
@@ -185,7 +201,7 @@ export class NBOSClient {
         const response = await this.post('/execute', {
             program: filePath,
             breakpoints: options?.breakpoints || []
-        });
+        }, 'file');
         const data = response.data;
         if (!data || typeof data !== 'object' || typeof data.ok !== 'boolean') {
             throw new Error('Malformed NBOS execution response: missing boolean ok');
@@ -220,7 +236,7 @@ export class NBOSClient {
         if (typeof command !== 'string' || !command.trim()) {
             throw new Error('Refusing to send an empty NBCL command');
         }
-        const response = await this.post('/execute', { command });
+        const response = await this.post('/execute', { command }, 'command');
         const data = response.data;
         if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.ok !== 'boolean') {
             throw new Error('Malformed NBOS command response: missing boolean ok');
