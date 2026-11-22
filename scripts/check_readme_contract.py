@@ -18,6 +18,7 @@ EXPECTED_COMMANDS = {
     "neuralblitz.debug.start", "neuralblitz.debug.step",
     "neuralblitz.debug.continue", "neuralblitz.introspect",
     "neuralblitz.ck.search", "neuralblitz.ck.documentation",
+    "neuralblitz.credentials.set", "neuralblitz.credentials.clear",
 }
 DANGEROUS_CLAIMS = (
     "world's most comprehensive", "24.11s → 0.000s", "95% test coverage",
@@ -66,7 +67,7 @@ def check(root=ROOT):
             "neuralblitzGoldenDAG", "neuralblitzCKRegistry"
         }:
             issues.append("View manifest changed; README must be revalidated")
-        for snippet in ("three language", "nine commands", "two contributed tree views"):
+        for snippet in ("three language", "eleven commands", "two contributed tree views"):
             if snippet not in main:
                 issues.append("Missing supported extension claim: " + snippet)
     except (OSError, ValueError, KeyError, TypeError) as exc:

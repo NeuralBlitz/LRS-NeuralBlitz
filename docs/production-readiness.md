@@ -50,8 +50,10 @@ merges; the GitHub integration may lack branch-protection administration scope.
   the optional Gitlink backend and external authorization are not integrated.
 - Add real VS Code Extension Host integration tests and debugger tests.
   The NBOS client now requires an explicit secure endpoint; there is no compatible
-  default service or secure token provisioning workflow, so execution remains
-  unavailable without an independently verified NBOS backend.
+  default service; local token management now uses `ExtensionContext.secrets`
+  with explicit set/clear commands. This does not certify remote identity,
+  token rotation or a real NBOS backend, and execution remains unavailable
+  without an independently verified compatible runtime.
 - Review all webviews/command surfaces and secrets handling, not just
   the three hardened static panels.
 - Pin container image versions/digests, address cAdvisor privileged mounts,

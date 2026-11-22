@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import axios, { AxiosInstance } from 'axios';
 
+// VS Code encrypts/manages this value through ExtensionContext.secrets.
+export const NBOS_TOKEN_SECRET_KEY = 'nbos.authToken';
+
 export interface BootOptions {
     mode: 'Sentio' | 'Dynamo' | 'Hybrid';
     trace?: boolean;
@@ -45,8 +48,17 @@ export class NBOSClient {
     // selected port. Port 8080 in this repository belongs to unrelated
     // development services, and the Python gateway is NOT an NBOS server.
     private requireEndpoint(): string {
-        const raw = vscode.workspace.getConfiguration('neuralblitz')
-            .get<string>('nbosEndpoint', '');
+        const config = vscode.workspace.getConfiguration('neuralblitz');
+        const origin = config.inspect<string>('nbosEndpoint');
+        // A downloaded repository can carry .vscode/settings.json. Never
+        // allow workspace configuration to redirect a stored bearer token.
+        if (!origin || origin.workspaceValue !== undefined ||
+            origin.workspaceFolderValue !== undefined) {
+            throw new Error(
+                'Set neuralblitz.nbosEndpoint in User settings, not workspace settings'
+            );
+        }
+        const raw = config.get<string>('nbosEndpoint', '');
         if (typeof raw !== 'string' || !raw.trim()) {
             throw new Error(
                 'NBOS endpoint is not configured. Set neuralblitz.nbosEndpoint ' +
@@ -84,7 +96,7 @@ export class NBOSClient {
         return this.client.get(path, { baseURL: this.requireEndpoint() });
     }
 
-    constructor() {
+    constructor(private readonly secrets?: vscode.SecretStorage) {
         this.client = axios.create({
             timeout: 30000,
             // Do not let an NBOS server silently redirect source or credentials.
@@ -92,8 +104,10 @@ export class NBOSClient {
             headers: { 'Content-Type': 'application/json' }
         });
         this.client.interceptors.request.use(
-            (requestConfig) => {
-                const token = vscode.workspace.getConfiguration('neuralblitz').get<string>('authToken');
+            async (requestConfig) => {
+                // No plaintext VS Code settings are consulted for credentials.
+                // Auth is provisioned only through extension SecretStorage.
+                const token = await this.secrets?.get(NBOS_TOKEN_SECRET_KEY);
                 if (token) requestConfig.headers.Authorization = `Bearer ${token}`;
                 return requestConfig;
             },

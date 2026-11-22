@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { NBOSClient } from '../util/nbosClient';
+import { NBOSClient, NBOS_TOKEN_SECRET_KEY } from '../util/nbosClient';
 import { CKRegistry, CKInfo } from '../util/ckRegistry';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -19,7 +19,8 @@ export class NBCLCommands {
 
     constructor(
         private nbosClient: NBOSClient,
-        private ckRegistry: CKRegistry
+        private ckRegistry: CKRegistry,
+        private secrets: vscode.SecretStorage
     ) {
         this.outputChannel = vscode.window.createOutputChannel('NeuralBlitz');
         this.statusBarItem = vscode.window.createStatusBarItem(
@@ -80,7 +81,47 @@ export class NBCLCommands {
             vscode.commands.registerCommand('neuralblitz.debug.continue', () => this.debugControl('workbench.action.debug.continue'))
         );
 
+        disposables.push(
+            vscode.commands.registerCommand(
+                'neuralblitz.credentials.set', () => this.setBearerToken()
+            )
+        );
+        disposables.push(
+            vscode.commands.registerCommand(
+                'neuralblitz.credentials.clear', () => this.clearBearerToken()
+            )
+        );
+
         return disposables;
+    }
+
+    private async setBearerToken(): Promise<void> {
+        const token = await vscode.window.showInputBox({
+            prompt: 'NBOS bearer token (saved in VS Code SecretStorage)',
+            password: true,
+            ignoreFocusOut: true
+        });
+        if (token === undefined) return; // Cancelled, preserve existing secret.
+        if (!token.trim() || token.includes(String.fromCharCode(10)) ||
+            token.includes(String.fromCharCode(13))) {
+            vscode.window.showWarningMessage('Provide a non-empty single-line NBOS token');
+            return;
+        }
+        try {
+            await this.secrets.store(NBOS_TOKEN_SECRET_KEY, token);
+            vscode.window.showInformationMessage('NBOS token saved in VS Code SecretStorage');
+        } catch {
+            vscode.window.showErrorMessage('Unable to save the NBOS token securely');
+        }
+    }
+
+    private async clearBearerToken(): Promise<void> {
+        try {
+            await this.secrets.delete(NBOS_TOKEN_SECRET_KEY);
+            vscode.window.showInformationMessage('NBOS token cleared from SecretStorage');
+        } catch {
+            vscode.window.showErrorMessage('Unable to clear the stored NBOS token');
+        }
     }
 
     private async boot(): Promise<void> {
