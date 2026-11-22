@@ -277,3 +277,10 @@ test('only explicit loopback HTTP or clean HTTPS endpoints are allowed', async (
     assert.equal(requests[0].config.baseURL, new URL(endpoint).origin);
   }
 });
+
+test('the published VS Code settings do not assume port 8080 is an NBOS service', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
+  const property = manifest.contributes.configuration.properties['neuralblitz.nbosEndpoint'];
+  assert.equal(property.default, '');
+  assert.match(property.description, /compatible NBOS backend/);
+});
