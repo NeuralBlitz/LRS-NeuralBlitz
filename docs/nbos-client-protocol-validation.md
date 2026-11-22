@@ -8,6 +8,8 @@ execution or debugger success signal.
 
 Before every remote NBOS operation, the client sends a **Bearer-authenticated** `GET /nbos/v1/capabilities` to the user-configured origin. A backend must respond with a JSON object containing exactly `protocol: "nbos/1"`, boolean `compatible: true`, and an array of declared operation strings such as `POST /execute` or `GET /status`. The client requires the specific operation it is about to perform, rejecting malformed discovery, missing permissions, or `compatible: false` **before transmitting command/source/debug request bodies**. For variable scopes, the declaration is `GET /debug/variables/*`.
 
+The `/execute` path carries **two different payload types**: `{command: string}` and `{program: string, breakpoints: []}`. Before either call, discovery must also provide an explicit `execution_modes` array containing `command` and/or `file`. A command-only server must **never receive a file path**; a file-only server must **never receive NBCL command source**. Missing, malformed or unknown modes fail closed, even if `POST /execute` is advertised. This is strict client-side permission negotiation, not a claim of server-side access control.
+
 Discovery is repeated for each operation (no stale capability cache). This is interface negotiation, **not security attestation** and not a substitute for a trusted backend identity, access controls, or executable integration evidence.
 
 ## Current response requirements
