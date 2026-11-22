@@ -10,14 +10,14 @@ execution or debugger success signal.
 | --- | --- |
 | `POST /boot` | `ok === true` (boolean) |
 | `POST /execute` with a file | `ok` boolean and explicit completed or stopped evidence (see [debugger contract](debugger-execution-contract.md)) |
-| `POST /execute` with a command | `ok` must be boolean; a rejected command (`ok: false`) is returned to the UI as a failure |
+| `POST /execute` with a command | `ok` must be boolean; `ok: true` alone is insufficient. Completion requires `completed: true`; `stopped: true` requires a valid positive integer `line` and is displayed as a paused command. Explicit `ok: false` is shown as a refusal. Contradictory and malformed states are rejected. |
 | `POST /debug/continue`, `stepOver`, `stepInto`, `stepOut`, `pause` | `ok === true` for command acknowledgement; this is **not** proof that a step finished |
 | `GET /debug/stack` | A `frames` array; missing data is not silently converted into an empty stack |
 | `GET /debug/variables/:scope` | A `variables` object; missing data is not silently converted into an empty scope |
 | `POST /debug/evaluate` | A present `result` property (a legitimate `null` is allowed) |
 | `GET /status`, `POST /introspect` | An object response; explicit `ok: false` must surface an error |
 
-These are **client-side contract checks**, not proof that any connected
+The command UI no longer duplicates raw NBCL source into the extension output channel. File and command execution require well-formed boolean state flags, and stopped debugger states must include a valid one-based line number. These are **client-side contract checks**, not proof that any connected
 backend currently complies. A backend returning an empty body for a successful
 debug-control request must be upgraded to return a positive acknowledgement
 before it can be used with this client.
