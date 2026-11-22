@@ -24,7 +24,8 @@ Return to the [main README](../README.md) for the verified product scope. The or
 - [Extension activation contract](extension-activation-contract.md) — manifest commands, tree views, and offline activation checks
 - [Debugger execution contract](debugger-execution-contract.md) — failure behavior, real execution evidence, and unsupported debugger capabilities
 - [NBOS client response validation](nbos-client-protocol-validation.md) — transport acknowledgements versus completed work
-- [Read-only NBOS protocol reference](nbos-readonly-reference.md) — opt-in real HTTP adapter, two safe commands and positive Axios/Uvicorn tests; no NBCL engine
+- [Read-only NBOS protocol reference](nbos-readonly-reference.md) — opt-in real HTTP adapter, finite pure commands and positive Axios/Uvicorn tests; no full NBCL engine
+- [Bounded NBCL subset grammar and program tests](nbcl-bounded-execution.md) — exact integer arithmetic, 16-step limit, reject-before-evaluation contract, real cross-runtime evidence
 - [Language asset boundaries](vscode-extension-language-assets.md) — provisional ReflexælLang / LoN grammar support
 - [VS Code webview security](vscode-webview-security.md) — tested text escaping and webview script restrictions
 - [VSIX candidate packaging](vscode-candidate-packaging.md) — allowlisted bundle, artifact checksums, and no-publish boundary
