@@ -1,3 +1,13 @@
 [submodule "lrs_agents"]
 	path = lrs_agents
 	url = https://github.com/NeuralBlitz/lrs-agents
+
+[submodule "neuralblitz-v50/Advanced-Research/Advanced-Research"]
+	path = neuralblitz-v50/Advanced-Research/Advanced-Research
+	url = https://github.com/NeuralBlitz/Advanced-Research.git
+[submodule "neuralblitz-v50/ComputationalAxioms/ComputationalAxioms"]
+	path = neuralblitz-v50/ComputationalAxioms/ComputationalAxioms
+	url = https://github.com/NeuralBlitz/ComputationalAxioms.git
+[submodule "neuralblitz-v50/Emergent-Prompt-Architecture/Emergent-Prompt-Architecture"]
+	path = neuralblitz-v50/Emergent-Prompt-Architecture/Emergent-Prompt-Architecture
+	url = https://github.com/NeuralBlitz/Emergent-Prompt-Architecture.git
