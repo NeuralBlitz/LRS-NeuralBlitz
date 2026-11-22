@@ -39,7 +39,7 @@ CI installs pinned Python dependencies and frozen Bun dependencies before runnin
 node --test tests/nbosGateway.real.integration.cjs
 ```
 
-This is a reproducible **negative integration contract** demonstrating incompatibility of the root gateway. A second [positive read-only adapter test](../tests/nbosReference.real.integration.cjs) starts `gateway.nbos_reference:app` on loopback and sends real Axios requests for `/status`, `/help` and system introspection. That separate service advertises only the operations it implements, rejects boot, debugger and file execution, and is [documented here](nbos-readonly-reference.md). The real VS Code Extension Host and a full NBOS execution engine remain untested.
+This is a reproducible **negative integration contract** demonstrating incompatibility of the root gateway. A second [positive read-only adapter test](../tests/nbosReference.real.integration.cjs) starts `gateway.nbos_reference:app` on loopback and sends real Axios requests for `/status`, `/help` and system introspection. That separate service advertises only the operations it implements, including `execution_modes: ["command"]`. The real client rejects file execution **before sending a path** to that command-only adapter; it also rejects boot and debugger operations. See the [reference contract](nbos-readonly-reference.md). The real VS Code Extension Host and a full NBOS execution engine remain untested.
 
 ## Integration risks to resolve
 
