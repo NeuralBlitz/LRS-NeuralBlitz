@@ -287,3 +287,38 @@ test('interactive NBCL UI displays completion, pause, or refusal accurately', as
   assert.equal(notices.at(-1)[0], 'info');
   assert.match(notices.at(-1)[1], /execution completed/);
 });
+
+
+test('multiline NBCL selections use explicit source mode, never a file path', async () => {
+  const h = createHarness();
+  const program = '# local read only\n/status\n/calc --a=2 --op=mul --b=3';
+  h.vscode.window.activeTextEditor = {
+    selection: { isEmpty: true },
+    document: { languageId: 'nbcl', getText: () => program },
+  };
+  const logs = [];
+  const notices = [];
+  h.vscode.window.createOutputChannel = () => ({
+    appendLine: line => logs.push(line), dispose: () => {},
+  });
+  h.vscode.window.showInformationMessage = value => notices.push(value);
+  h.vscode.window.showErrorMessage = value => { throw new Error(value); };
+  let sent = 0;
+  const backend = {
+    executeSource: async text => {
+      sent++;
+      assert.equal(text, program);
+      return { ok: true, completed: true, instruction_count: 2,
+        steps: [{ line: 2, command: '/status', result: {} },
+          { line: 3, command: '/calc', result: { value: 6 } }] };
+    },
+    executeCommand: async () => { throw new Error('Incorrect command mode'); },
+    executeFile: async () => { throw new Error('A local path must never be sent'); },
+  };
+  const commands = new h.cmdModule.NBCLCommands(backend, {}, h.context.secrets);
+  commands.register(h.context);
+  await h.registeredCommands.get('neuralblitz.execute')();
+  assert.equal(sent, 1);
+  assert.match(notices.at(-1), /subset program completed/);
+  assert.ok(!logs.some(line => line.includes(program)));
+});
