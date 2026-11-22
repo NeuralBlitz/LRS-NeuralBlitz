@@ -64,7 +64,8 @@ Before even considering external exposure or production use, read [deployment se
 # Check source-backed README statements and all local Markdown links
 python3 scripts/check_readme_contract.py
 
-# Python contracts and HTTP/ASGI integration (first install pinned gateway dependencies)
+# Python contracts and HTTP/ASGI integration (separate Python environment recommended)
+python3 -m pip install -r gateway/requirements-pinned.txt
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 # VS Code extension compilation, lint, and mocked regression checks
