@@ -10,7 +10,8 @@ component, backend, container, or research claim works in production.
    contributions, debugging, and NBOS client integration.
 2. **API/interface**: Python FastAPI gateway in `main.py`; optional
    `lrs_agents` functionality requires compatible installed dependencies.
-3. **Telemetry stack**: Compose development configuration for monitoring
+3. **Read-only NBOS protocol reference**: separate opt-in FastAPI process supporting limited safe commands, status and system introspection. Actual Axios/Uvicorn tests verify these operations; it cannot boot an agent, execute arbitrary NBCL or debug programs.
+4. **Telemetry stack**: Compose development configuration for monitoring
    and databases. It is not an approved production deployment manifest.
 
 The root repository also contains research demos, nested projects, and
@@ -29,11 +30,7 @@ main**, every push to main, and manual dispatch:
   test](gateway-nbos-boundary.md) launches the process and exercises HTTP over
   TCP. Tests local Bearer token enforcement and fail-closed error contracts,
   but **does not validate any live LRS/NBOS backend**.
-- `Real NBOS client versus live gateway protocol`: boots the real Python
-  Uvicorn gateway and sends actual Axios requests from the transpiled VS Code
-  NBOS client, proving correct authentication and **no false NBOS success**
-  on incompatible backend routes. This is a negative compatibility check,
-  not a completed NBOS integration.
+- `Real NBOS client versus live gateway protocol`: starts **two separate** real Python Uvicorn services and sends Axios requests from the transpiled VS Code NBOS client. The root gateway must **reject incompatible NBOS operations**; the opt-in read-only reference must **successfully complete only** its two safe commands, return actual status/introspection, and reject boot, files and debugging. Neither proves a full NBCL engine.
 - `Compose security regression`: policy unit tests and `docker compose config`
   validation with disposable test-only credentials.
 
@@ -51,7 +48,7 @@ merges; the GitHub integration may lack branch-protection administration scope.
   returning false success, and define authentication/authorization.
 - Validate security hardening beyond the tested 1 MiB authenticated request-body limit and sanitized optional-component error responses: rate limiting, reverse proxy limits, slow-client timeouts, operational monitoring and external ingress remain unverified.
 - Resolve the [pinned LRS-Agents import and dependency risks](audits/lrs-submodule-runtime-compatibility.md), including subprocess-based OpenCode probing and optional enterprise middleware, before enabling any execution adapter.
-- Implement a real backend supporting the versioned `nbos/1` capability contract with independently verified operation results. The new preflight currently refuses this incompatible Python gateway; a positive capability declaration alone would not prove execution or production security.
+- Implement a full backend supporting the versioned `nbos/1` capability contract with independently verified agent boot, program execution and debugger states. The read-only reference verifies a **strict subset** only; the root gateway remains incompatible. A positive capability declaration alone does not prove execution or production security.
 - Verify backend startup and contracts using the checked-out `lrs_agents`
   dependency and real request/response fixtures. The [gateway developer
   installation](../gateway/README.md) covers only isolated HTTP/ASGI behavior;
