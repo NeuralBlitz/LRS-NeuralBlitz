@@ -43,7 +43,7 @@ def check_links(root, path, body):
 def check(root=ROOT):
     issues = []
     docs = {}
-    for filename in ("README.md", "docs/README.md", "docs/readme-claim-audit.md"):
+    for filename in ("README.md", "README_SIMPLE.md", "docs/README.md", "docs/readme-claim-audit.md", "docs/API_REFERENCE.md"):
         try:
             docs[filename] = read(root, filename)
             issues.extend(check_links(root, filename, docs[filename]))
@@ -51,7 +51,7 @@ def check(root=ROOT):
             issues.append("Missing evidence document: " + str(exc))
     main = docs.get("README.md", "")
     index = docs.get("docs/README.md", "")
-    for name, text in (("Root README", main), ("Documentation index", index)):
+    for name, text in (("Root README", main), ("Documentation index", index), ("Quick start", docs.get("README_SIMPLE.md", "")), ("API reference", docs.get("docs/API_REFERENCE.md", ""))):
         if "pre-production" not in text[:800].lower():
             issues.append(name + " must declare pre-production status near top")
         for phrase in DANGEROUS_CLAIMS:
@@ -101,6 +101,9 @@ def check(root=ROOT):
             issues.append("README API route table differs from main.py")
         if not backend_fail_closed:
             issues.append("Workflow endpoint no longer has explicit HTTP 501 guard")
+        documented_api = re.findall(r"^\|\s*(GET|POST)\s*\|\s*`([^`]+)`\s*\|", docs.get("docs/API_REFERENCE.md", ""), re.M)
+        if set(documented_api) != routes or len(documented_api) != len(routes):
+            issues.append("Current API reference route table differs from main.py")
     except (OSError, SyntaxError) as exc:
         issues.append("Gateway inspection failed: " + str(exc))
     try:
