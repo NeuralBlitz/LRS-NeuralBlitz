@@ -130,6 +130,8 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       ]);
       assert.equal(response.data.execution_engine_available, false);
       assert.equal(response.data.agent_boot_available, false);
+      assert.equal(response.data.subset_interpreter_available, true);
+      assert.deepEqual(response.data.execution_modes, ['command', 'source']);
     });
 
     await t.test('actual client reads status and introspection after preflight', async () => {
@@ -153,16 +155,46 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       ]);
     });
 
-    await t.test('actual client completes only the two supported pure commands', async () => {
+    await t.test('actual client completes status, help and bounded integer calculation', async () => {
       const client = makeActualClient(baseURL, token);
       const status = await client.executeCommand('/status');
       const help = await client.executeCommand('/help');
+      const calc = await client.executeCommand('/calc --a=12 --op=mul --b=-3');
       assert.equal(status.ok, true);
       assert.equal(status.completed, true);
       assert.equal(status.result.system_status, 'read_only_reference');
       assert.equal(help.ok, true);
       assert.equal(help.completed, true);
-      assert.deepEqual(help.result.supported_commands, ['/status', '/help']);
+      assert.deepEqual(help.result.supported_commands, ['/status', '/help', '/calc']);
+      assert.equal(calc.ok, true);
+      assert.equal(calc.completed, true);
+      assert.equal(calc.result.value, -36);
+    });
+
+    await t.test('actual client executes bounded source with real step-level evidence', async () => {
+      const client = makeActualClient(baseURL, token);
+      const paths = [];
+      client.client.interceptors.request.use(config => {
+        paths.push(config.url);
+        return config;
+      });
+      const program = '# safe arithmetic\n/status\n/calc --a=19 --op=sub --b=6\n/help\n';
+      const result = await client.executeSource(program);
+      assert.equal(result.ok, true);
+      assert.equal(result.completed, true);
+      assert.equal(result.instruction_count, 3);
+      assert.deepEqual(result.steps.map(step => step.line), [2, 3, 4]);
+      assert.equal(result.steps[1].result.value, 13);
+      assert.deepEqual(paths, ['/nbos/v1/capabilities', '/execute']);
+      await assert.rejects(
+        client.executeSource('/status\n/boot\n/help'),
+        error => error?.response?.status === 422,
+      );
+      await assert.rejects(
+        client.executeCommand('/calc --a=1 --op=pow --b=999999'),
+        error => error?.response?.status === 422,
+      );
+      assert.equal(client.isConnected(), false);
     });
 
     await t.test('agent boot and debug are rejected at preflight', async () => {
