@@ -53,11 +53,11 @@
       "patterns": [
         {
           "name": "keyword.control.command.nbcl",
-          "match": "\\b/(boot|nbos|omega|status|verify|export|manifest_drs_field|set_state|drift_field|entangle|project|collapse_trace|merge|fork|query_drs|charter\\.shade|charter\\.enforce|judex\\.review|sentia\\.scan|veritas\\.sign|conscientia\\.stabilize|custodian\\.override|policy\\.set|psi|ignite|glyphnet\\.compile|qec\\.set|aqm\\.recursion\\.fold|build_dsl|introspect|import|mount|publish|index|apply|analyze_policy|correct_drift|lock_ethics|entropy_budget|scan_alignment|ignite_ΩZ_superbloom)\\b"
+          "match": "\\b/(boot|nbos|omega|status|calc|verify|export|manifest_drs_field|set_state|drift_field|entangle|project|collapse_trace|merge|fork|query_drs|charter\\.shade|charter\\.enforce|judex\\.review|sentia\\.scan|veritas\\.sign|conscientia\\.stabilize|custodian\\.override|policy\\.set|psi|ignite|glyphnet\\.compile|qec\\.set|aqm\\.recursion\\.fold|build_dsl|introspect|import|mount|publish|index|apply|analyze_policy|correct_drift|lock_ethics|entropy_budget|scan_alignment|ignite_ΩZ_superbloom)\\b"
         },
         {
           "name": "keyword.control.command.system.nbcl",
-          "match": "\\b/(boot|nbos|status|verify|export)\\b"
+          "match": "\\b/(boot|nbos|status|calc|verify|export)\\b"
         },
         {
           "name": "keyword.control.command.ethics.nbcl",
