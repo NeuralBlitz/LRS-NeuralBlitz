@@ -165,13 +165,21 @@ export class NBCLCommands {
             ? editor.document.getText()
             : editor.document.getText(selection);
 
+        // Full/multiline documents use explicit source mode; a single
+        // command keeps the established command-mode contract. Never send a
+        // local file path to a command-only source service.
+        const isSource = /[\r\n]/.test(text) || text.trimStart().startsWith('#');
         try {
-            this.outputChannel.appendLine('Executing NBCL command...');
+            this.outputChannel.appendLine(
+                isSource ? 'Executing bounded NBCL source...' : 'Executing NBCL command...'
+            );
             // Avoid duplicating user source text (potentially containing secrets) in logs.
             this.outputChannel.appendLine('Source omitted (' + text.length + ' characters)');
             this.outputChannel.appendLine('---');
 
-            const result = await this.nbosClient.executeCommand(text);
+            const result = isSource
+                ? await this.nbosClient.executeSource(text)
+                : await this.nbosClient.executeCommand(text);
             this.outputChannel.appendLine(JSON.stringify(result, null, 2));
 
             if (result.ok === false) {
@@ -179,7 +187,9 @@ export class NBCLCommands {
                     'Execution failed: ' + (result.error?.message || 'NBOS rejected the command')
                 );
             } else if (result.completed === true && result.stopped !== true) {
-                vscode.window.showInformationMessage('Command execution completed');
+                vscode.window.showInformationMessage(
+                    isSource ? 'NBCL subset program completed' : 'Command execution completed'
+                );
             } else if (result.stopped === true && result.completed !== true) {
                 vscode.window.showWarningMessage(
                     'Command stopped at line ' + result.line + '; execution is not complete'
