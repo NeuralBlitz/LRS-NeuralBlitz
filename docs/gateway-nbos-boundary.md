@@ -29,8 +29,8 @@ This smoke test is a **development-only** gate. It does not validate TLS, mTLS, 
 
 ## Integration risks to resolve
 
-- **Port collision:** the extension defaults to `http://localhost:8080`. `server.py` can also bind port 8080; Compose publishes cAdvisor at loopback port 8080. Neither service implements the NBOS client contract. Configuring the extension to use the FastAPI gateway on port 8000 also does **not** solve the incompatible routes.
-- **Credential configuration:** the NBOS client currently looks for `neuralblitz.authToken` in VS Code settings, but `package.json` does not contribute that setting. Plaintext settings are not a recommended secret storage mechanism. A dedicated `vscode.SecretStorage` workflow and a real backend token contract are required.
+- **Port collision remediated in the client:** the extension now defaults to **no NBOS endpoint**. Earlier releases assumed `http://localhost:8080`, overlapping with `server.py` and Compose cAdvisor. Commands fail locally until the user explicitly configures `neuralblitz.nbosEndpoint` for a verified compatible server; the gateway on 8000 remains **incompatible**.
+- **Credential configuration:** the NBOS client currently looks for `neuralblitz.authToken` in VS Code settings, but `package.json` does not contribute that setting. Plaintext settings are not a recommended secret storage mechanism. A dedicated `vscode.SecretStorage` workflow and a real backend token contract remain required; do not store production tokens in settings or untrusted workspaces.
 - **Backend provenance:** the root `lrs_agents` Gitlink is not initialized as a verified compatible NBOS service. No HTTP adapter, execution engine, debugger event stream, or end-to-end validation exists for it in this repo.
 - **Fail closed:** until an explicit versioned bridge is implemented and tested, return errors for missing capabilities. Do not install generic catch-all `/boot` or `/execute` handlers that merely reply `ok: true`.
 

@@ -31,7 +31,7 @@ bun run lint
 bun run test
 ~~~
 
-Editor language support and command contributions are defined in `package.json` and implemented under `src/`. The extension exposes an NBOS client; commands that require a backend do not work merely by installing the extension.
+Editor language support and command contributions are defined in `package.json` and implemented under `src/`. The NBOS client starts with **no configured backend endpoint** and refuses network actions until a compatible server URL is explicitly set. Supported transport is HTTPS or loopback HTTP; do not point it at the unrelated Python gateway, cAdvisor or other port-8080 services. NBOS command execution is not currently demonstrated end-to-end. See [protocol compatibility](docs/gateway-nbos-boundary.md).
 
 To inspect the **unpublished** test VSIX candidate, open the [VSIX release-candidate workflow](https://github.com/NeuralBlitz/LRS-NeuralBlitz/actions/workflows/vscode-vsix-candidate.yml), select a successful run from an approved commit, and review the artifact and checksum. See [candidate packaging and test-install instructions](docs/vscode-candidate-packaging.md). Do not treat this candidate as a verified production release.
 

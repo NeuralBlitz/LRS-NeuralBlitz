@@ -22,6 +22,8 @@ backend currently complies. A backend returning an empty body for a successful
 debug-control request must be upgraded to return a positive acknowledgement
 before it can be used with this client.
 
+**Fail-closed endpoint selection:** `neuralblitz.nbosEndpoint` now has an empty default. The client does not contact any server until the user selects a compatible NBOS address, with HTTPS required except for loopback HTTP. URLs containing credentials, non-root paths, query strings or fragments are rejected; HTTP redirects are disabled. This avoids accidentally sending NBCL source to the project's unrelated port-8080 services. Backend authentication still requires a separate secure credential-storage design.
+
 The Python gateway does **not** implement these NBOS endpoints. [Gateway/NBOS route compatibility](gateway-nbos-boundary.md) documents the missing bridge, overlapping port 8080 uses, insecure/undeclared authentication configuration, and a real loopback HTTP test for deliberate 404 results.
 
 The isolated test suite uses mocked transport responses. API authentication,
