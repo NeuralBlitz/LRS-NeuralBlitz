@@ -1,6 +1,6 @@
 # Gateway process and NBOS protocol compatibility — November 22, 2026
 
-**Status: pre-production.** The root Python API gateway and VS Code NBOS client do **not** yet speak the same execution protocol. A **separate opt-in read-only reference service** now provides narrowly supported NBOS methods and actual tested command results; it does not change the root gateway or implement the LRS engine. This document records observed source-level contracts and the reproducible loopback integration test. It is not a claim that a working NBOS agent runtime exists.
+**Status: pre-production.** The root Python API gateway and VS Code NBOS client do **not** yet speak the same execution protocol. A **separate opt-in read-only reference service** provides narrowly supported NBOS methods and now evaluates a [finite deterministic NBCL subset](nbcl-bounded-execution.md), including bounded integer calculations and short inline programs; it does not change the root gateway or implement the full LRS engine. This document records observed source-level contracts and the reproducible loopback integration test. It is not a claim that a working NBOS agent runtime exists.
 
 ## Validated endpoints and required evidence
 
@@ -39,7 +39,7 @@ CI installs pinned Python dependencies and frozen Bun dependencies before runnin
 node --test tests/nbosGateway.real.integration.cjs
 ```
 
-This is a reproducible **negative integration contract** demonstrating incompatibility of the root gateway. A second [positive read-only adapter test](../tests/nbosReference.real.integration.cjs) starts `gateway.nbos_reference:app` on loopback and sends real Axios requests for `/status`, `/help` and system introspection. That separate service advertises only the operations it implements, including `execution_modes: ["command"]`. The real client rejects file execution **before sending a path** to that command-only adapter; it also rejects boot and debugger operations. See the [reference contract](nbos-readonly-reference.md). The real VS Code Extension Host and a full NBOS execution engine remain untested.
+This is a reproducible **negative integration contract** demonstrating incompatibility of the root gateway. A second [positive read-only adapter test](../tests/nbosReference.real.integration.cjs) starts `gateway.nbos_reference:app` on loopback and sends real Axios requests for `/status`, `/help` and system introspection. That separate service advertises only the operations it implements, including `execution_modes: ["command"]`. The real client rejects file execution **before sending a path** to that restricted source/command adapter; it also rejects boot and debugger operations. See the [reference contract](nbos-readonly-reference.md). The real VS Code Extension Host and a full NBOS execution engine remain untested.
 
 ## Integration risks to resolve
 
