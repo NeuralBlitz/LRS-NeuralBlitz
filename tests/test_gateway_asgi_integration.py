@@ -124,6 +124,76 @@ class GatewayASGIIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(unimplemented.status_code, 501)
         self.assertIn("no tasks were run", unimplemented.json()["detail"])
 
+    async def test_authenticated_body_limit_rejects_declared_oversize(self):
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            response = await self.request(
+                "POST", "/api/multi-agent/execute-workflow", token=TOKEN,
+                headers={"Content-Length": str(gateway.MAX_GATEWAY_BODY_BYTES + 1)},
+                content=b"{}",
+            )
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(response.headers.get("cache-control"), "no-store")
+        self.assertNotIn(TOKEN, response.text)
+
+    async def test_streaming_body_limit_cannot_be_bypassed_with_no_length(self):
+        async def chunked_body():
+            yield b'{"tasks":["'
+            yield b"x" * gateway.MAX_GATEWAY_BODY_BYTES
+            yield b'"]}'
+
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            response = await self.request(
+                "POST", "/api/multi-agent/execute-workflow", token=TOKEN,
+                headers={"Content-Type": "application/json"},
+                content=chunked_body(),
+            )
+        self.assertEqual(response.status_code, 413)
+        self.assertIn("limit exceeded", response.json()["detail"])
+
+    async def test_oversize_request_requires_authentication_first(self):
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            response = await self.request(
+                "POST", "/api/multi-agent/execute-workflow",
+                headers={"Content-Length": str(gateway.MAX_GATEWAY_BODY_BYTES + 1)},
+                content=b"{}",
+            )
+        self.assertEqual(response.status_code, 401)
+
+    async def test_normal_authenticated_request_still_reaches_route(self):
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            response = await self.request(
+                "POST", "/api/multi-agent/execute-workflow",
+                token=TOKEN, json={"tasks": ["inspect"]},
+            )
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("Multi-agent components not available", response.text)
+
+    async def test_optional_component_exceptions_never_leak_raw_details(self):
+        marker = "private-file-and-token-leak-should-not-appear"
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            with patch.object(gateway, "COGNITIVE_AVAILABLE", True), patch.object(
+                gateway, "CognitiveCodeAnalyzer", create=True,
+                side_effect=RuntimeError(marker)
+            ):
+                status = await self.request("GET", "/api/cognitive/status", token=TOKEN)
+                analyze = await self.request(
+                    "POST", "/api/cognitive/analyze", token=TOKEN,
+                    json={"code": "x", "file_path": "example.py"},
+                )
+            with patch.object(gateway, "MULTI_AGENT_AVAILABLE", True), patch.object(
+                gateway, "MultiAgentCoordinator", create=True,
+                side_effect=RuntimeError(marker)
+            ):
+                multi = await self.request("GET", "/api/multi-agent/status", token=TOKEN)
+
+        self.assertEqual(status.status_code, 200)
+        self.assertIs(status.json()["cognitive_available"], False)
+        self.assertEqual(analyze.status_code, 500)
+        self.assertEqual(multi.status_code, 200)
+        self.assertIs(multi.json()["multi_agent_available"], False)
+        for response in (status, analyze, multi):
+            self.assertNotIn(marker, response.text)
+
     async def test_websocket_handshake_rejects_unconfigured_and_bad_auth(self):
         events = []
 
