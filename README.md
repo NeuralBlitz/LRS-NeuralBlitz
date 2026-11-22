@@ -12,7 +12,7 @@ The former ~2,900-line README mixed executable interfaces, sketches, numerical p
 | --- | --- | --- |
 | VS Code extension | `package.json` defines three language IDs (`nbcl`, `reflexaellang`, `lon`), eleven commands, two contributed tree views, and an inline debug adapter; TypeScript compilation, lint, and offline regression tests run in CI | Real VS Code Extension Host operation and authenticated NBOS integration are **not yet certified** |
 | VSIX packaging | A [GitHub Actions workflow](.github/workflows/vscode-vsix-candidate.yml) bundles the extension, creates a minimal pre-release candidate, verifies its contents, and records SHA-256 integrity metadata | A downloadable CI test artifact is **not** Marketplace publication or a production release |
-| Python gateway | `main.py` contains six declared FastAPI routes; CI installs a [version-pinned ASGI environment](gateway/requirements-pinned.txt), sends authenticated ASGI requests, and starts a **real Uvicorn loopback process** for HTTP smoke testing | Token-gated **local prototype only**; [NBOS route contracts do not match](docs/gateway-nbos-boundary.md), and real execution, production identity, TLS and deployment remain unverified |
+| Python gateway | `main.py` contains seven declared FastAPI routes, including authenticated negative NBOS capability discovery; CI installs a [version-pinned ASGI environment](gateway/requirements-pinned.txt), sends authenticated ASGI requests, and starts a **real Uvicorn loopback process** for HTTP smoke testing | Token-gated **local prototype only**; [NBOS route contracts do not match](docs/gateway-nbos-boundary.md), and real execution, production identity, TLS and deployment remain unverified |
 | Telemetry configuration | `docker-compose.yml` defines five default services (InfluxDB, TimescaleDB, Prometheus, Grafana, Node Exporter) and an explicitly opt-in, privileged cAdvisor profile; CI checks both profiles and loopback port bindings | Services have **not** been verified as a production deployment; image pinning, cAdvisor privileges, and previously committed credential rotation require work |
 | Other research directories | Source trees and proposals exist under folders such as `neuralblitz-v50/`, `iot_mesh_system/`, `voice_interface/` and `edge_computing/` | Presence of a directory or example does **not** establish implementation completeness, accuracy, performance, or hardware compatibility |
 
@@ -43,10 +43,13 @@ To inspect the **unpublished** test VSIX candidate, open the [VSIX release-candi
 | --- | --- |
 | GET | `/` |
 | GET | `/api/integration/status` |
+| GET | `/nbos/v1/capabilities` |
 | GET | `/api/cognitive/status` |
 | POST | `/api/cognitive/analyze` |
 | GET | `/api/multi-agent/status` |
 | POST | `/api/multi-agent/execute-workflow` |
+
+The authenticated `GET /nbos/v1/capabilities` endpoint explicitly returns `protocol: "nbos/1"`, `compatible: false` and no supported operations. The VS Code client requires a compatible versioned response and per-operation declaration **before** sending NBCL source, commands or debug requests. A discovery response does not establish backend trust or execution capability. The gateway remains intentionally incompatible.
 
 The multi-agent execution route explicitly **does not execute tasks**. It rejects unavailable components (HTTP 503), invalid task lists (HTTP 400), and otherwise reports that the executor is not implemented (HTTP 501). Any earlier example describing successful workflow execution through this route is outdated. See [workflow implementation status](docs/multi-agent-workflow-status.md).
 

@@ -4,6 +4,12 @@ The VS Code client treats network transport success as distinct from a
 confirmed backend operation. A successful HTTP status code alone is not an
 execution or debugger success signal.
 
+## Versioned preflight and response requirements
+
+Before every remote NBOS operation, the client sends a **Bearer-authenticated** `GET /nbos/v1/capabilities` to the user-configured origin. A backend must respond with a JSON object containing exactly `protocol: "nbos/1"`, boolean `compatible: true`, and an array of declared operation strings such as `POST /execute` or `GET /status`. The client requires the specific operation it is about to perform, rejecting malformed discovery, missing permissions, or `compatible: false` **before transmitting command/source/debug request bodies**. For variable scopes, the declaration is `GET /debug/variables/*`.
+
+Discovery is repeated for each operation (no stale capability cache). This is interface negotiation, **not security attestation** and not a substitute for a trusted backend identity, access controls, or executable integration evidence.
+
 ## Current response requirements
 
 | Operation | Required backend evidence |
@@ -24,9 +30,9 @@ before it can be used with this client.
 
 **Fail-closed endpoint selection:** `neuralblitz.nbosEndpoint` now has an empty default. The client does not contact any server until the user selects a compatible NBOS address, with HTTPS required except for loopback HTTP. URLs containing credentials, non-root paths, query strings or fragments are rejected; HTTP redirects are disabled. This avoids accidentally sending NBCL source to the project's unrelated port-8080 services. Bearer-token provisioning now uses a password-masked VS Code command and `ExtensionContext.secrets` rather than the unsupported plaintext `neuralblitz.authToken` setting. Endpoint URLs set in workspace/folder scope are rejected so a checked-out repository cannot redirect a stored token; only user-level endpoint configuration is accepted. No server-side authentication, token rotation, TLS termination or actual NBOS backend is certified.
 
-The Python gateway does **not** implement these NBOS endpoints. [Gateway/NBOS route compatibility](gateway-nbos-boundary.md) documents the missing bridge, overlapping port 8080 uses, insecure/undeclared authentication configuration, and a real loopback HTTP test for deliberate 404 results.
+The Python gateway implements only a negative `GET /nbos/v1/capabilities` discovery route; it does **not** implement the actual NBOS operation endpoints. [Gateway/NBOS route compatibility](gateway-nbos-boundary.md) documents the missing bridge, overlapping port 8080 uses, insecure/undeclared authentication configuration, and a real loopback HTTP test for deliberate 404 results.
 
-The original unit suite uses mocked transport responses. The new [real Node Axios ↔ Uvicorn protocol test](gateway-nbos-boundary.md) exercises an actual network connection and checks that authenticated but unsupported NBOS requests fail with HTTP 404. This is not proof that any NBOS backend supports execution or debugger functionality.
+The original unit suite uses mocked transport responses. The new [real Node Axios ↔ Uvicorn protocol test](gateway-nbos-boundary.md) exercises an actual network connection and checks that real Axios refuses to send unsupported NBOS operations after a negative discovery result; direct authenticated calls to missing NBOS routes still return HTTP 404. This is not proof that any NBOS backend supports execution or debugger functionality.
 
 The isolated test suite uses mocked transport responses. API authentication,
 real server interoperability, error format versioning, DAP events and

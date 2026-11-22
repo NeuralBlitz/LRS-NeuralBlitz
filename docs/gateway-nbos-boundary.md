@@ -7,12 +7,12 @@
 | Surface | Declared path(s) | Implemented behavior/evidence |
 | --- | --- | --- |
 | Public local gateway | `GET /` | Static pre-production explanation; public without a token |
-| Gateway discovery | `GET /api/integration/status` | Environment-provided Bearer auth; explicitly reports `integration_verified: false` |
+| Gateway discovery | `GET /api/integration/status`, `GET /nbos/v1/capabilities` | Bearer-authenticated, `integration_verified: false`; versioned NBOS discovery explicitly returns `compatible: false` with no operations |
 | Cognitive prototype | `GET /api/cognitive/status`, `POST /api/cognitive/analyze` | Optional components; not evaluated as a functional LRS backend |
 | Multi-agent prototype | `GET /api/multi-agent/status`, `POST /api/multi-agent/execute-workflow` | Workflow fails closed: 503 if optional component unavailable, 501 if executor missing |
 | VS Code NBOS client | `POST /boot`, `POST /execute`, `GET /status`, `POST /introspect`, `/debug/*` | Client-side response validation exists, **but no matching routes in root `main.py`** |
 
-A browser page loading successfully, or the HTTP gateway accepting its token, **does not** establish that NBOS commands can execute. A correctly authenticated request to `/boot` on the gateway must return **404**, not fabricated `ok: true`.
+A browser page loading successfully, or the HTTP gateway accepting its token, **does not** establish that NBOS commands can execute. The VS Code client now probes `GET /nbos/v1/capabilities` before each operation. It requires `protocol: "nbos/1"`, `compatible: true`, and a matching method/path in the `operations` array. This gateway returns `compatible: false` and `operations: []`; the client refuses operations before sending source or debugger requests. Missing/invalid discovery also fails closed. A correctly authenticated request to `/boot` on the gateway must return **404**, not fabricated `ok: true`.
 
 ## Real server smoke test
 
@@ -31,7 +31,7 @@ This smoke test is a **development-only** gate. It does not validate TLS, mTLS, 
 
 A second test, [`tests/nbosGateway.real.integration.cjs`](../tests/nbosGateway.real.integration.cjs), launches **the real Python Uvicorn server over a TCP socket** and exercises the actual TypeScript `NBOSClient` through **real Axios**, with only the VS Code settings/SecretStorage host API stubbed. The client is configured at user scope and uses an ephemeral test-only Bearer token stored via the simulated secret store.
 
-It verifies that the gateway's own `/api/integration/status` authenticates successfully and still declares `integration_verified: false`, while the *actual client* receives authenticated **404** responses on `/boot`, `/execute`, `/status`, `/introspect`, and `/debug/stack`. Without a stored token, client boot gets **401**. No NBOS client call is allowed to fabricate a successful boot or execution.
+It verifies that the gateway's own `/api/integration/status` authenticates successfully and still declares `integration_verified: false`. The versioned discovery route returns explicit incompatibility; the actual Axios client sends **only** capability probes and refuses to issue `/boot`, `/execute`, `/status`, `/introspect`, or debugger calls. Direct authenticated requests to those nonexistent paths still receive HTTP **404**; without a stored token the client receives HTTP **401** on discovery. No NBOS client call may fabricate execution.
 
 CI installs pinned Python dependencies and frozen Bun dependencies before running:
 
@@ -50,6 +50,6 @@ This is a reproducible **negative integration contract** demonstrating incompati
 
 ## Criteria for a future real NBOS bridge
 
-Define a versioned API envelope, secure credential storage, discovery/health and capability negotiation; implement actual `/boot`, `/execute`, `/status`, `/introspect` and debugger functions backed by independently verified execution, not synthetic data. Add negative/auth tests, real VS Code Extension Host tests and backend event handling. Release only after route, transport, integrity and security claims have evidence.
+The `nbos/1` discovery preflight is now implemented as a conservative contract check, **not** an implementation of the engine. A future compatible server must advertise exact operation strings (for example `POST /boot` and `POST /execute`, with `GET /debug/variables/*` for scoped variables). The client currently rechecks on every operation; this adds a round trip and does not authenticate the truthfulness of a malicious backend. Implement actual `/boot`, `/execute`, `/status`, `/introspect` and debugger functions backed by independently verified execution, not synthetic data. Add negative/auth tests, real VS Code Extension Host tests and backend event handling. Release only after route, transport, integrity and security claims have evidence.
 
 See [NBOS client response validation](nbos-client-protocol-validation.md), [production readiness](production-readiness.md), and [gateway setup](../gateway/README.md).

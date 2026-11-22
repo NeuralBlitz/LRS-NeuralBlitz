@@ -281,6 +281,22 @@ async def read_root():
 </html>"""
 
 
+@app.get("/nbos/v1/capabilities")
+async def get_nbos_v1_capabilities():
+    """Authenticated negative NBOS discovery: this gateway is not an executor.
+
+    A 200 response to capability discovery is not a positive runtime health
+    check; clients must require compatible=True and an explicit operation.
+    """
+    return {
+        "protocol": "nbos/1",
+        "service": "lrs-neuralblitz-gateway",
+        "compatible": False,
+        "operations": [],
+        "reason": "This gateway does not implement an NBOS execution runtime",
+    }
+
+
 @app.get("/api/integration/status")
 async def get_integration_status():
     """Report component detection, not unmeasured end-to-end availability."""

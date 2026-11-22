@@ -10,6 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_ROUTES = {
     ("GET", "/"), ("GET", "/api/integration/status"),
+    ("GET", "/nbos/v1/capabilities"),
     ("GET", "/api/cognitive/status"), ("POST", "/api/cognitive/analyze"),
     ("GET", "/api/multi-agent/status"), ("POST", "/api/multi-agent/execute-workflow"),
 }
@@ -67,6 +68,8 @@ def check(root=ROOT):
             "neuralblitzGoldenDAG", "neuralblitzCKRegistry"
         }:
             issues.append("View manifest changed; README must be revalidated")
+        if 'compatible: false' not in main or '/nbos/v1/capabilities' not in main:
+            issues.append("README must disclose incompatible NBOS discovery endpoint")
         for snippet in ("three language", "eleven commands", "two contributed tree views"):
             if snippet not in main:
                 issues.append("Missing supported extension claim: " + snippet)

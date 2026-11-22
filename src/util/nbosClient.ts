@@ -3,6 +3,8 @@ import axios, { AxiosInstance } from 'axios';
 
 // VS Code encrypts/manages this value through ExtensionContext.secrets.
 export const NBOS_TOKEN_SECRET_KEY = 'nbos.authToken';
+export const NBOS_PROTOCOL_VERSION = 'nbos/1';
+export const NBOS_CAPABILITIES_PATH = '/nbos/v1/capabilities';
 
 export interface BootOptions {
     mode: 'Sentio' | 'Dynamo' | 'Hybrid';
@@ -97,12 +99,47 @@ export class NBOSClient {
         return url.origin;
     }
 
-    private post(path: string, data?: unknown) {
-        return this.client.post(path, data, { baseURL: this.requireEndpoint() });
+    /**
+     * Verify a versioned, operation-specific contract before sending commands,
+     * source paths, or debugger requests. Each operation probes afresh so a
+     * changed backend cannot keep using an old in-memory capability cache.
+     * Discovery proves a declared contract, not backend trust or correctness.
+     */
+    private async requireCapability(
+        baseURL: string, method: 'GET' | 'POST', path: string
+    ): Promise<void> {
+        const response = await this.client.get(NBOS_CAPABILITIES_PATH, { baseURL });
+        const data: unknown = response.data;
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            throw new Error('NBOS capability discovery returned a malformed response');
+        }
+        const record = data as Record<string, unknown>;
+        if (record.protocol !== NBOS_PROTOCOL_VERSION ||
+            record.compatible !== true ||
+            !Array.isArray(record.operations) ||
+            record.operations.length > 64 ||
+            record.operations.some((op: unknown) =>
+                typeof op !== 'string' || op.length > 128)) {
+            throw new Error('NBOS backend is not compatible with nbos/1');
+        }
+        const requiredPath = path.startsWith('/debug/variables/')
+            ? '/debug/variables/*' : path;
+        const operation = `${method} ${requiredPath}`;
+        if (!record.operations.includes(operation)) {
+            throw new Error(`NBOS backend does not advertise ${operation}`);
+        }
     }
 
-    private get(path: string) {
-        return this.client.get(path, { baseURL: this.requireEndpoint() });
+    private async post(path: string, data?: unknown) {
+        const baseURL = this.requireEndpoint();
+        await this.requireCapability(baseURL, 'POST', path);
+        return this.client.post(path, data, { baseURL });
+    }
+
+    private async get(path: string) {
+        const baseURL = this.requireEndpoint();
+        await this.requireCapability(baseURL, 'GET', path);
+        return this.client.get(path, { baseURL });
     }
 
     constructor(private readonly secrets?: vscode.SecretStorage) {

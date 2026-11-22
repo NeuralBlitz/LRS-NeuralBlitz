@@ -140,6 +140,19 @@ class GatewayLiveProcessTests(unittest.TestCase):
         self.assertIs(payload["integration_verified"], False)
         self.assertNotIn(self.token, body)
 
+    def test_live_capability_discovery_is_authenticated_and_negative(self):
+        denied_status, _, _ = self.request_raw("GET", "/nbos/v1/capabilities")
+        self.assertEqual(denied_status, 401)
+        status, _, body = self.request_raw(
+            "GET", "/nbos/v1/capabilities", authenticated=True
+        )
+        self.assertEqual(status, 200)
+        payload = json.loads(body)
+        self.assertEqual(payload["protocol"], "nbos/1")
+        self.assertIs(payload["compatible"], False)
+        self.assertEqual(payload["operations"], [])
+        self.assertNotIn(self.token, body)
+
     def test_live_server_does_not_fabricate_nbos_routes(self):
         # The VS Code NBOSClient uses /boot, /execute, /status, /introspect
         # and /debug/*; this Python API does not implement those contracts.
