@@ -46,6 +46,8 @@ Only `GET /` (the static pre-production page) is public. **Every other HTTP path
 
 The versioned authenticated `GET /nbos/v1/capabilities` route returns `protocol: "nbos/1"`, `compatible: false`, and `operations: []`. This is **negative discovery** for the actual VS Code NBOS client; it cannot execute or debug through the gateway. A successful discovery HTTP response is not evidence of functional compatibility.
 
+The gateway does not instantiate `OpenCodeTool` during startup (the pinned helper probes external executables), and it does not import experimental benchmark or enterprise modules by default. Opting in with `LRS_ENABLE_EXPERIMENTAL_ROUTES=1` loads those unreviewed modules and fails startup if their dependencies are absent; keep that switch unset in ordinary development. See the [pinned dependency source audit](../docs/audits/lrs-submodule-runtime-compatibility.md).
+
 The endpoint status remains `integration_verified: false`: successful authentication only proves access to a **prototype gateway**, not LRS backend availability. The workflow endpoint returns **503** when components are unavailable and **501** when a valid task request cannot be executed. The CI suite tests these behaviors through the real ASGI application without an external server or network call.
 
 **Operational boundary:** Run only on loopback in a trusted development environment. Do not expose port 8000, enable optional experimental routes, or deploy behind a public ingress without a completed security review, TLS, secret rotation, broader resource limits, rate limiting, audit controls and a backend integration contract. `LRS_ENABLE_EXPERIMENTAL_ROUTES=1` may register additional unreviewed endpoints and must remain unset.
