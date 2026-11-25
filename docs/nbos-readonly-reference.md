@@ -64,7 +64,7 @@ will complete **only** for a selection containing a supported
 single command (`/status`, `/help`, or bounded integer `/calc`).
 Multi-line documents or selections use the strictly prevalidated inline
 source mode; comments, blank lines and local-register instructions are permitted within the documented
-budgets. A new execution starts with no registered variables, and `/local.*` commands are rejected in standalone command mode. Boot and debugger commands still fail because they are genuinely
+budgets. A new execution starts with no registered variables, and `/local.*` commands are rejected in standalone command mode. The VS Code UI intentionally withholds raw backend JSON—including register values or echoed source—from its output channel; the authenticated HTTP API still returns the structured results to explicit callers. Boot and debugger commands still fail because they are genuinely
 unavailable.
 
 ## Verification and remaining limitations
