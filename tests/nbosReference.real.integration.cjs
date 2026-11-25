@@ -167,7 +167,9 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       assert.equal(status.result.system_status, 'read_only_reference');
       assert.equal(help.ok, true);
       assert.equal(help.completed, true);
-      assert.deepEqual(help.result.supported_commands, ['/status', '/help', '/calc']);
+      assert.deepEqual(help.result.supported_commands, [
+        '/status', '/help', '/calc', '/local.set', '/local.get', '/local.add',
+      ]);
       assert.equal(calc.ok, true);
       assert.equal(calc.completed, true);
       assert.equal(calc.result.value, -36);
