@@ -131,6 +131,8 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       assert.equal(response.data.execution_engine_available, false);
       assert.equal(response.data.agent_boot_available, false);
       assert.equal(response.data.subset_interpreter_available, true);
+      assert.equal(response.data.local_state_scope, 'single_inline_program');
+      assert.equal(response.data.max_local_registers, 8);
       assert.deepEqual(response.data.execution_modes, ['command', 'source']);
     });
 
@@ -165,7 +167,9 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       assert.equal(status.result.system_status, 'read_only_reference');
       assert.equal(help.ok, true);
       assert.equal(help.completed, true);
-      assert.deepEqual(help.result.supported_commands, ['/status', '/help', '/calc']);
+      assert.deepEqual(help.result.supported_commands, [
+        '/status', '/help', '/calc', '/local.set', '/local.get', '/local.add',
+      ]);
       assert.equal(calc.ok, true);
       assert.equal(calc.completed, true);
       assert.equal(calc.result.value, -36);
@@ -195,6 +199,49 @@ test('read-only NBOS reference responds to actual Axios client without inventing
         error => error?.response?.status === 422,
       );
       assert.equal(client.isConnected(), false);
+    });
+
+    await t.test('real Axios observes isolated local state and rejects cross-request reads', async () => {
+      const first = makeActualClient(baseURL, token);
+      const source = [
+        '/local.set --name=counter --value=21',
+        '/local.add --name=counter --value=4',
+        '/local.get --name=counter',
+      ].join('\n');
+      const result = await first.executeSource(source);
+      assert.equal(result.ok, true);
+      assert.equal(result.completed, true);
+      assert.equal(result.instruction_count, 3);
+      assert.deepEqual(JSON.parse(JSON.stringify(result.final_locals)), { counter: 25 });
+      assert.deepEqual(result.steps.map(step => step.result.value), [21, 25, 25]);
+      const other = makeActualClient(baseURL, token);
+      await assert.rejects(
+        other.executeSource('/local.get --name=counter'),
+        error => error?.response?.status === 422 &&
+          error?.response?.data?.completed === false,
+      );
+      await assert.rejects(
+        other.executeCommand('/local.get --name=counter'),
+        error => error?.response?.status === 422,
+      );
+    });
+
+    await t.test('state overflow or register-capacity failure rejects whole source', async () => {
+      const client = makeActualClient(baseURL, token);
+      const programs = [
+        '/status\n/local.set --name=x --value=1000000\n/local.add --name=x --value=1',
+        'abcdefghi'.split('').map(name =>
+          '/local.set --name=' + name + ' --value=1'
+        ).join('\n'),
+      ];
+      for (const source of programs) {
+        await assert.rejects(
+          client.executeSource(source),
+          error => error?.response?.status === 422 &&
+            !Object.prototype.hasOwnProperty.call(error.response.data, 'steps') &&
+            !Object.prototype.hasOwnProperty.call(error.response.data, 'final_locals'),
+        );
+      }
     });
 
     await t.test('agent boot and debug are rejected at preflight', async () => {

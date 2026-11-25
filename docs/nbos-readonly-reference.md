@@ -6,7 +6,7 @@ includes a real, bounded, read-only HTTP reference implementation of the
 It does **not** implement the NeuralBlitz engine, agent boot, arbitrary NBCL/file
 execution, debugger events, governance proof, or LRS-Agents integration. It does
 provide a [deterministic, bounded NBCL subset](nbcl-bounded-execution.md) for
-pure commands and short inline source programs.
+pure commands and short inline source programs with **nonpersistent, per-request integer registers**.
 It is distinct from the root [`main.py`](../main.py) gateway, which still
 reports **negative** NBOS compatibility.
 
@@ -17,9 +17,9 @@ reports **negative** NBOS compatibility.
 | `GET /nbos/v1/capabilities` | Authenticated protocol discovery: `compatible: true` **only for the operations below**. Advertises `execution_engine_available: false`, `agent_boot_available: false`, and `debugger_available: false`. |
 | `GET /status` | Returns the reference process's own read-only status; `agent_booted: false`, `integration_verified: false`, governance values explicitly unverified. |
 | `POST /introspect` | Accepts exactly `{"scope":"system"}` and returns its **own** status and capabilities. Other scopes get HTTP 422. |
-| `POST /execute` | Executes three supported pure commands (`/status`, `/help`, and strict integer `/calc`), or at most 16 instructions from prevalidated inline `{source}` text. Real arithmetic results and per-step completion evidence are returned. All other commands, file paths and unbounded programs return HTTP 422 with `ok: false`. |
+| `POST /execute` | Executes three standalone pure commands (`/status`, `/help`, and strict integer `/calc`), or at most 16 instructions from prevalidated inline `{source}` text, including `/local.set`, `/local.get`, and `/local.add` with bounded per-request registers. Real arithmetic results and per-step completion evidence are returned. All other commands, file paths and unbounded programs return HTTP 422 with `ok: false`. |
 
-Discovery advertises `execution_modes: ["command", "source"]`. The VS Code client now blocks file execution at **capability preflight**, before sending local file paths to this restricted reference process; direct file requests to the reference HTTP endpoint also receive HTTP 422. Source mode accepts only in-memory text, never local paths; see the [precise grammar and budgets](nbcl-bounded-execution.md).
+Discovery advertises `execution_modes: ["command", "source"]`. The VS Code client now blocks file execution at **capability preflight**, before sending local file paths to this restricted reference process; direct file requests to the reference HTTP endpoint also receive HTTP 422. Source mode accepts only in-memory text, never local paths. `local_state_scope: "single_inline_program"` and `max_local_registers: 8` are published in discovery. Locals are **discarded after each request**, even for the same token. See the [precise grammar and budgets](nbcl-bounded-execution.md).
 
 It never evaluates input as Python, invokes a shell, reads submitted paths,
 opens arbitrary files, launches a model, or fabricates successful NBCL work.
@@ -63,8 +63,8 @@ put them in workspace settings. The editor's Execute NBCL Command operation
 will complete **only** for a selection containing a supported
 single command (`/status`, `/help`, or bounded integer `/calc`).
 Multi-line documents or selections use the strictly prevalidated inline
-source mode; comments and blank lines are permitted within the documented
-budgets. Boot and debugger commands still fail because they are genuinely
+source mode; comments, blank lines and local-register instructions are permitted within the documented
+budgets. A new execution starts with no registered variables, and `/local.*` commands are rejected in standalone command mode. Boot and debugger commands still fail because they are genuinely
 unavailable.
 
 ## Verification and remaining limitations
@@ -85,7 +85,7 @@ gateway **must remain incompatible** with NBOS execution.
 
 Passing these tests verifies only the deliberately limited reference
 operations and finite, tested NBCL subset on the tested commit and environment. There is no full or arbitrary NBCL
-interpreter, user session isolation, production security, authenticated
+interpreter, persistent agent sessions, user isolation beyond individual request-local registers, production security, authenticated
 identity management, TLS, traffic/rate limiting, deployed service, validated
 LRS backends, or VS Code Extension Host verification.
 

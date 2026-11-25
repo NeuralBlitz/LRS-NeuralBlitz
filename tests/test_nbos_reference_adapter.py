@@ -41,6 +41,8 @@ class ReferenceAdapterASGITests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(caps["operations"], list(reference.REFERENCE_OPERATIONS))
         self.assertEqual(caps["execution_modes"], ["command", "source"])
         self.assertIs(caps["subset_interpreter_available"], True)
+        self.assertEqual(caps["local_state_scope"], "single_inline_program")
+        self.assertEqual(caps["max_local_registers"], 8)
         self.assertFalse(caps["execution_engine_available"])
         self.assertFalse(caps["agent_boot_available"])
         self.assertFalse(caps["debugger_available"])
@@ -101,6 +103,82 @@ class ReferenceAdapterASGITests(unittest.IsolatedAsyncioTestCase):
                          ["/status", "/calc", "/help"])
         self.assertEqual(body["steps"][1]["result"]["value"], 15)
         self.assertEqual(body["steps"][0]["result"]["agent_booted"], False)
+
+    async def test_authenticated_program_reads_its_own_local_registers(self):
+        source = (
+            "/local.set --name=budget --value=17\n"
+            "/local.add --name=budget --value=-4\n"
+            "/local.get --name=budget\n"
+        )
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            result = await self.send("POST", "/execute", json={"source": source})
+        self.assertEqual(result.status_code, 200)
+        body = result.json()
+        self.assertIs(body["ok"], True)
+        self.assertIs(body["completed"], True)
+        self.assertEqual(body["instruction_count"], 3)
+        self.assertEqual(body["final_locals"], {"budget": 13})
+        self.assertEqual(
+            [step["result"]["value"] for step in body["steps"]],
+            [17, 13, 13],
+        )
+
+    async def test_registers_cannot_be_read_across_http_requests(self):
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            first = await self.send(
+                "POST", "/execute",
+                json={"source": "/local.set --name=secret --value=777"},
+            )
+            second = await self.send(
+                "POST", "/execute",
+                json={"source": "/local.get --name=secret"},
+            )
+            one_shot = await self.send(
+                "POST", "/execute",
+                json={"command": "/local.get --name=secret"},
+            )
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json()["final_locals"], {"secret": 777})
+        for response in (second, one_shot):
+            self.assertEqual(response.status_code, 422)
+            self.assertIs(response.json()["completed"], False)
+            self.assertNotIn("steps", response.json())
+            self.assertNotIn("secret", response.text)
+
+    async def test_program_state_errors_fail_atomically_with_no_results(self):
+        malformed = (
+            "/status\n/local.get --name=missing",
+            "/status\n/local.set --name=x --value=1000000\n"
+            "/local.add --name=x --value=1",
+            "\n".join(f"/local.set --name={name} --value=1" for name in "abcdefghi"),
+        )
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            for source in malformed:
+                with self.subTest(length=len(source)):
+                    response = await self.send("POST", "/execute", json={"source": source})
+                    self.assertEqual(response.status_code, 422)
+                    self.assertIs(response.json()["ok"], False)
+                    self.assertIs(response.json()["completed"], False)
+                    self.assertNotIn("steps", response.json())
+                    self.assertNotIn("final_locals", response.json())
+
+    async def test_parallel_http_programs_have_disjoint_ephemeral_state(self):
+        import asyncio
+        with patch.dict(os.environ, {"LRS_GATEWAY_API_TOKEN": TOKEN}):
+            response_a, response_b = await asyncio.gather(
+                self.send("POST", "/execute", json={
+                    "source": "/local.set --name=x --value=111\n/local.get --name=x"
+                }),
+                self.send("POST", "/execute", json={
+                    "source": "/local.set --name=x --value=-222\n/local.get --name=x"
+                }),
+            )
+        self.assertEqual(response_a.status_code, 200)
+        self.assertEqual(response_b.status_code, 200)
+        self.assertEqual(response_a.json()["final_locals"], {"x": 111})
+        self.assertEqual(response_b.json()["final_locals"], {"x": -222})
+        self.assertEqual(response_a.json()["steps"][1]["result"]["value"], 111)
+        self.assertEqual(response_b.json()["steps"][1]["result"]["value"], -222)
 
     async def test_untrusted_inline_programs_are_rejected_without_partial_results(self):
         disallowed = (

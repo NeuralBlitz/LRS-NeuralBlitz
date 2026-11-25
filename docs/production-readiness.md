@@ -10,7 +10,7 @@ component, backend, container, or research claim works in production.
    contributions, debugging, and NBOS client integration.
 2. **API/interface**: Python FastAPI gateway in `main.py`; optional
    `lrs_agents` functionality requires compatible installed dependencies.
-3. **Bounded read-only NBOS reference**: separate opt-in FastAPI process supporting a finite deterministic NBCL subset, short inline programs, status and system introspection. Actual Axios/Uvicorn tests verify these operations; it cannot boot an agent, execute arbitrary NBCL or debug programs.
+3. **Bounded read-only NBOS reference**: separate opt-in FastAPI process supporting a finite deterministic NBCL subset, short inline programs with up to eight **request-local** registers, status and system introspection. Actual Axios/Uvicorn tests verify these operations; it cannot boot an agent, execute arbitrary NBCL or debug programs.
 4. **Telemetry stack**: Compose development configuration for monitoring
    and databases. It is not an approved production deployment manifest.
 
@@ -49,6 +49,7 @@ merges; the GitHub integration may lack branch-protection administration scope.
 - Validate security hardening beyond the tested 1 MiB authenticated request-body limit and sanitized optional-component error responses: rate limiting, reverse proxy limits, slow-client timeouts, operational monitoring and external ingress remain unverified.
 - Resolve the [pinned LRS-Agents import and dependency risks](audits/lrs-submodule-runtime-compatibility.md), including subprocess-based OpenCode probing and optional enterprise middleware, before enabling any execution adapter.
 - Preserve explicit `execution_modes` (`command`, `source`, or `file`) preflight when adding new backends; the limited reference advertises only command and inline source, never file-path execution.
+- Define and validate **persistent session identity, authorization, concurrency control, expiry and cleanup** separately; the bounded reference registers are deliberately discarded after each request and are not real multi-user sessions.
 - Implement a full backend supporting the versioned `nbos/1` capability contract with independently verified agent boot, program execution and debugger states. The read-only reference verifies a **strict subset** only; the root gateway remains incompatible. A positive capability declaration alone does not prove execution or production security.
 - Verify backend startup and contracts using the checked-out `lrs_agents`
   dependency and real request/response fixtures. The [gateway developer

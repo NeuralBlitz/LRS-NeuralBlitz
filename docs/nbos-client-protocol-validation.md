@@ -18,7 +18,7 @@ Discovery is repeated for each operation (no stale capability cache). This is in
 | --- | --- |
 | `POST /boot` | `ok === true` (boolean) |
 | `POST /execute` with a file | `ok` boolean and explicit completed or stopped evidence (see [debugger contract](debugger-execution-contract.md)) |
-| `POST /execute` with bounded inline source | `ok === true`, `completed === true`, `instruction_count` a positive integer no greater than 16, and exactly that many well-formed step records with valid one-based line numbers; mere positive HTTP acknowledgment does not count. The reference prevalidates every instruction before evaluation. |
+| `POST /execute` with bounded inline source | `ok === true`, `completed === true`, `instruction_count` a positive integer no greater than 16, and exactly that many well-formed step records with valid one-based line numbers; mere positive HTTP acknowledgment does not count. The reference prevalidates every instruction and local-register transition before evaluation, then returns `final_locals` for the current source request. The client validates step-record shape but does not cryptographically certify backend computations or persistent sessions. |
 | `POST /execute` with a command | `ok` must be boolean; `ok: true` alone is insufficient. Completion requires `completed: true`; `stopped: true` requires a valid positive integer `line` and is displayed as a paused command. Explicit `ok: false` is shown as a refusal. Contradictory and malformed states are rejected. |
 | `POST /debug/continue`, `stepOver`, `stepInto`, `stepOut`, `pause` | `ok === true` for command acknowledgement; this is **not** proof that a step finished |
 | `GET /debug/stack` | A `frames` array; missing data is not silently converted into an empty stack |

@@ -10,8 +10,8 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
 from gateway.security import GatewayAuthMiddleware
 from gateway.nbcl_subset import (
-    SUPPORTED_COMMANDS, SubsetSyntaxError, parse_instruction,
-    run_instruction, run_program,
+    SUPPORTED_COMMANDS, MAX_LOCAL_REGISTERS, SubsetSyntaxError,
+    parse_instruction, run_instruction, run_program,
 )
 
 app = FastAPI(
@@ -51,7 +51,7 @@ async def reference_home():
         "<title>NBOS read-only reference</title></head><body>"
         "<h1>Pre-production research prototype: read-only NBOS reference</h1>"
         "<p>No agent boot, arbitrary NBCL execution, file access or debugger."
-        " Only /status, /help and bounded /calc source programs are implemented.</p>"
+        " Only pure commands and bounded programs with request-local registers are implemented.</p>"
         "</body></html>"
     )
 
@@ -64,9 +64,11 @@ async def reference_capabilities():
         "service": "lrs-neuralblitz-readonly-reference",
         "compatible": True,
         "operations": list(REFERENCE_OPERATIONS),
-        # POST /execute accepts only {command}, never a client file path.
+        # POST /execute accepts {command} or {source}; never client file paths.
         "execution_modes": ["command", "source"],
         "subset_interpreter_available": True,
+        "local_state_scope": "single_inline_program",
+        "max_local_registers": MAX_LOCAL_REGISTERS,
         "supported_commands": list(REFERENCE_COMMANDS),
         "execution_engine_available": False,
         "agent_boot_available": False,
