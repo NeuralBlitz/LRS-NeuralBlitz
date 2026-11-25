@@ -90,7 +90,7 @@ command uses `{command}`; a multi-line document or leading-comment
 selection uses `{source}`. The client checks that a completed inline
 source response has **1–16 step records** with valid line numbers and
 commands; an `ok: true` acknowledgment alone cannot masquerade as
-completed work. The client **never sends a `{program: filePath}` payload**
+completed work. The VS Code command interface displays only completion/stop/failure states and bounded instruction counts; **raw backend results, register values, source text and error messages are not written to the output channel**. Programmatic API callers receive the full structured response for explicit inspection. The client **never sends a `{program: filePath}` payload**
 to this reference, because `file` is not advertised.
 
 Run and configure the reference using the
