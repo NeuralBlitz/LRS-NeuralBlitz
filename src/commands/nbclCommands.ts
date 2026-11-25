@@ -214,8 +214,8 @@ export class NBCLCommands {
                     'NBCL operation refused by backend; response details withheld.'
                 );
             } else if (result.completed === true && result.stopped !== true) {
-                const count = isSource && Number.isSafeInteger(result.instruction_count) &&
-                    typeof result.instruction_count === 'number' &&
+                const count = isSource && typeof result.instruction_count === 'number' &&
+                    Number.isSafeInteger(result.instruction_count) &&
                     result.instruction_count > 0 && result.instruction_count <= 16
                     ? result.instruction_count : undefined;
                 this.outputChannel.appendLine(
@@ -227,7 +227,7 @@ export class NBCLCommands {
                     isSource ? 'NBCL subset program completed' : 'Command execution completed'
                 );
             } else if (result.stopped === true && result.completed !== true &&
-                Number.isSafeInteger(result.line) && typeof result.line === 'number' &&
+                typeof result.line === 'number' && Number.isSafeInteger(result.line) &&
                 result.line > 0) {
                 this.outputChannel.appendLine('Execution paused; backend result not logged');
                 vscode.window.showWarningMessage(
