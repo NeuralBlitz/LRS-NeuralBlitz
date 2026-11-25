@@ -13,6 +13,34 @@ function escapeHtml(value: unknown): string {
         .replace(/'/g, '&#39;');
 }
 
+/** Never display arbitrary backend exception text or returned error strings in UI. */
+function safeNbclExecutionError(error: unknown): string {
+    const record = error && typeof error === 'object'
+        ? error as { message?: unknown; response?: { status?: unknown } }
+        : null;
+    const status = record?.response?.status;
+    if (status === 401 || status === 403) {
+        return 'NBCL execution authentication or authorization failed; check the stored token.';
+    }
+    if (status === 422) {
+        return 'NBCL request rejected by the backend (HTTP 422); details withheld.';
+    }
+    if (typeof status === 'number' && Number.isSafeInteger(status) &&
+        status >= 400 && status <= 599) {
+        return 'NBCL backend request failed (HTTP ' + status + '); details withheld.';
+    }
+    const message = typeof record?.message === 'string' ? record.message : '';
+    if (message.startsWith('NBOS endpoint is not configured') ||
+        message.startsWith('Set neuralblitz.nbosEndpoint in User settings')) {
+        return 'Set neuralblitz.nbosEndpoint in VS Code User settings to a verified NBOS server.';
+    }
+    if (message.startsWith('NBOS backend is not compatible') ||
+        message.startsWith('NBOS backend does not advertise')) {
+        return 'The configured NBOS backend does not support this operation.';
+    }
+    return 'NBCL execution request failed; raw backend details withheld.';
+}
+
 export class NBCLCommands {
     private outputChannel: vscode.OutputChannel;
     private statusBarItem: vscode.StatusBarItem;
@@ -173,32 +201,45 @@ export class NBCLCommands {
             this.outputChannel.appendLine(
                 isSource ? 'Executing bounded NBCL source...' : 'Executing NBCL command...'
             );
-            // Avoid duplicating user source text (potentially containing secrets) in logs.
-            this.outputChannel.appendLine('Source omitted (' + text.length + ' characters)');
-            this.outputChannel.appendLine('---');
+            // Neither submitted text nor an untrusted backend response/error
+            // may be copied to the long-lived extension output channel.
+            this.outputChannel.appendLine('Submitted source and backend details omitted');
 
             const result = isSource
                 ? await this.nbosClient.executeSource(text)
                 : await this.nbosClient.executeCommand(text);
-            this.outputChannel.appendLine(JSON.stringify(result, null, 2));
-
             if (result.ok === false) {
+                this.outputChannel.appendLine('Execution refused (response details redacted)');
                 vscode.window.showErrorMessage(
-                    'Execution failed: ' + (result.error?.message || 'NBOS rejected the command')
+                    'NBCL operation refused by backend; response details withheld.'
                 );
             } else if (result.completed === true && result.stopped !== true) {
+                const count = isSource && typeof result.instruction_count === 'number' &&
+                    Number.isSafeInteger(result.instruction_count) &&
+                    result.instruction_count > 0 && result.instruction_count <= 16
+                    ? result.instruction_count : undefined;
+                this.outputChannel.appendLine(
+                    count === undefined
+                        ? 'Execution completion confirmed; backend result not logged'
+                        : 'Source completed (' + count + ' steps); backend result not logged'
+                );
                 vscode.window.showInformationMessage(
                     isSource ? 'NBCL subset program completed' : 'Command execution completed'
                 );
-            } else if (result.stopped === true && result.completed !== true) {
+            } else if (result.stopped === true && result.completed !== true &&
+                typeof result.line === 'number' && Number.isSafeInteger(result.line) &&
+                result.line > 0) {
+                this.outputChannel.appendLine('Execution paused; backend result not logged');
                 vscode.window.showWarningMessage(
                     'Command stopped at line ' + result.line + '; execution is not complete'
                 );
             } else {
+                this.outputChannel.appendLine('Execution result unconfirmed');
                 vscode.window.showErrorMessage('NBOS did not confirm command completion');
             }
         } catch (error) {
-            vscode.window.showErrorMessage(`Execution error: ${error}`);
+            this.outputChannel.appendLine('Execution request failed; details redacted');
+            vscode.window.showErrorMessage(safeNbclExecutionError(error));
         }
     }
 

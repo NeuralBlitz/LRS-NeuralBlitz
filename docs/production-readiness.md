@@ -62,7 +62,9 @@ merges; the GitHub integration may lack branch-protection administration scope.
   token rotation or a real NBOS backend, and execution remains unavailable
   without an independently verified compatible runtime.
 - Review all webviews/command surfaces and secrets handling, not just
-  the three hardened static panels.
+  the three hardened static panels. NBCL command UI now redacts backend results,
+  refusal text and exception messages under offline regression tests, but a full
+  extension-host security review and controlled result-display UX remain open.
 - Confirm optional `host-metrics` cAdvisor remains absent from the default Compose profile; explicitly opted-in deployments are still privileged and require separate host-hardening review.
 - Pin container image versions/digests, address cAdvisor privileged mounts,
   audit the full dependency inventory, and validate runtime health.

@@ -277,10 +277,11 @@ test('interactive NBCL UI displays completion, pause, or refusal accurately', as
   assert.equal(notices.at(-1)[0], 'warning');
   assert.match(notices.at(-1)[1], /stopped at line 11/);
 
-  backendResult = { ok: false, error: { message: 'not authorized' } };
+  backendResult = { ok: false, error: { message: 'backend leaked an internal credential' } };
   await execute();
   assert.equal(notices.at(-1)[0], 'error');
-  assert.match(notices.at(-1)[1], /not authorized/);
+  assert.match(notices.at(-1)[1], /response details withheld/);
+  assert.ok(!logs.some(line => line.includes('internal credential')));
 
   backendResult = { ok: true, completed: true };
   await execute();
@@ -288,6 +289,84 @@ test('interactive NBCL UI displays completion, pause, or refusal accurately', as
   assert.match(notices.at(-1)[1], /execution completed/);
 });
 
+
+
+test('NBCL UI never logs source or backend-echoed secrets on success, refusal or exception', async () => {
+  const h = createHarness();
+  const secret = 'TEST-PRIVATE-NBCL-TOKEN-SHOULD-NOT-APPEAR';
+  h.vscode.window.activeTextEditor = {
+    selection: { isEmpty: true },
+    document: { languageId: 'nbcl', getText: () => '/status #' + secret },
+  };
+  const logs = [], notices = [];
+  h.vscode.window.createOutputChannel = () => ({
+    appendLine: value => logs.push(value), dispose: () => {},
+  });
+  h.vscode.window.showInformationMessage = value => notices.push(value);
+  h.vscode.window.showWarningMessage = value => notices.push(value);
+  h.vscode.window.showErrorMessage = value => notices.push(value);
+  let backendValue = { ok: true, completed: true,
+    result: { source: secret, Authorization: 'Bearer ' + secret } };
+  const backend = { executeCommand: async () => {
+    if (backendValue instanceof Error) throw backendValue;
+    return backendValue;
+  } };
+  const commands = new h.cmdModule.NBCLCommands(backend, {}, h.context.secrets);
+  commands.register(h.context);
+  const execute = h.registeredCommands.get('neuralblitz.execute');
+
+  await execute();
+  assert.match(notices.at(-1), /execution completed/);
+
+  backendValue = { ok: false, error: { message: 'Refused: ' + secret } };
+  await execute();
+  assert.match(notices.at(-1), /details withheld/);
+
+  backendValue = new Error('Backend exception exposed ' + secret);
+  await execute();
+  assert.match(notices.at(-1), /details withheld/);
+
+  const responseError = new Error('Request contained Authorization Bearer ' + secret);
+  responseError.response = { status: 422, data: { source: secret } };
+  backendValue = responseError;
+  await execute();
+  assert.match(notices.at(-1), /HTTP 422/);
+
+  const emitted = logs.concat(notices).join('\n');
+  assert.ok(!emitted.includes(secret), 'Never leak user or echoed backend secrets in UI');
+  assert.ok(!emitted.includes('Bearer'), 'Never show Authorization headers');
+  assert.ok(!emitted.includes('Refused: '), 'Never echo raw backend error text');
+  assert.ok(logs.some(line => /result not logged|details redacted/.test(line)));
+});
+
+test('multiline NBCL UI shows only step count, not backend source or values', async () => {
+  const h = createHarness();
+  const secret = 'SENSITIVE-INLINE-NBCL-RESULT';
+  const source = '/local.set --name=x --value=1\n/local.get --name=x';
+  h.vscode.window.activeTextEditor = {
+    selection: { isEmpty: true },
+    document: { languageId: 'nbcl', getText: () => source },
+  };
+  const logs = [], notices = [];
+  h.vscode.window.createOutputChannel = () => ({
+    appendLine: value => logs.push(value), dispose: () => {},
+  });
+  h.vscode.window.showInformationMessage = value => notices.push(value);
+  h.vscode.window.showErrorMessage = value => notices.push(value);
+  const backend = { executeSource: async () => ({
+    ok: true, completed: true, instruction_count: 2,
+    steps: [{ line: 1, command: '/local.set', result: { token: secret } },
+      { line: 2, command: '/local.get', result: { value: 1, secret } }],
+    final_locals: { marker: secret },
+  }) };
+  const commands = new h.cmdModule.NBCLCommands(backend, {}, h.context.secrets);
+  commands.register(h.context);
+  await h.registeredCommands.get('neuralblitz.execute')();
+  assert.match(notices.at(-1), /subset program completed/);
+  assert.ok(logs.some(line => /Source completed \(2 steps\)/.test(line)));
+  assert.ok(!logs.join('\n').includes(secret));
+  assert.ok(!logs.join('\n').includes(source));
+});
 
 test('multiline NBCL selections use explicit source mode, never a file path', async () => {
   const h = createHarness();

@@ -26,7 +26,7 @@ Discovery is repeated for each operation (no stale capability cache). This is in
 | `POST /debug/evaluate` | A present `result` property (a legitimate `null` is allowed) |
 | `GET /status`, `POST /introspect` | An object response; explicit `ok: false` must surface an error |
 
-The command UI no longer duplicates raw NBCL source into the extension output channel. File and command execution require well-formed boolean state flags, and stopped debugger states must include a valid one-based line number. These are **client-side contract checks**, not proof that any connected
+The command UI now logs **only allowlisted execution states and bounded step counts**, not submitted NBCL source, raw server result JSON, arbitrary rejection messages, or exception text. A malicious or misconfigured backend may echo credentials or source in any of these fields. The VS Code notification maps HTTP 401/403/422 and incompatible endpoints to fixed messages, without displaying backend content. The programmatic client still returns actual response data to callers; **UI redaction does not prove the server is trustworthy**. File and command execution require well-formed boolean state flags, and stopped debugger states must include a valid one-based line number. These are **client-side contract checks**, not proof that any connected
 backend currently complies. A backend returning an empty body for a successful
 debug-control request must be upgraded to return a positive acknowledgement
 before it can be used with this client.
