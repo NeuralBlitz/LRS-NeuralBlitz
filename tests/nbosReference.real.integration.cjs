@@ -131,6 +131,8 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       assert.equal(response.data.execution_engine_available, false);
       assert.equal(response.data.agent_boot_available, false);
       assert.equal(response.data.subset_interpreter_available, true);
+      assert.equal(response.data.local_state_scope, 'single_inline_program');
+      assert.equal(response.data.max_local_registers, 8);
       assert.deepEqual(response.data.execution_modes, ['command', 'source']);
     });
 
