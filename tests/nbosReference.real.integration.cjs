@@ -197,6 +197,49 @@ test('read-only NBOS reference responds to actual Axios client without inventing
       assert.equal(client.isConnected(), false);
     });
 
+    await t.test('real Axios observes isolated local state and rejects cross-request reads', async () => {
+      const first = makeActualClient(baseURL, token);
+      const source = [
+        '/local.set --name=counter --value=21',
+        '/local.add --name=counter --value=4',
+        '/local.get --name=counter',
+      ].join('\n');
+      const result = await first.executeSource(source);
+      assert.equal(result.ok, true);
+      assert.equal(result.completed, true);
+      assert.equal(result.instruction_count, 3);
+      assert.deepEqual(JSON.parse(JSON.stringify(result.final_locals)), { counter: 25 });
+      assert.deepEqual(result.steps.map(step => step.result.value), [21, 25, 25]);
+      const other = makeActualClient(baseURL, token);
+      await assert.rejects(
+        other.executeSource('/local.get --name=counter'),
+        error => error?.response?.status === 422 &&
+          error?.response?.data?.completed === false,
+      );
+      await assert.rejects(
+        other.executeCommand('/local.get --name=counter'),
+        error => error?.response?.status === 422,
+      );
+    });
+
+    await t.test('state overflow or register-capacity failure rejects whole source', async () => {
+      const client = makeActualClient(baseURL, token);
+      const programs = [
+        '/status\n/local.set --name=x --value=1000000\n/local.add --name=x --value=1',
+        'abcdefghi'.split('').map(name =>
+          '/local.set --name=' + name + ' --value=1'
+        ).join('\n'),
+      ];
+      for (const source of programs) {
+        await assert.rejects(
+          client.executeSource(source),
+          error => error?.response?.status === 422 &&
+            !Object.prototype.hasOwnProperty.call(error.response.data, 'steps') &&
+            !Object.prototype.hasOwnProperty.call(error.response.data, 'final_locals'),
+        );
+      }
+    });
+
     await t.test('agent boot and debug are rejected at preflight', async () => {
       const client = makeActualClient(baseURL, token);
       const paths = [];
