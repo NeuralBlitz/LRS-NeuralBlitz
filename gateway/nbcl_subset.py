@@ -112,7 +112,7 @@ def _apply_local(instruction: Instruction, local_state: dict[str, int]) -> dict[
 
 
 def parse_program(source: str) -> tuple[Instruction, ...]:
-    """Prevalidate a complete, bounded, stateless source program.
+    """Prevalidate a bounded program with ephemeral local registers.
 
     Blank lines and whole-line # comments are ignored. At most 16 actual
     instructions are allowed; any invalid instruction rejects the whole
